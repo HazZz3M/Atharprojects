@@ -2870,7 +2870,6 @@
                     if (typeof supabaseClient !== 'undefined') {
                         const payload = buildAnswersPayload(state.userAnswers);
                         supabaseClient.from('submissions').insert([{
-                            id: state.submissionId,
                             assessment_id: state.activeAssessmentId,
                             team_name: state.activeTeam,
                             member_name: state.memberName,
