@@ -1919,7 +1919,7 @@
                 const overlay = document.getElementById('global-modal');
                 const content = overlay.querySelector('.modal-content');
                 overlay.querySelector('.modal-title').innerText = title;
-                overlay.querySelector('.modal-text').innerText = text;
+                overlay.querySelector('.modal-text').innerHTML = text;
 
                 const input = overlay.querySelector('.modal-input');
                 const btnCancel = overlay.querySelector('#modal-btn-cancel');
