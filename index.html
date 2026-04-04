@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <title>Premium Assessment Hub</title>
-    <!-- Supabase CDN -->
+    <!-- Supabase & Rendering Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 
     <style>
@@ -1303,7 +1305,10 @@
             </div>
             <div class="loader" id="team-loader" style="margin-top: 1rem; display: none;"></div>
 
-            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Current Teams (<span id="team-count">0</span>)</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem; margin-bottom:1rem;">
+                <h3 style="margin:0;">Current Teams (<span id="team-count">0</span>)</h3>
+                <button class="btn accent-btn" onclick="extractAllResults()" style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
+            </div>
             <div
                 style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2);">
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -1312,6 +1317,7 @@
                             <th style="padding: 1rem;">Team Name</th>
                             <th style="padding: 1rem;">Password</th>
                             <th style="padding: 1rem;">Round</th>
+                            <th style="padding: 1rem; text-align: right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="team-list-body">
@@ -4371,9 +4377,12 @@
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid var(--card-border)';
                 tr.innerHTML = `
-                    <td style="padding: 0.8rem 1rem;">${t.name}</td>
+                    <td style="padding: 0.8rem 1rem; font-weight:600; color:var(--accent);">${t.name}</td>
                     <td style="padding: 0.8rem 1rem;">${t.password}</td>
                     <td style="padding: 0.8rem 1rem;">${t.round || ''}</td>
+                    <td style="padding: 0.8rem 1rem; text-align:right;">
+                        <button class="btn info outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; min-width:auto;" onclick="extractResultsForTeam('${t.name}')">Extract Assessments</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -4484,6 +4493,115 @@
                 if (!confirmed) return;
                 google.script.run.withSuccessHandler(() => renderAdminUserList()).deleteAdmin(id);
             });
+        }
+
+        // ----- PREMIUM EXTRACTION SYSTEM -----
+        async function extractResultsForTeam(teamName) {
+            try {
+                const zip = new JSZip();
+                const teamFolder = zip.folder(teamName);
+                Modal.showLoader("Preparing " + teamName + "...");
+
+                const teamSubs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === normalizeAnswerKey(teamName));
+                if (teamSubs.length === 0) {
+                    Modal.hideLoader();
+                    return Modal.alert("Empty", "No submissions found for " + teamName);
+                }
+
+                for (const sub of teamSubs) {
+                    const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
+                    if (!assm) continue;
+
+                    const assmFolder = teamFolder.folder(assm.title || "Assessment_" + sub.assessment_id);
+                    const answers = sub.answers_data || {};
+
+                    for (let i = 0; i < assm.pages.length; i++) {
+                        const page = assm.pages[i];
+                        try {
+                            const blob = await renderPageToBlob(page, answers);
+                            if (blob) assmFolder.file("Page_" + (i + 1) + ".png", blob);
+                        } catch (e) { console.error("Page render fail:", e); }
+                    }
+                }
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement('a'); a.href = url; a.download = teamName + "_Results.zip"; a.click();
+                Modal.hideLoader();
+            } catch (err) {
+                console.error(err);
+                Modal.hideLoader();
+                Modal.alert("Error", "Extraction failed: " + err.message);
+            }
+        }
+
+        async function extractAllResults() {
+            try {
+                const zip = new JSZip();
+                Modal.showLoader("Gathering ALL Team Data...");
+                
+                const teamsWithSubs = Array.from(new Set(state.submissions.map(s => normalizeAnswerKey(s.team_name || s.team || ''))));
+                if (teamsWithSubs.length === 0) {
+                    Modal.hideLoader();
+                    return Modal.alert("Empty", "No submissions found in the database.");
+                }
+
+                for (const tKey of teamsWithSubs) {
+                    const tName = (state.teams.find(xt => normalizeAnswerKey(xt.name) === tKey)?.name || tKey).replace(/[\\/:*?"<>|]/g, '_');
+                    const teamFolder = zip.folder(tName);
+                    const teamSubs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === tKey);
+                    
+                    for (const sub of teamSubs) {
+                        const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
+                        if (!assm) continue;
+                        const assmFolder = teamFolder.folder((assm.title || "Assm").replace(/[\\/:*?"<>|]/g, '_'));
+                        const answers = sub.answers_data || {};
+                        for (let i = 0; i < assm.pages.length; i++) {
+                            const blob = await renderPageToBlob(assm.pages[i], answers);
+                            if (blob) assmFolder.file("Page_" + (i + 1) + ".png", blob);
+                        }
+                    }
+                }
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement('a'); a.href = url; a.download = "Full_Assessment_Archive.zip"; a.click();
+                Modal.hideLoader();
+            } catch (err) {
+                console.error(err);
+                Modal.hideLoader();
+                Modal.alert("Error", "Extraction failed: " + err.message);
+            }
+        }
+
+        async function renderPageToBlob(page, ans) {
+            const div = document.createElement('div');
+            div.style.position = 'fixed'; div.style.left = '-5000px'; div.style.top = '0';
+            div.style.width = '800px'; div.style.background = '#fff';
+            div.innerHTML = `
+                <div class="canvas-container" style="width:100%; position:relative; line-height:0;">
+                    <img src="${page.url}" style="width:100%; display:block;">
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+                </div>
+            `;
+            document.body.appendChild(div);
+            
+            const overlay = div.querySelector('div div');
+            (page.fields || []).forEach(f => {
+                const val = ans[f.id] || ans[f.name] || '';
+                const field = document.createElement('div');
+                field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
+                field.style.width = f.width + '%'; field.style.height = f.height + '%';
+                field.style.color = '#1e40af'; field.style.fontWeight = 'bold'; field.style.fontSize = '12px';
+                field.style.display = 'flex'; field.style.alignItems = 'center'; field.style.justifyContent = 'center';
+                field.style.textAlign = 'center'; field.innerText = val;
+                overlay.appendChild(field);
+            });
+
+            await new Promise(r => setTimeout(r, 800)); // Increased for image loading
+            const canvas = await html2canvas(div, { useCORS: true, scale: 2 });
+            document.body.removeChild(div);
+            return new Promise(r => canvas.toBlob(r, 'image/png'));
         }
 
         showView('home');
