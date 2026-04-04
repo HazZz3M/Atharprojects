@@ -1665,7 +1665,7 @@
                         
                         const sm = {}; 
                         (s || []).forEach(r => { 
-                            const aid = String(r.assessment_id || '');
+                            const aid = String(r.assessment_id || '').toLowerCase().trim();
                             if (aid) {
                                 if (!sm[aid]) sm[aid] = 0; 
                                 sm[aid]++; 
@@ -1675,7 +1675,8 @@
                         const as = (a || []).map(r => { 
                             let pg = pm[r.id] || []; 
                             pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
-                            const count = sm[String(r.id)] || 0;
+                            // Case-insensitive count matching
+                            const count = sm[String(r.id).toLowerCase().trim()] || 0;
                             return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
