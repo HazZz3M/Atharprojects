@@ -2737,13 +2737,28 @@
 
             // Check for double submission
             if (assm && assm.settings) {
-                const allowMulti = assm.settings.allowMulti === true || assm.settings.allowMulti === 'true';
+                const sets = assm.settings || {};
+                const allowMulti = sets.allowMulti === true || sets.allowMulti === 'true';
                 if (!allowMulti) {
-                    const hasSubmitted = state.submissions.some(s => s.assessment_id === assm.id && 
-                        (normalizeAnswerKey(s.team_name || '') === normalizeAnswerKey(teamName)));
+                    const subs = state.submissions || [];
+                    const hasSubmitted = subs.some(s => {
+                        const sId = String(s.assessment_id || '');
+                        const targetId = String(assm.id || '');
+                        if (sId !== targetId) return false;
+                        
+                        const sTeam = normalizeAnswerKey(s.team_name || s.team || '');
+                        const tTeam = normalizeAnswerKey(teamName || '');
+                        return sTeam === tTeam;
+                    });
+
                     if (hasSubmitted) {
-                        document.getElementById('team-error').innerText = "Your team has already submitted this assessment.";
-                        document.getElementById('team-error').style.display = 'block';
+                        const errEl = document.getElementById('team-error');
+                        if (errEl) {
+                            errEl.innerText = "Access Denied: Your team has already submitted this assessment.";
+                            errEl.style.display = 'block';
+                        } else {
+                            Modal.alert("Access Denied", "Your team has already finished this assessment.");
+                        }
                         return;
                     }
                 }
