@@ -1653,12 +1653,20 @@
                         const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
                         const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
                         
-                        const sm = {}; (s || []).forEach(r => { if (!sm[r.assessment_id]) sm[r.assessment_id] = 0; sm[r.assessment_id]++; });
+                        const sm = {}; 
+                        (s || []).forEach(r => { 
+                            const aid = String(r.assessment_id || '');
+                            if (aid) {
+                                if (!sm[aid]) sm[aid] = 0; 
+                                sm[aid]++; 
+                            }
+                        });
                         
                         const as = (a || []).map(r => { 
                             let pg = pm[r.id] || []; 
                             pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
-                            return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: sm[r.id] || 0 }; 
+                            const count = sm[String(r.id)] || 0;
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
@@ -2678,14 +2686,22 @@
                 const opt = document.createElement('option');
                 opt.value = t.name;
 
-                const hasSubmitted = assm.submittedTeams && assm.submittedTeams.includes(t.name.toString());
-                const isBlocked = hasSubmitted && (assm.settings && assm.settings.allowMulti === false);
+                const cleanTName = normalizeAnswerKey(t.name || '');
+                const hasSubmitted = (state.submissions || []).some(s => {
+                    const tid = String(s.assessment_id || s.assessmentId || '');
+                    const target = String(assm.id || '');
+                    if (tid !== target) return false;
+                    const sTeam = normalizeAnswerKey(s.team_name || s.team || '');
+                    return sTeam === cleanTName;
+                });
+                
+                const sets = assm.settings || {};
+                const isBlocked = hasSubmitted && (sets.allowMulti !== true && sets.allowMulti !== 'true');
 
                 if (isBlocked) {
                     opt.disabled = true;
                     opt.innerText = t.name + " (Already Submitted)";
-                    opt.style.background = "rgba(40, 40, 40, 0.4)"; // Darker for inactive
-                    opt.style.color = "#555";
+                    opt.style.color = "var(--text-muted)"; 
                 } else {
                     opt.innerText = t.name;
                 }
