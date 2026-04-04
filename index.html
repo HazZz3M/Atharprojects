@@ -3266,7 +3266,8 @@
         function renderAdminDashboard(list, isTempTab, callback) {
             document.getElementById('admin-dash-title').innerText = isTempTab ? "Templates" : "Assessments";
             document.getElementById('btn-new-assessment').style.display = 'inline-flex';
-            if (document.getElementById('view-admin-dashboard').classList.contains('active')) startAdminAutoSync();
+            
+            // Auto-sync is now handled globally during showView transitions to prevent loops
             
             // Highlight active tab
             document.getElementById('tab-btn-assm').style.background = isTempTab ? 'transparent' : 'var(--accent)';
@@ -3475,9 +3476,16 @@
             if (state.adminSyncIntervalId) return;
             state.adminSyncIntervalId = setInterval(() => {
                 if (!state.isAdmin) return;
-                if (!document.getElementById('view-admin-dashboard').classList.contains('active')) return;
-                loadAdminDashboard(true, null, true); // silent=true
-            }, state.adminSyncInterval);
+                // Only sync if strictly viewing the main dashboard list
+                const dash = document.getElementById('view-admin-dashboard');
+                if (dash && dash.classList.contains('active')) {
+                    google.script.run.fetchData((res) => {
+                         // Silent update logic
+                         const isTempTab = state.adminTab === 'templates';
+                         renderAdminDashboard(document.getElementById('dash-assessment-list'), isTempTab);
+                    });
+                }
+            }, 30000); // Increased to 30s to prevent spam
         }
 
         function stopAdminAutoSync() {
