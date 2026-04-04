@@ -1191,7 +1191,7 @@
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
 
-            <div id="player-canvas" class="canvas-container" style="min-height: 400px; position: relative;">
+            <div id="player-canvas" class="canvas-container" style="position: relative;">
                 <div id="player-img-loader" class="loader"
                     style="position: absolute; top: 50%; left: 50%; margin: -20px 0 0 -20px; z-index: 10; display: block;">
                 </div>
@@ -1247,8 +1247,10 @@
             <div style="display:flex; gap:0.8rem;">
                 <button class="btn outline" onclick="openTeamManager()" title="Bulk Manage Teams"
                     style="border-color: var(--accent); color: var(--accent);">👥 Teams</button>
+                <button class="btn outline" onclick="openUserManager()" title="Manage Admin Users"
+                    style="border-color: var(--accent); color: var(--accent);">👤 Admins</button>
                 <button class="btn outline" onclick="loadAdminDashboard(true)"
-                    title="Sync latest data from Google Sheets">🔄
+                    title="Sync latest data from Supabase">🔄
                     Refresh</button>
                 <button class="btn outline" onclick="openSpreadsheet()"
                     title="View raw responses and database records">📊
@@ -1454,7 +1456,7 @@
 
                 <div class="assessment-wrapper">
                     <div id="sub-canvas-container" class="canvas-container"
-                        style="min-height: 400px; position: relative;">
+                        style="position: relative;">
                         <div id="sub-img-loader" class="loader"
                             style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
                         </div>
@@ -1479,6 +1481,39 @@
     </main>
 
     <!-- Admin Manage Assessment Pages -->
+    <!-- Admin User Manager -->
+    <main id="view-admin-users" class="view-section">
+        <div class="card" style="max-width: 800px; text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+                <h2 style="margin:0;">Manage Administrators</h2>
+                <button class="btn outline" onclick="showView('admin-dashboard')">← Back</button>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="margin-bottom:1rem; opacity:0.8;">Add New Admin</h4>
+                <div style="display:flex; gap:1rem;">
+                    <input type="text" id="new-admin-user" placeholder="Username" style="margin:0; flex:1;">
+                    <input type="password" id="new-admin-pass" placeholder="Password" style="margin:0; flex:1;">
+                    <button class="btn primary-btn" onclick="addNewAdmin()">+ Add User</button>
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--card-border);">
+                            <th style="padding: 1rem;">Username</th>
+                            <th style="padding: 1rem;">Password</th>
+                            <th style="padding: 1rem; width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-user-list-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Admin Assessment (Pages) -->
     <main id="view-admin-assessment" class="view-section">
         <div style="max-width: 800px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
             <div style="display:flex; align-items: center; gap: 1rem;">
@@ -1536,7 +1571,7 @@
                 </div>
 
                 <div id="editor-canvas" class="canvas-container"
-                    style="display:none; overflow: visible; min-height: 400px; position: relative;">
+                    style="display:none; overflow: visible; position: relative;">
                     <div id="editor-img-loader" class="loader"
                         style="position: absolute; top: 50%; left: 50%; margin: -20px 0 0 -20px; z-index: 10; display: block;">
                     </div>
@@ -1655,7 +1690,19 @@
                     getSpreadsheetUrl() { if (this._s) this._s("https://supabase.com/dashboard/project/yhtcpqmfpgiflyajygik"); },
                     saveExportImage() { if (this._s) this._s({ success: true, fileId: 'dummy_' + Date.now(), folderUrl: '#', folderId: 'root' }); },
                     groupImagesInDoc() { if (this._s) this._s({ success: true }); },
-                    updateSubmissionFolderLink(aid, sid, url) { return this._x(supabaseClient.from('submissions').update({ folder_link: url }).eq('id', sid)); }
+                    updateSubmissionFolderLink(aid, sid, url) { return this._x(supabaseClient.from('submissions').update({ folder_link: url }).eq('id', sid)); },
+                    async fetchAdmins() {
+                        const { data, error } = await supabaseClient.from('admins').select('*').order('created_at', { ascending: false });
+                        if (this._s) this._s({ success: !error, admins: data || [] });
+                    },
+                    async createAdmin(u, p) {
+                        const { data, error } = await supabaseClient.from('admins').insert([{ username: u, password: p }]).select();
+                        if (this._s) this._s({ success: !error, message: error ? error.message : "Admin created" });
+                    },
+                    async deleteAdmin(id) {
+                        const { error } = await supabaseClient.from('admins').delete().eq('id', id);
+                        if (this._s) this._s({ success: !error });
+                    }
                 }
             }
         };
@@ -2304,13 +2351,12 @@
                     if (obj[f.name] !== undefined) return obj[f.name];
 
                     // Fallback: If student used the ID system but ID changed, maybe they also saved the name?
-                    const norm = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
-                    if (obj[norm] !== undefined) return obj[norm];
+                    const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                    const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
 
-                    // HEURISTIC: Search through ALL keys. If a key's label (old name) matches exactly, use it.
-                    // This handles cases where ID shifted but Name remained the same.
                     for (const key in obj) {
-                        if (normalizeAnswerKey(key) === norm) return obj[key];
+                        const normKey = normalizeAnswerKey(key);
+                        if (normKey === normName || normKey === normId) return obj[key];
                     }
                     return null;
                 };
@@ -4296,6 +4342,60 @@
             };
             reader.readAsText(file);
             e.target.value = '';
+        }
+
+        // Admin User Manager JS
+        function openUserManager() {
+            showView('admin-users');
+            renderAdminUserList();
+        }
+
+        function renderAdminUserList() {
+            const tbody = document.getElementById('admin-user-list-body');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem;">Loading admins...</td></tr>';
+            
+            google.script.run.withSuccessHandler(res => {
+                tbody.innerHTML = '';
+                if (!res.success) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--danger); text-align:center;">Failed to load users.</td></tr>';
+                    return;
+                }
+                res.admins.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid var(--card-border)';
+                    tr.innerHTML = `
+                        <td style="padding: 1rem; font-weight:600;">${u.username}</td>
+                        <td style="padding: 1rem; font-family:monospace; opacity:0.6;">${u.password}</td>
+                        <td style="padding: 1rem;">
+                            <button class="btn danger" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;" onclick="deleteAdmin('${u.id}')">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }).fetchAdmins();
+        }
+
+        function addNewAdmin() {
+            const u = document.getElementById('new-admin-user').value.trim();
+            const p = document.getElementById('new-admin-pass').value.trim();
+            if (!u || !p) return Modal.alert("Error", "Please enter both username and password.");
+            
+            google.script.run.withSuccessHandler(res => {
+                if (res.success) {
+                    document.getElementById('new-admin-user').value = '';
+                    document.getElementById('new-admin-pass').value = '';
+                    renderAdminUserList();
+                } else {
+                    Modal.alert("Action Failed", res.message);
+                }
+            }).createAdmin(u, p);
+        }
+
+        function deleteAdmin(id) {
+            Modal.confirm("Delete Admin", "Are you sure you want to remove this user? They will lose access immediately.", (confirmed) => {
+                if (!confirmed) return;
+                google.script.run.withSuccessHandler(() => renderAdminUserList()).deleteAdmin(id);
+            });
         }
 
         showView('home');
