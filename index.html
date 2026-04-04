@@ -1643,13 +1643,25 @@
                         } catch (e) { if (this._f) this._f(e); return { success: false }; }
                     },
                     async fetchAppData() {
-                        const { data: a } = await supabaseClient.from('assessments').select('*'); const { data: p } = await supabaseClient.from('pages').select('*');
-                        const { data: f } = await supabaseClient.from('fields').select('*'); const { data: t } = await supabaseClient.from('teams').select('*');
+                        const { data: a } = await supabaseClient.from('assessments').select('*'); 
+                        const { data: p } = await supabaseClient.from('pages').select('*');
+                        const { data: f } = await supabaseClient.from('fields').select('*'); 
+                        const { data: t } = await supabaseClient.from('teams').select('*');
+                        const { data: s } = await supabaseClient.from('submissions').select('id, assessment_id, team_name');
+                        
                         const fm = {}; (f || []).forEach(r => { if (!fm[r.page_id]) fm[r.page_id] = []; fm[r.page_id].push({ id: r.id, top: r.top_percent, left: r.left_percent, width: r.width_percent, height: r.height_percent, name: r.field_name, type: r.type }); });
                         const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
                         const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
-                        const as = (a || []).map(r => { let pg = pm[r.id] || []; pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg }; }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                        const res = { success: true, assessments: as, teams: ts, availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
+                        
+                        const sm = {}; (s || []).forEach(r => { if (!sm[r.assessment_id]) sm[r.assessment_id] = 0; sm[r.assessment_id]++; });
+                        
+                        const as = (a || []).map(r => { 
+                            let pg = pm[r.id] || []; 
+                            pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: sm[r.id] || 0 }; 
+                        }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        
+                        const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
                         if (this._s) this._s(res); return res;
                     },
                     createAssessment(t) { return this._x(supabaseClient.from('assessments').insert([{ title: t, is_active: false, settings_json: { isTemplate: true } }]).select().single()); },
@@ -2225,6 +2237,11 @@
 
             const rawTeams = pickFirstDefined(payload, ['teams', 'Teams']) ?? pickFirstDefined(res, ['teams', 'Teams']);
             const rawRounds = pickFirstDefined(payload, ['availableRounds', 'rounds', 'AvailableRounds']) ?? pickFirstDefined(res, ['availableRounds', 'rounds', 'AvailableRounds']);
+            const rawSubmissions = pickFirstDefined(payload, ['submissions', 'Submissions']) ?? pickFirstDefined(res, ['submissions', 'Submissions']);
+
+            if (rawTeams) state.teams = rawTeams;
+            if (rawSubmissions) state.submissions = rawSubmissions;
+            if (rawRounds) state.availableRounds = rawRounds;
 
             if (rawAssessments !== undefined) {
                 const normalized = normalizeData(rawAssessments).filter(a => {
@@ -2717,6 +2734,21 @@
             }
 
             state.activeTeam = teamName;
+
+            // Check for double submission
+            if (assm && assm.settings) {
+                const allowMulti = assm.settings.allowMulti === true || assm.settings.allowMulti === 'true';
+                if (!allowMulti) {
+                    const hasSubmitted = state.submissions.some(s => s.assessment_id === assm.id && 
+                        (normalizeAnswerKey(s.team_name || '') === normalizeAnswerKey(teamName)));
+                    if (hasSubmitted) {
+                        document.getElementById('team-error').innerText = "Your team has already submitted this assessment.";
+                        document.getElementById('team-error').style.display = 'block';
+                        return;
+                    }
+                }
+            }
+
             launchPlayer();
         }
 
