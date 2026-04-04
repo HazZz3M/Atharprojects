@@ -1317,6 +1317,7 @@
                             <th style="padding: 1rem;">Team Name</th>
                             <th style="padding: 1rem;">Password</th>
                             <th style="padding: 1rem;">Round</th>
+                            <th style="padding: 1rem;">Submissions</th>
                             <th style="padding: 1rem; text-align: right;">Actions</th>
                         </tr>
                     </thead>
@@ -4373,15 +4374,30 @@
             const tbody = document.getElementById('team-list-body');
             tbody.innerHTML = '';
             document.getElementById('team-count').innerText = state.teams.length;
+            
+            const subsByTeam = {};
+            (state.submissions || []).forEach(s => {
+                const tKey = normalizeAnswerKey(s.team_name || s.team || '');
+                if (!subsByTeam[tKey]) subsByTeam[tKey] = [];
+                subsByTeam[tKey].push(s);
+            });
+
             state.teams.forEach(t => {
+                const tKey = normalizeAnswerKey(t.name);
+                const tSubs = subsByTeam[tKey] || [];
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid var(--card-border)';
                 tr.innerHTML = `
-                    <td style="padding: 0.8rem 1rem; font-weight:600; color:var(--accent);">${t.name}</td>
+                    <td style="padding: 0.8rem 1rem; font-weight:600; color:${tSubs.length > 0 ? 'var(--accent)' : 'var(--text-main)'};">${t.name}</td>
                     <td style="padding: 0.8rem 1rem;">${t.password}</td>
                     <td style="padding: 0.8rem 1rem;">${t.round || ''}</td>
+                    <td style="padding: 0.8rem 1rem; text-align:center;">
+                        <span class="badge" onclick="viewTeamSubmissions('${t.name.replace(/'/g, "\\'")}')" style="cursor:pointer; background:${tSubs.length > 0 ? 'rgba(255,215,0,0.1)' : 'transparent'}; border: 1px solid ${tSubs.length > 0 ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}; padding: 4px 10px; border-radius: 6px;">
+                            ${tSubs.length}
+                        </span>
+                    </td>
                     <td style="padding: 0.8rem 1rem; text-align:right;">
-                        <button class="btn info outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; min-width:auto;" onclick="extractResultsForTeam('${t.name}')">Extract Assessments</button>
+                        <button class="btn info outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; min-width:auto;" onclick="extractResultsForTeam('${t.name.replace(/'/g, "\\'")}')">Extract Assessments</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -4575,33 +4591,61 @@
         }
 
         async function renderPageToBlob(page, ans) {
-            const div = document.createElement('div');
-            div.style.position = 'fixed'; div.style.left = '-5000px'; div.style.top = '0';
-            div.style.width = '800px'; div.style.background = '#fff';
-            div.innerHTML = `
-                <div class="canvas-container" style="width:100%; position:relative; line-height:0;">
-                    <img src="${page.url}" style="width:100%; display:block;">
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-                </div>
-            `;
-            document.body.appendChild(div);
-            
-            const overlay = div.querySelector('div div');
-            (page.fields || []).forEach(f => {
-                const val = ans[f.id] || ans[f.name] || '';
-                const field = document.createElement('div');
-                field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
-                field.style.width = f.width + '%'; field.style.height = f.height + '%';
-                field.style.color = '#1e40af'; field.style.fontWeight = 'bold'; field.style.fontSize = '12px';
-                field.style.display = 'flex'; field.style.alignItems = 'center'; field.style.justifyContent = 'center';
-                field.style.textAlign = 'center'; field.innerText = val;
-                overlay.appendChild(field);
-            });
+            try {
+                const div = document.createElement('div');
+                div.style.position = 'fixed'; div.style.left = '-9999px'; div.style.width = '1000px'; 
+                div.style.background = '#fff'; div.className = 'canvas-container';
+                div.innerHTML = `<img src="${page.url}" style="width:100%; display:block;"><div style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>`;
+                document.body.appendChild(div);
+                
+                const overlay = div.querySelector('div div');
+                (page.fields || []).forEach(f => {
+                    const val = ans[f.id] || ans[f.name] || '';
+                    const field = document.createElement('div');
+                    field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
+                    field.style.width = f.width + '%'; field.style.height = f.height + '%';
+                    field.style.color = '#0000FF'; field.style.fontWeight = 'bold'; field.style.fontSize = '14px';
+                    field.style.display = 'flex'; field.style.alignItems = 'center'; field.style.justifyContent = 'center';
+                    field.style.textAlign = 'center'; field.innerText = val;
+                    overlay.appendChild(field);
+                });
 
-            await new Promise(r => setTimeout(r, 800)); // Increased for image loading
-            const canvas = await html2canvas(div, { useCORS: true, scale: 2 });
-            document.body.removeChild(div);
-            return new Promise(r => canvas.toBlob(r, 'image/png'));
+                await new Promise(r => setTimeout(r, 1200)); 
+                const canvas = await html2canvas(div, { useCORS: true, scale: 1, backgroundColor: null });
+                document.body.removeChild(div);
+                return new Promise(r => canvas.toBlob(r, 'image/png'));
+            } catch (e) {
+                console.error("Render error:", e);
+                return null;
+            }
+        }
+
+        function viewTeamSubmissions(teamName) {
+            const tKey = normalizeAnswerKey(teamName);
+            const subs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === tKey);
+            
+            let html = `<div style="text-align:left;">
+                <p style="margin-bottom:1rem; opacity:0.7;">History for <b>${teamName}</b></p>
+                <div style="max-height:300px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:8px; border:1px solid var(--card-border);">
+                    <table style="width:100%; border-collapse:collapse;">
+                         <tr style="border-bottom:1px solid var(--card-border); background:rgba(255,255,255,0.05);">
+                            <th style="padding:10px; font-size:0.8rem;">Assessment</th>
+                            <th style="padding:10px; font-size:0.8rem;">Submitted At</th>
+                         </tr>`;
+
+            if (subs.length === 0) {
+                html += `<tr><td colspan="2" style="padding:20px; text-align:center; opacity:0.5;">No submissions found.</td></tr>`;
+            } else {
+                subs.forEach(s => {
+                    const assm = state.assessments.find(a => String(a.id) === String(s.assessment_id));
+                    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:10px; font-size:0.85rem;">${assm ? assm.title : 'Unknown'}</td>
+                        <td style="padding:10px; font-size:0.8rem; opacity:0.6;">${new Date(s.created_at || Date.now()).toLocaleString()}</td>
+                    </tr>`;
+                });
+            }
+            html += `</table></div></div>`;
+            Modal.alert(`Team Activity: ${teamName}`, html);
         }
 
         showView('home');
