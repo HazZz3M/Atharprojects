@@ -1948,6 +1948,14 @@
             alert(title, text, cb) { this._show(title, text, 'alert', cb); },
             confirm(title, text, cb) { this._show(title, text, 'confirm', cb); },
             prompt(title, text, cb) { this._show(title, text, 'prompt', cb); },
+            showLoader(text = "Loading...") {
+                this._show("Please Wait", `<div class="loader" style="margin: 1rem auto;"></div><p>${text}</p>`, 'alert');
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'none';
+            },
+            hideLoader() {
+                this.close();
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'flex';
+            },
             close(confirmed) {
                 const overlay = document.getElementById('global-modal');
                 const input = overlay.querySelector('.modal-input');
