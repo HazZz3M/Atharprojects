@@ -1674,8 +1674,11 @@
                         
                         const as = (a || []).map(r => { 
                             let pg = pm[r.id] || []; 
-                    const count = sm[String(r.id).toLowerCase().trim()] || 0;
-                            return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: count }; 
+                            pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
+                            const count = sm[String(r.id).toLowerCase().trim()] || 0;
+                            // Safe settings parsing for accurate counter and permission checks
+                            const sets = parseSettingsObject(r.settings_json);
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
