@@ -3400,7 +3400,7 @@
             };
             if (typeof google !== 'undefined') {
                 google.script.run.withSuccessHandler(() => {
-                    fetchData(() => showView('admin-dashboard'));
+                    google.script.run.fetchData(() => showView('admin-dashboard'));
                 }).updateAssessmentSettings(id, settings);
             }
         }
