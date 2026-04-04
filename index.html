@@ -408,14 +408,20 @@
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             background: #000;
-            line-height: 0; /* Critical for zero-gap mobile layout */
+            line-height: 0; 
+            font-size: 0;
+            display: inline-block; /* Fuses container to image size precisely */
+            vertical-align: top;
         }
 
         .canvas-container img {
             display: block;
-            width: 100%;
-            height: auto;
+            width: 100% !important;
+            height: auto !important;
             pointer-events: none;
+            vertical-align: top;
+            margin: 0;
+            padding: 0;
         }
 
         /* The input text fix and styles */
@@ -1473,9 +1479,9 @@
                             style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
                         </div>
                         <img id="sub-image" src="" alt="Assessment Page"
-                            style="opacity: 0; transition: opacity 0.3s;" />
+                            style="width: 100%; height: auto; display: block; opacity: 1;" />
                         <div id="sub-fields"
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; margin: 0; padding: 0;">
                         </div>
                     </div>
 
@@ -2806,6 +2812,8 @@
                         input.style.left = f.left + '%';
                         input.style.width = f.width + '%';
                         input.style.height = f.height + '%';
+                        input.style.padding = '0'; // Essential for mobile precision
+                        input.style.margin = '0';
                         input.title = f.name || '';
                         input.checked = state.userAnswers[page.pageId][f.id] === 'true' || state.userAnswers[page.pageId][f.id] === true;
                         input.addEventListener('change', e => { state.userAnswers[page.pageId][f.id] = e.target.checked; });
