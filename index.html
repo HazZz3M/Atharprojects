@@ -2703,68 +2703,63 @@
         }
 
         function verifyTeamAuth() {
-            const teamName = document.getElementById('team-select').value;
-            if (!teamName) return alert("Please select a team.");
-
-            const match = state.teams.find(t => t.name === teamName);
-            if (match && match.password) {
-                const pass = document.getElementById('team-password').value;
-                if (pass !== match.password) {
-                    document.getElementById('team-error').innerText = "Incorrect team password.";
-                    document.getElementById('team-error').style.display = 'block';
+            try {
+                const teamName = document.getElementById('team-select').value;
+                if (!teamName) {
+                    Modal.alert("Action Required", "Please choose your team from the list.");
                     return;
                 }
-            }
 
-            const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
-            const memberName = document.getElementById('member-name').value.trim();
-            if (assm && assm.settings && assm.settings.allowMulti && !memberName) {
-                document.getElementById('team-error').innerText = "Please enter your name.";
-                document.getElementById('team-error').style.display = 'block';
-                return;
-            }
-            state.memberName = memberName;
+                const match = state.teams.find(t => t.name === teamName);
+                if (match && match.password) {
+                    const pass = document.getElementById('team-password').value;
+                    if (pass !== match.password) {
+                        const errEl = document.getElementById('team-error');
+                        errEl.innerText = "Incorrect team password.";
+                        errEl.style.display = 'block';
+                        return;
+                    }
+                }
 
-            // User has interacted, warm up the notification sound if needed
-            if (state.notificationSound) {
-                state.notificationSound.play().then(() => {
-                    state.notificationSound.pause();
-                    state.notificationSound.currentTime = 0;
-                }).catch(() => { });
-            }
+                const assmId = state.activeAssessmentId;
+                const assm = state.assessments.find(a => a.id === assmId);
+                const memberName = document.getElementById('member-name').value.trim();
 
-            state.activeTeam = teamName;
+                if (assm && assm.settings && assm.settings.allowMulti && !memberName) {
+                    const errEl = document.getElementById('team-error');
+                    errEl.innerText = "Please enter your name.";
+                    errEl.style.display = 'block';
+                    return;
+                }
+                state.memberName = memberName;
 
-            // Check for double submission
-            if (assm && assm.settings) {
-                const sets = assm.settings || {};
-                const allowMulti = sets.allowMulti === true || sets.allowMulti === 'true';
-                if (!allowMulti) {
-                    const subs = state.submissions || [];
+                // Secure Double Submission check
+                const subs = state.submissions || [];
+                const allowMulti = assm && assm.settings && (assm.settings.allowMulti === true || assm.settings.allowMulti === 'true');
+                
+                if (assm && !allowMulti) {
                     const hasSubmitted = subs.some(s => {
-                        const sId = String(s.assessment_id || '');
-                        const targetId = String(assm.id || '');
-                        if (sId !== targetId) return false;
-                        
+                        const tid = String(s.assessment_id || s.assessmentId || '');
+                        const target = String(assm.id || '');
+                        if (tid !== target) return false;
                         const sTeam = normalizeAnswerKey(s.team_name || s.team || '');
                         const tTeam = normalizeAnswerKey(teamName || '');
                         return sTeam === tTeam;
                     });
-
+                    
                     if (hasSubmitted) {
-                        const errEl = document.getElementById('team-error');
-                        if (errEl) {
-                            errEl.innerText = "Access Denied: Your team has already submitted this assessment.";
-                            errEl.style.display = 'block';
-                        } else {
-                            Modal.alert("Access Denied", "Your team has already finished this assessment.");
-                        }
+                        Modal.alert("Access Denied", "Your team has already finished this assessment. Multiple attempts are not allowed.");
                         return;
                     }
                 }
-            }
 
-            launchPlayer();
+                // Interaction complete, safe to proceed
+                state.activeTeam = teamName;
+                launchPlayer();
+            } catch (err) {
+                console.error("Login crash:", err);
+                Modal.alert("System Error", "Something went wrong during login: " + err.message);
+            }
         }
 
         function launchPlayer() {
