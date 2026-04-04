@@ -1279,6 +1279,9 @@
         </div>
         <div class="loader" id="dash-loader"></div>
         <div class="assessment-list" id="dash-assessment-list"></div>
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 2rem;">
+            Assessment Hub v3.1 - Security Locked & Synchronized
+        </div>
     </main>
 
     <!-- Admin Team Manager -->
@@ -2718,7 +2721,7 @@
             document.getElementById('team-password').style.display = (match && match.password) ? 'block' : 'none';
         }
 
-        function verifyTeamAuth() {
+        async function verifyTeamAuth() {
             try {
                 const teamName = document.getElementById('team-select').value;
                 if (!teamName) {
@@ -2739,6 +2742,13 @@
 
                 const assmId = state.activeAssessmentId;
                 const assm = state.assessments.find(a => a.id === assmId);
+                
+                // Final background sync check to prevent RLS race conditions
+                if (!state.submissions || state.submissions.length === 0) {
+                    await google.script.run.withSuccessHandler(res => {
+                        if (res && res.submissions) state.submissions = res.submissions;
+                    }).fetchAppData();
+                }
                 const memberName = document.getElementById('member-name').value.trim();
 
                 if (assm && assm.settings && assm.settings.allowMulti && !memberName) {
