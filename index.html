@@ -3246,20 +3246,28 @@
             const list = document.getElementById('dash-assessment-list');
             const isTempTab = state.adminTab === 'templates';
 
+            // Always ensure the latest submission counts are loaded when opening the dashboard
+            if (forceFetch || !state.submissions || state.submissions.length === 0) {
+                 fetchData(() => renderAdminDashboard(list, isTempTab, callback));
+            } else {
+                 renderAdminDashboard(list, isTempTab, callback);
+            }
+        }
+
+        function renderAdminDashboard(list, isTempTab, callback) {
             document.getElementById('admin-dash-title').innerText = isTempTab ? "Templates" : "Assessments";
             document.getElementById('btn-new-assessment').style.display = 'inline-flex';
             if (document.getElementById('view-admin-dashboard').classList.contains('active')) startAdminAutoSync();
-
+            
             // Highlight active tab
             document.getElementById('tab-btn-assm').style.background = isTempTab ? 'transparent' : 'var(--accent)';
             document.getElementById('tab-btn-assm').style.color = isTempTab ? 'var(--text-muted)' : '#000';
             document.getElementById('tab-btn-temp').style.background = isTempTab ? 'var(--accent)' : 'transparent';
             document.getElementById('tab-btn-temp').style.color = isTempTab ? '#000' : 'var(--text-muted)';
 
-            const render = () => {
-                document.getElementById('dash-loader').style.display = 'none';
-                list.innerHTML = '';
-                list.className = isTempTab ? 'dash-list' : 'admin-grid';
+            document.getElementById('dash-loader').style.display = 'none';
+            list.innerHTML = '';
+            list.className = isTempTab ? 'dash-list' : 'admin-grid';
 
                 // isTemplate is guaranteed boolean after normalizeData — use it directly
                 const filtered = state.assessments.filter(a => {
@@ -3330,17 +3338,6 @@
                     list.appendChild(el);
                 });
                 if (callback) callback();
-            };
-
-            if (state.assessments.length > 0 && !forceFetch) {
-                render();
-            } else {
-                if (!silent) {
-                    document.getElementById('dash-loader').style.display = 'block';
-                    list.innerHTML = ''; // CLEAR HERE to fix tab-switching glitch
-                }
-                fetchData(render);
-            }
         }
 
         function openSettings(id) {
