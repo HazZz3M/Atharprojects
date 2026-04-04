@@ -1,0 +1,4291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Premium Assessment Hub</title>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+    <style>
+        :root {
+            --bg-start: #0f172a;
+            --bg-end: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #ca8a04;
+            --accent-glow: rgba(202, 138, 4, 0.4);
+            --success: #22c55e;
+            --danger: #ef4444;
+            --student-color: #000000;
+            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Light Mode Variables */
+        [data-theme="light"] {
+            --bg-start: #f1f5f9;
+            --bg-end: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-border: rgba(148, 163, 184, 0.3);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #eab308;
+            --accent-glow: rgba(234, 179, 8, 0.2);
+            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        }
+
+
+        [dir="rtl"] {
+            font-family: 'Outfit', 'Cairo', 'Segoe UI Arabic', 'Tahoma', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -1px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-inline-end: 1.5rem;
+        }
+
+        .theme-btn,
+        .editor-box.checkbox-type {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .delete-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .theme-btn:hover,
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--accent);
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            width: 28px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 0;
+            inset-inline-end: -100%;
+            width: 300px;
+            height: 100vh;
+            background: var(--bg-end);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            padding: 100px 2rem;
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-inline-start: 1px solid var(--card-border);
+            z-index: 1000;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-links.open {
+            inset-inline-end: 0;
+        }
+
+        .nav-links a {
+            margin: 1.5rem 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-main);
+        }
+
+        .view-section {
+            display: none;
+            padding: 3rem 2rem;
+            flex-grow: 1;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--h1-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s var(--transition-smooth);
+            box-shadow: 0 8px 20px -8px var(--accent-glow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 25px -5px var(--accent-glow);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn.danger {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn.outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            box-shadow: none;
+        }
+
+        .btn.success {
+            background: #22c55e;
+            color: white;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 1.2rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s var(--transition-smooth);
+            color: var(--text-main);
+        }
+
+        [data-theme="light"] input[type="text"],
+        [data-theme="light"] input[type="password"],
+        [data-theme="light"] input[type="number"] {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        /* ---- Themed Dropdowns ---- */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--card-bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23facc15' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
+            background-size: 10px;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.5rem 2rem 0.5rem 0.8rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        [dir="rtl"] select {
+            background-position: left 0.8rem center;
+        }
+
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        select:hover {
+            border-color: rgba(250, 204, 21, 0.5);
+        }
+
+        select option {
+            background-color: var(--bg-end);
+            color: var(--text-main);
+            padding: 0.5rem;
+        }
+
+        select option:disabled {
+            color: var(--text-muted);
+        }
+
+        /* Assessment specific styles */
+        .assessment-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--card-border);
+            border-radius: 3px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite linear;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .canvas-container {
+            position: relative;
+            user-select: none;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: #000;
+        }
+
+        .canvas-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+
+        /* The input text fix and styles */
+        textarea.input-overlay {
+            position: absolute;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: var(--student-color);
+            font-weight: 700;
+            padding: 5px;
+            margin: 0;
+            box-shadow: none;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.3;
+            resize: none;
+            overflow-y: auto;
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+            -ms-overflow-style: none;
+            /* Hide scrollbar IE/Edge */
+        }
+
+        textarea.input-overlay::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar Chrome/Safari */
+        }
+
+        .input-overlay:focus {
+            outline: none;
+            background: rgba(250, 204, 21, 0.1);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-start);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* Checkbox styling on canvas */
+        .checkbox-overlay {
+            position: absolute;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 3px solid var(--student-color);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox-overlay:checked {
+            background: var(--student-color);
+        }
+
+        .checkbox-overlay:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .checkbox-overlay:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .editor-box {
+            position: absolute;
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px dashed var(--accent);
+            cursor: pointer;
+        }
+
+        .editor-box.temp {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid var(--success);
+        }
+
+        .editor-box .delete-btn {
+            position: absolute;
+            top: -10px;
+            inset-inline-end: -10px;
+            background: var(--danger);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .editor-box:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            inset-inline-end: 0;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            cursor: nwse-resize;
+            border-start-start-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #000;
+        }
+
+        .resize-handle::after {
+            content: "↘";
+            font-weight: bold;
+        }
+
+        [dir="rtl"] .resize-handle::after {
+            content: "↙";
+        }
+
+        .editor-box.moving {
+            border-style: solid;
+            opacity: 0.8;
+            z-index: 100 !important;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--card-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .page-list,
+        .assessment-list {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 2rem;
+        }
+
+        .assessment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .page-item,
+        .assessment-row {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            transition: transform 0.2s;
+        }
+
+        .page-item {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem;
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .page-item.dragging {
+            opacity: 0.55;
+            transform: scale(0.98);
+        }
+
+        .page-item.drop-target {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .timer-badge {
+            display: none;
+            background: var(--danger);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .page-badge {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            background: var(--card-bg);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+        }
+
+        .assessment-row {
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-item:hover,
+        .assessment-row:hover {
+            transform: translateY(-3px);
+        }
+
+        .page-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        /* Editor Layout with Sidebar */
+        .editor-container {
+            display: flex;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+
+        .editor-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar-thumb {
+            width: 100%;
+            aspect-ratio: 16/10;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-thumb:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .sidebar-thumb.active {
+            border-color: var(--accent);
+            border-width: 3px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .sidebar-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-thumb:hover img,
+        .sidebar-thumb.active img {
+            opacity: 1;
+        }
+
+        .sidebar-thumb .field-badge {
+            position: absolute;
+            bottom: 4px;
+            inset-inline-end: 4px;
+            background: var(--accent);
+            color: #000;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 0 6px;
+            border-radius: 10px;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            inset-inline-start: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .color-picker-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+        }
+
+        .color-picker-wrap input[type="color"] {
+            -webkit-appearance: none;
+            appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+
+        .color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-wrap input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+
+        /* Player Navigation Bar */
+        .player-nav-list {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 900px;
+            scrollbar-width: none;
+            justify-content: center;
+        }
+
+        .player-nav-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-dot {
+            min-width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .nav-dot.answered {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Custom Modal System */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: #111111;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 92%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            transform: scale(0.95);
+            animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalScaleUp {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .modal-text {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+            font-size: 1.05rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin: 1.5rem 0;
+            color: var(--text-main);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-buttons .btn {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        #live-notice {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(15, 23, 42, 0.98);
+            border: 2px solid #ef4444;
+            color: #fff;
+            padding: 1.1rem 1.6rem;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+            z-index: 10001;
+            display: none;
+            max-width: min(92vw, 700px);
+            text-align: center;
+            font-weight: 800;
+            line-height: 1.4;
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+        }
+
+        #live-notice.show {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            animation: pulse-red 2s infinite alternate;
+            pointer-events: auto;
+        }
+
+        @keyframes pulse-red {
+            from {
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+                border-color: #ef4444;
+            }
+
+            to {
+                box-shadow: 0 0 35px rgba(239, 68, 68, 0.9);
+                border-color: #fca5a5;
+            }
+        }
+
+        /* Admin Grid Layout */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .admin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: all 0.3s var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .admin-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-card .card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-card .card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: auto;
+            padding-top: 1.2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-card .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .assessment-row {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .assessment-row:hover {
+            border-color: var(--accent);
+            background: rgba(30, 41, 59, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="live-notice"></div>
+    <!-- Overlay for saving/loading states -->
+    <div id="save-overlay" class="loading-overlay" style="display:none; z-index:10000; background:rgba(0,0,0,0.7);">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="save-overlay-text" style="color:white; margin-top:1rem; font-weight:bold;">Saving Changes...</p>
+        </div>
+    </div>
+    <!-- Premium Global Modal -->
+    <div id="global-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Notice</div>
+            <div class="modal-text">Message goes here...</div>
+            <input type="text" class="modal-input" placeholder="Type here...">
+            <div class="modal-buttons">
+                <button id="modal-btn-cancel" class="btn outline" onclick="Modal.close(false)"
+                    data-i18n="cancel">Cancel</button>
+                <button id="modal-btn-ok" class="btn" onclick="Modal.close(true)" data-i18n="confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="logo" id="nav-home" onclick="showView('home')" style="cursor:pointer;" data-i18n="logo">Athar inc
+        </div>
+
+        <div class="nav-actions">
+            <button class="lang-btn" onclick="Language.toggle()">
+                <span id="lang-icon">AR</span>
+            </button>
+            <button class="theme-btn" onclick="Theme.toggle()">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="menu-links">
+            <a onclick="showView('admin-login'); toggleMenu();" id="nav-admin" data-i18n="admin_portal">Admin Portal</a>
+        </div>
+    </nav>
+
+    <!-- Student Home -->
+    <main id="view-home" class="view-section active">
+        <h1 data-i18n="available_assessments">Available Assessments</h1>
+        <p data-i18n="select_assessment">Select an assessment below to begin.</p>
+        <div class="loader" id="home-loader"></div>
+        <div class="assessment-list" id="home-assessment-list"></div>
+        <div id="home-message" style="margin-top: 2rem; font-size: 1.2rem; display:none;"></div>
+    </main>
+
+    <!-- Team Authentication -->
+    <main id="view-team-auth" class="view-section">
+        <div class="card">
+            <h1 data-i18n="team_portal">Team Portal</h1>
+            <p data-i18n="select_team">Select your team and enter your access password.</p>
+            <select id="team-select" onchange="toggleTeamPassField()"
+                style="width: 100%; padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; border-radius: 12px; font-size: 1.1rem;">
+                <option value="" disabled selected data-i18n="choose_team">-- Select Team --</option>
+            </select>
+            <input type="password" id="team-password" data-i18n="team_password" placeholder="Team Password"
+                style="display: none; margin-top: 0.5rem;">
+            <input type="text" id="member-name" data-i18n="your_name" placeholder="Your Name"
+                style="display: none; margin-top: 0.5rem;">
+            <button class="btn" onclick="verifyTeamAuth()" style="width: 100%; margin-top: 1rem;"
+                data-i18n="confirm_team">Confirm Team</button>
+            <button class="btn outline" onclick="showView('home')"
+                style="width: 100%; margin-top: 0.8rem; border-color: rgba(255,255,255,0.2); color: var(--text-muted);"
+                data-i18n="back_to_home">Back
+                to Home</button>
+            <div id="team-error" style="color: var(--danger); margin-top: 1rem; display:none;"></div>
+        </div>
+    </main>
+
+    <!-- Student Assessment Player -->
+    <main id="view-assessment" class="view-section">
+        <h2 id="player-title" style="margin-bottom: 1rem;"></h2>
+        <div class="assessment-wrapper" id="player-wrapper" style="display:none;">
+            <div class="player-header">
+                <div id="player-timer" class="timer-badge">00:00</div>
+                <div id="player-page-count" class="page-badge">Page 1 of 1</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div id="player-canvas" class="canvas-container" style="min-height: 400px; position: relative;">
+                <div id="player-img-loader" class="loader"
+                    style="position: absolute; top: 50%; left: 50%; margin: -20px 0 0 -20px; z-index: 10; display: block;">
+                </div>
+                <img id="player-image" src="" alt="Assessment Page" style="opacity: 0; transition: opacity 0.3s;">
+                <div id="player-fields"></div>
+            </div>
+
+            <div id="player-nav-list" class="player-nav-list"></div>
+
+            <div
+                style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem; justify-content: space-between; width: 100%; max-width: 900px;">
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <div class="color-picker-wrap">
+                        <label style="font-weight:600; font-size:0.9rem;" data-i18n="text_color">Text Color</label>
+                        <input type="color" id="font-color" value="#000000" onchange="updateColor()">
+                    </div>
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <button class="btn outline" id="btn-prev" onclick="prevPage()" data-i18n="prev_page">Back</button>
+                    <button class="btn" id="btn-next" onclick="nextPage()" data-i18n="next_page">Next Page</button>
+                </div>
+            </div>
+        </div>
+        <div id="player-message" style="margin-top: 2rem; font-size: 1.2rem; display:none;"></div>
+    </main>
+
+    <!-- Admin Login -->
+    <main id="view-admin-login" class="view-section">
+        <div class="card">
+            <h1 data-i18n="admin_portal">Admin Authentication</h1>
+            <input type="text" id="username" data-i18n="username" placeholder="Username" autocomplete="off">
+            <input type="password" id="password" data-i18n="password" placeholder="Password">
+            <button class="btn" onclick="attemptLogin()" style="width: 100%;" data-i18n="login">Sign In</button>
+            <div id="login-error" style="color: var(--danger); margin-top: 1rem; display:none;"></div>
+            <div class="loader" id="login-loader"></div>
+        </div>
+    </main>
+
+    <!-- Admin Dashboard (Assessments) -->
+    <main id="view-admin-dashboard" class="view-section">
+        <div
+            style="max-width: 800px; width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom:1rem;">
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <h1 id="admin-dash-title">Assessments</h1>
+                <div
+                    style="display:flex; background:rgba(255,255,255,0.05); padding:4px; border-radius:8px; border:1px solid var(--card-border);">
+                    <button id="tab-btn-assm" class="btn active" onclick="switchAdminTab('assessments')"
+                        style="padding:0.5rem 1rem; font-size:0.8rem; box-shadow:none; background:var(--accent);">Active</button>
+                    <button id="tab-btn-temp" class="btn outline" onclick="switchAdminTab('templates')"
+                        style="padding:0.5rem 1rem; font-size:0.8rem; border:none; color:var(--text-muted);">Templates</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <button class="btn outline" onclick="openTeamManager()" title="Bulk Manage Teams"
+                    style="border-color: var(--accent); color: var(--accent);">👥 Teams</button>
+                <button class="btn outline" onclick="loadAdminDashboard(true)"
+                    title="Sync latest data from Google Sheets">🔄
+                    Refresh</button>
+                <button class="btn outline" onclick="openSpreadsheet()"
+                    title="View raw responses and database records">📊
+                    Results</button>
+                <button id="btn-new-assessment" class="btn primary-btn" onclick="createNewAssessment()"
+                    title="Create a brand new assessment or template">+ New</button>
+            </div>
+        </div>
+        <div class="loader" id="dash-loader"></div>
+        <div class="assessment-list" id="dash-assessment-list"></div>
+    </main>
+
+    <!-- Admin Team Manager -->
+    <main id="view-admin-teams" class="view-section">
+        <div class="card" style="max-width: 800px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Bulk Team Manager</h2>
+                <button class="btn outline" onclick="showView('admin-dashboard')">Close</button>
+            </div>
+            <p>Upload a CSV file to bulk import teams. The CSV must have headers: <b>TeamName, Password, Round</b></p>
+
+            <div
+                style="display: flex; gap: 1rem; align-items: center; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--accent);">
+                <input type="file" id="team-csv-input" accept=".csv" style="display: none;"
+                    onchange="handleTeamCsvUpload(event)">
+                <button class="btn success" onclick="document.getElementById('team-csv-input').click()">Upload
+                    CSV</button>
+                <button class="btn outline" onclick="downloadTeamCsvTemplate()">Download Template</button>
+            </div>
+            <div class="loader" id="team-loader" style="margin-top: 1rem; display: none;"></div>
+
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Current Teams (<span id="team-count">0</span>)</h3>
+            <div
+                style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-start);">
+                        <tr style="border-bottom: 2px solid var(--card-border);">
+                            <th style="padding: 1rem;">Team Name</th>
+                            <th style="padding: 1rem;">Password</th>
+                            <th style="padding: 1rem;">Round</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-list-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn info outline" style="width: 100%; margin-top: 1rem;" onclick="exportTeamsCsv()">Export
+                All Teams</button>
+        </div>
+    </main>
+
+    <!-- Admin Assessment Settings -->
+    <main id="view-admin-settings" class="view-section">
+        <div class="card" style="max-width: 600px;">
+            <h2 id="settings-title" style="margin-bottom: 1.5rem;">Assessment Settings</h2>
+            <div
+                style="text-align: left; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Multi Submission -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700;">Allow Multiple Submissions</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Allow a team to submit more than
+                            once.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting-allow-multi">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Timer -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <div>
+                        <div style="font-weight: 700;">Assessment Timer</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Set a time limit (in minutes).</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="number" id="setting-timer-duration" value="30" min="1"
+                            style="width: 70px; margin-bottom:0; padding: 0.5rem; background: transparent; border: none; border-radius: 6px; color: var(--text-main);">
+                        <label class="switch">
+                            <input type="checkbox" id="setting-timer-enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Shuffle -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <div>
+                        <div style="font-weight: 700;">Shuffle Pages</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Randomize page order for every
+                            student.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting-shuffle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Template Toggle -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <div>
+                        <div style="font-weight: 700;">Mark as Template</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Templates are hidden from students
+                            and used for cloning.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting-is-template">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <!-- Assigned Round -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <div>
+                        <div style="font-weight: 700;">Assign to Round</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Only teams in this round will see
+                            this assessment.</div>
+                    </div>
+                    <select id="setting-round"
+                        style="width: 100px; padding: 0.5rem; background: transparent; border: none; border-radius: 6px; color: var(--text-main);">
+                        <option value="all">All Rounds</option>
+                    </select>
+                </div>
+                <div
+                    style="display:flex; flex-direction:column; gap:0.6rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <div style="font-weight: 700;">Submission Success Message</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Message shown to teams after they submit
+                        this assessment.</div>
+                    <textarea id="setting-submit-message"
+                        style="width:100%; min-height:90px; padding:0.8rem; margin:0; background:transparent; border:none; border-radius:10px; color:var(--text-main); resize:vertical;">Assessment Successfully Submitted! Thank you.</textarea>
+                    <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                        <div
+                            style="display:flex; align-items:center; gap:0.4rem; background:var(--card-bg); border:1px solid var(--card-border); border-radius:999px; padding:0.35rem 0.7rem;">
+                            <span style="font-size:0.8rem; color:var(--text-muted);">Color</span>
+                            <input type="color" id="setting-submit-color" value="#22c55e"
+                                style="width:26px; height:26px; border:none; background:none; padding:0; margin:0;">
+                        </div>
+                        <div
+                            style="display:flex; align-items:center; gap:0.4rem; background:var(--card-bg); border:1px solid var(--card-border); border-radius:999px; padding:0.35rem 0.7rem;">
+                            <span style="font-size:0.8rem; color:var(--text-muted);">Size</span>
+                            <input type="number" id="setting-submit-size" min="12" max="72" value="19"
+                                style="width:58px; margin:0; padding:0.25rem 0.45rem; background:transparent; border:none; border-radius:6px; color:var(--text-main);">px
+                        </div>
+                        <div
+                            style="display:flex; align-items:center; gap:0.4rem; background:var(--card-bg); border:1px solid var(--card-border); border-radius:999px; padding:0.35rem 0.7rem;">
+                            <span style="font-size:0.8rem; color:var(--text-muted);">Font</span>
+                            <select id="setting-submit-font" style="margin:0; padding:0.3rem 1.6rem 0.3rem 0.5rem;">
+                                <option value="'Outfit', sans-serif">Outfit</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button class="btn outline" onclick="showView('admin-dashboard')" style="flex:1;">Cancel</button>
+            <button class="btn" onclick="saveAssessmentSettings()" style="flex:1;">Save Settings</button>
+        </div>
+    </main>
+
+    <!-- Submissions Explorer -->
+    <main id="view-admin-submissions" class="view-section">
+        <div style="max-width: 1000px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <button class="btn outline" onclick="showView('admin-dashboard')">&#8592; Back</button>
+                    <h2 id="sub-explorer-title" style="margin:0;">Submissions</h2>
+                </div>
+                <div id="sub-count-badge"
+                    style="background:var(--card-border); padding:0.4rem 1rem; border-radius:999px; font-size:0.9rem; font-weight:700;">
+                    0 Teams</div>
+            </div>
+
+            <div id="sub-team-list" class="admin-grid" style="margin-bottom:3rem;">
+                <!-- List of teams -->
+            </div>
+
+            <div id="sub-viewer"
+                style="display:none; flex-direction:column; gap:2rem; background:rgba(15,23,42,0.8); padding:2rem; border-radius:24px; border:1px solid var(--card-border);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 id="sub-viewer-team" style="margin:0; color:var(--accent);">Team Alpha</h2>
+                        <div id="sub-viewer-time" style="font-size:0.85rem; color:var(--text-muted);">Submitted at...
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn info outline" id="sub-viewer-debug"
+                            style="padding:0.6rem; font-size:0.75rem;">JSON</button>
+                        <button class="btn outline danger"
+                            onclick="document.getElementById('sub-viewer').style.display='none';">Close Viewer</button>
+                    </div>
+                </div>
+
+                <div class="assessment-wrapper">
+                    <div id="sub-canvas-container" class="canvas-container"
+                        style="min-height: 400px; position: relative;">
+                        <div id="sub-img-loader" class="loader"
+                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
+                        </div>
+                        <img id="sub-image" src="" alt="Assessment Page"
+                            style="opacity: 0; transition: opacity 0.3s;" />
+                        <div id="sub-fields"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
+                        </div>
+                    </div>
+
+                    <div id="sub-pagination"
+                        style="display: flex; gap: 1rem; align-items: center; width: 100%; justify-content: space-between;">
+                        <button class="btn outline" onclick="prevSubPage()">Back</button>
+                        <div id="sub-page-counter" style="font-weight: 700; color: var(--accent);">Page 1 of 1</div>
+                        <button class="btn outline" onclick="nextSubPage()">Next</button>
+                    </div>
+
+                    <div id="sub-nav-dots" class="player-nav-list" style="margin-top:2rem;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Admin Manage Assessment Pages -->
+    <main id="view-admin-assessment" class="view-section">
+        <div style="max-width: 800px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display:flex; align-items: center; gap: 1rem;">
+                <button class="btn outline" onclick="showView('admin-dashboard')">&#8592; Back</button>
+                <h2 id="manage-title">Pages</h2>
+            </div>
+            <button class="btn" onclick="resetEditor(); showView('admin-editor')">+ Add Page</button>
+        </div>
+        <div class="page-list" id="manage-page-list"></div>
+    </main>
+
+    <!-- Admin Page Editor -->
+    <main id="view-admin-editor" class="view-section">
+        <div
+            style="max-width: 900px; width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <button class="btn outline" onclick="showView('admin-assessment')"
+                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">&#8592; Back to List</button>
+                <h2 style="margin:0;">Page Editor</h2>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn outline" id="btn-crop-page" onclick="startCrop()"
+                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem;">✂ Crop</button>
+                <button class="btn" id="btn-add-checkbox" onclick="createDirectCheckbox()"
+                    style="display:none; transition: all 0.3s; background: var(--success); color: white;">+ Add
+                    Checkbox</button>
+                <button class="btn" id="btn-save-page" onclick="savePage()"
+                    style="display:none; transition: all 0.3s;">Save Layout</button>
+            </div>
+        </div>
+
+        <div class="card" id="upload-card">
+            <h3>Batch Template Upload</h3>
+            <p>Select one or more images to add as pages to this assessment.</p>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none;"
+                onchange="handleImageSelect(event)">
+            <button class="btn" onclick="document.getElementById('file-input').click()">Browse Images</button>
+            <div id="upload-progress-text"
+                style="margin-top:1rem; font-weight:bold; color:var(--accent); display:none;"></div>
+            <div class="loader" id="upload-loader"></div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-sidebar" id="editor-sidebar" style="display:none;">
+                <div
+                    style="font-size: 0.8rem; font-weight:bold; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">
+                    Pages</div>
+                <div id="editor-sidebar-list" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+            </div>
+
+            <div style="flex:1;">
+                <div style="width:100%; text-align:center; color: var(--text-muted); margin-bottom: 1rem; display:none;"
+                    id="editor-instructions">
+                    Drag mouse over the image to create text input boxes.
+                </div>
+
+                <div id="editor-canvas" class="canvas-container"
+                    style="display:none; overflow: visible; min-height: 400px; position: relative;">
+                    <div id="editor-img-loader" class="loader"
+                        style="position: absolute; top: 50%; left: 50%; margin: -20px 0 0 -20px; z-index: 10; display: block;">
+                    </div>
+                    <div id="crop-overlay"
+                        style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index: 10;">
+                        <div id="crop-box"
+                            style="position:absolute; border:2px dashed var(--accent); cursor:move; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);">
+                            <div id="crop-resize-handle"
+                                style="position:absolute; right:-5px; bottom:-5px; width:10px; height:10px; background:var(--accent); cursor:nwse-resize;">
+                            </div>
+                        </div>
+                    </div>
+                    <img id="editor-image" src="" onload="this.parentElement.classList.remove('skeleton')"
+                        style="opacity: 0; transition: opacity 0.3s;">
+                    <div id="editor-layer"></div>
+                </div>
+                <div id="crop-controls" style="display:none; margin-top:1rem; gap:1rem; justify-content:center;">
+                    <button class="btn success" onclick="applyCrop()">Apply Crop</button>
+                    <button class="btn outline" onclick="cancelCrop()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://yhtcpqmfpgiflyajygik.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_48nK34EP9ZQoYoMP4Eczyg_TFMZRHFg';
+        
+        // Safe Initialization
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.error("Supabase fail:", e);
+        }
+
+        window.google = {
+            script: {
+                run: {
+                    _s: null, _f: null,
+                    withSuccessHandler(h) { this._s = h; return this; },
+                    withFailureHandler(h) { this._f = h; return this; },
+                    async _x(p) {
+                        try {
+                            const { data, error } = await p;
+                            if (error) { if (this._f) this._f(error); return { success: false }; }
+                            const r = data || { success: true };
+                            if (r && r.id) { r.assessmentId = r.id; r.pageId = r.id; r.newId = r.id; }
+                            if (this._s) this._s(r); return r;
+                        } catch (e) { if (this._f) this._f(e); return { success: false }; }
+                    },
+                    async fetchAppData() {
+                        const { data: a } = await supabaseClient.from('assessments').select('*'); const { data: p } = await supabaseClient.from('pages').select('*');
+                        const { data: f } = await supabaseClient.from('fields').select('*'); const { data: t } = await supabaseClient.from('teams').select('*');
+                        const fm = {}; (f || []).forEach(r => { if (!fm[r.page_id]) fm[r.page_id] = []; fm[r.page_id].push({ id: r.id, top: r.top_percent, left: r.left_percent, width: r.width_percent, height: r.height_percent, name: r.field_name, type: r.type }); });
+                        const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
+                        const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
+                        const as = (a || []).map(r => { let pg = pm[r.id] || []; pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg }; }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        const res = { success: true, assessments: as, teams: ts, availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
+                        if (this._s) this._s(res); return res;
+                    },
+                    createAssessment(t) { return this._x(supabaseClient.from('assessments').insert([{ title: t, is_active: false, settings_json: { isTemplate: true } }]).select().single()); },
+                    toggleAssessment(id, st) { return this._x(supabaseClient.from('assessments').update({ is_active: st }).eq('id', id)); },
+                    deleteAssessment(id) { return this._x(supabaseClient.from('assessments').delete().eq('id', id)); },
+                    renameAssessment(id, t) { return this._x(supabaseClient.from('assessments').update({ title: t }).eq('id', id)); },
+                    updateAssessmentSettings(id, s) { return this._x(supabaseClient.from('assessments').update({ settings_json: s }).eq('id', id)); },
+                    deletePage(id) { return this._x(supabaseClient.from('pages').delete().eq('id', id)); },
+                    async saveFields(id, f) {
+                        await supabaseClient.from('fields').delete().eq('page_id', id);
+                        if (f && f.length > 0) await supabaseClient.from('fields').insert(f.map(x => ({ page_id: id, field_name: x.name, top_percent: x.top, left_percent: x.left, width_percent: x.width, height_percent: x.height, type: x.type })));
+                        if (this._s) this._s({ success: true, pageId: id });
+                    },
+                    async fetchSubmissionData(aid) {
+                        const { data } = await supabaseClient.from('submissions').select('*').eq('assessment_id', aid).order('created_at', { ascending: false });
+                        const r = { success: true, submissions: (data || []).map(d => ({ id: d.id, team: d.team_name, timestamp: d.created_at, answers: d.answers_data, folderLink: d.folder_link })) };
+                        if (this._s) this._s(r); return r;
+                    },
+                    async duplicateAssessment(id) {
+                        const { data: a } = await supabaseClient.from('assessments').select('*').eq('id', id).single();
+                        const { data: n } = await supabaseClient.from('assessments').insert([{ title: a.title + ' (Copy)', is_active: false, settings_json: a.settings_json }]).select().single();
+                        const { data: ps } = await supabaseClient.from('pages').select('*').eq('assessment_id', id);
+                        for (let p of ps) {
+                            const { data: np } = await supabaseClient.from('pages').insert([{ assessment_id: n.id, image_url: p.image_url }]).select().single();
+                            const { data: fs } = await supabaseClient.from('fields').select('*').eq('page_id', p.id);
+                            if (fs && fs.length > 0) await supabaseClient.from('fields').insert(fs.map(x => ({ page_id: np.id, field_name: x.field_name, top_percent: x.top_percent, left_percent: x.left_percent, width_percent: x.width_percent, height_percent: x.height_percent, type: x.type })));
+                        }
+                        if (this._s) this._s({ success: true, newId: n.id });
+                    },
+                    async uploadImageAndCreatePage(fd, fn, aid) {
+                        const res = await fetch(fd); const b = await res.blob(); const fp = aid + '/' + Date.now() + '_' + fn;
+                        await supabaseClient.storage.from('assessment_images').upload(fp, b, { contentType: 'image/png' });
+                        const { data: ud } = supabaseClient.storage.from('assessment_images').getPublicUrl(fp);
+                        const { data: pd } = await supabaseClient.from('pages').insert([{ assessment_id: aid, image_url: ud.publicUrl }]).select().single();
+                        if (this._s) this._s({ success: true, pageId: pd.id, url: ud.publicUrl });
+                    },
+                    async bulkImportTeams(csv) {
+                        const r = csv.split('\n').filter(l => l.trim()).map(x => x.split(','));
+                        let count = 0;
+                        for (let i = 1; i < r.length; i++) { if (r[i][0] && r[i][1]) { await supabaseClient.from('teams').insert([{ team_name: r[i][0].trim(), password: r[i][1].trim(), round: r[i][2] || '1' }]); count++; } }
+                        if (this._s) this._s({ success: true, imported: count });
+                    },
+                    getSpreadsheetUrl() { if (this._s) this._s("https://supabase.com/dashboard/project/yhtcpqmfpgiflyajygik"); },
+                    saveExportImage() { if (this._s) this._s({ success: true, fileId: 'dummy_' + Date.now(), folderUrl: '#', folderId: 'root' }); },
+                    groupImagesInDoc() { if (this._s) this._s({ success: true }); },
+                    updateSubmissionFolderLink(aid, sid, url) { return this._x(supabaseClient.from('submissions').update({ folder_link: url }).eq('id', sid)); }
+                }
+            }
+        };
+        // Language Utility
+        const Language = {
+            current: 'en',
+            translations: {
+                en: {
+                    logo: "Athar inc",
+                    admin_portal: "Admin Portal",
+                    available_assessments: "Available Assessments",
+                    select_assessment: "Select an assessment below to begin.",
+                    no_assessments: "No assessments available right now.",
+                    begin: "Begin",
+                    team_portal: "Team Portal",
+                    select_team: "Select your team and enter your access password.",
+                    choose_team: "-- Select Team --",
+                    team_password: "Team Password",
+                    your_name: "Your Name",
+                    confirm_team: "Confirm Team",
+                    back_to_home: "Back to Home",
+                    page_x_of_y: "Page {x} of {y}",
+                    text_color: "Text Color",
+                    next_page: "Next Page",
+                    prev_page: "Previous",
+                    submit: "Submit",
+                    loading: "Loading...",
+                    notice: "Notice",
+                    cancel: "Cancel",
+                    confirm: "Confirm",
+                    admin_login: "Admin Login",
+                    username: "Username",
+                    password: "Password",
+                    login: "Login",
+                    logout: "Logout",
+                    confirm_submit_msg: "Are you sure you want to submit your assessment? You won't be able to change your answers after this.",
+                    submitting: "Submitting...",
+                    error: "Error",
+                    success: "Success",
+                    sent: "Sent",
+                    export_error: "Export Error",
+                    no_pages: "No pages found for this assessment.",
+                    not_available: "Not Available",
+                    export_success: "Export Success",
+                    new_assessment: "New Assessment",
+                    delete_assessment: "Delete Assessment",
+                    rename_assessment: "Rename Assessment",
+                    duplicate_assessment: "Duplicate Assessment",
+                    delete_page: "Delete Page",
+                    field_label: "Field Label",
+                    field_type: "Field Type",
+                    rename_field: "Rename Field",
+                    are_you_sure: "Are you sure?",
+                },
+                ar: {
+                    logo: "مسرعة أعمال أثر",
+                    admin_portal: "خاص بفريق التنظيم",
+                    available_assessments: "التدريبات المتاحة",
+                    select_assessment: "اختر تدريباً للبدء.",
+                    no_assessments: "لا توجد تقييمات متاحة حالياً.",
+                    begin: "ابدأ",
+                    team_portal: "الفريق",
+                    select_team: "اختر فريقك وأدخل كلمة المرور.",
+                    choose_team: "-- اختر الفريق --",
+                    team_password: "كلمة مرور الفريق",
+                    your_name: "اسمك",
+                    confirm_team: "تأكيد الفريق",
+                    back_to_home: "العودة للصفحة الرئيسية",
+                    page_x_of_y: "صفحة {x} من {y}",
+                    point: "نقطة",
+                    points: "نقاط",
+                    text_color: "لون الخط",
+                    next_page: "الصفحة التالية",
+                    prev_page: "السابق",
+                    submit: "إرسال",
+                    loading: "جاري التحميل...",
+                    notice: "تنبيه",
+                    cancel: "إلغاء",
+                    confirm: "تأكيد",
+                    admin_login: "تسجيل دخول فريق التنظيم",
+                    username: "اسم المستخدم",
+                    password: "كلمة المرور",
+                    login: "دخول",
+                    logout: "خروج",
+                    confirm_submit_msg: "هل أنت متأكد من الإرسال ؟ لن تتمكن من تغيير إجاباتك بعد ذلك.",
+                    submitting: "جاري الإرسال...",
+                    error: "خطأ",
+                    success: "تم بنجاح",
+                    sent: "تم الإرسال",
+                    export_error: "خطأ في التصدير",
+                    no_pages: "لا توجد صفحات لهذا التقييم.",
+                    not_available: "غير متاح",
+                    export_success: "تم التصدير بنجاح",
+                    new_assessment: "تقييم جديد",
+                    delete_assessment: "حذف التقييم",
+                    rename_assessment: "إعادة تسمية التقييم",
+                    duplicate_assessment: "تكرار التقييم",
+                    delete_page: "حذف الصفحة",
+                    field_label: "تسمية الحقل",
+                    field_type: "نوع الحقل",
+                    rename_field: "إعادة تسمية الحقل",
+                    are_you_sure: "هل أنت متأكد؟",
+                }
+            },
+            init() {
+                this.updateDOM();
+            },
+            toggle() {
+                this.current = this.current === 'en' ? 'ar' : 'en';
+                localStorage.setItem('app-lang', this.current);
+                this.updateDOM();
+            },
+            updateDOM() {
+                const isRtl = this.current === 'ar';
+                document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+                document.documentElement.lang = this.current;
+                document.getElementById('lang-icon').innerText = isRtl ? 'EN' : 'AR';
+
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (this.translations[this.current][key]) {
+                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                            el.placeholder = this.translations[this.current][key];
+                        } else {
+                            el.innerText = this.translations[this.current][key];
+                        }
+                    }
+                });
+            },
+            get(key, replacements = {}) {
+                let text = this.translations[this.current][key] || key;
+                Object.keys(replacements).forEach(k => {
+                    text = text.replace(`{${k}}`, replacements[k]);
+                });
+                return text;
+            }
+        };
+
+        // Theme Utility
+        const Theme = {
+            current: localStorage.getItem('app-theme') || 'dark',
+            init() {
+                document.documentElement.setAttribute('data-theme', this.current);
+                this.updateIcon();
+            },
+            toggle() {
+                this.current = this.current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('app-theme', this.current);
+                document.documentElement.setAttribute('data-theme', this.current);
+                this.updateIcon();
+            },
+            updateIcon() {
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.innerText = this.current === 'dark' ? '☀️' : '🌙';
+            }
+        };
+
+        // Initialize utilities
+        Language.init();
+        Theme.init();
+
+        // Professional Modal Utility
+        const Modal = {
+            activeCallback: null,
+            _show(title, text, type = 'alert', callback = null) {
+                const overlay = document.getElementById('global-modal');
+                const content = overlay.querySelector('.modal-content');
+                overlay.querySelector('.modal-title').innerText = title;
+                overlay.querySelector('.modal-text').innerText = text;
+
+                const input = overlay.querySelector('.modal-input');
+                const btnCancel = overlay.querySelector('#modal-btn-cancel');
+
+                input.style.display = (type === 'prompt') ? 'block' : 'none';
+                btnCancel.style.display = (type === 'alert') ? 'none' : 'block';
+
+                input.value = '';
+                overlay.style.display = 'flex';
+                this.activeCallback = callback;
+
+                if (type === 'prompt') setTimeout(() => input.focus(), 100);
+            },
+            alert(title, text, cb) { this._show(title, text, 'alert', cb); },
+            confirm(title, text, cb) { this._show(title, text, 'confirm', cb); },
+            prompt(title, text, cb) { this._show(title, text, 'prompt', cb); },
+            close(confirmed) {
+                const overlay = document.getElementById('global-modal');
+                const input = overlay.querySelector('.modal-input');
+                const val = input.value;
+                overlay.style.display = 'none';
+                if (this.activeCallback) {
+                    if (input.style.display !== 'none') {
+                        this.activeCallback(confirmed ? val : null);
+                    } else {
+                        this.activeCallback(confirmed);
+                    }
+                }
+                this.activeCallback = null;
+            }
+        };
+
+        // State
+        const state = {
+            assessments: [],
+            teams: [],
+            activeTeam: null,
+            _pendingAssessments: [], // Optimistic entries awaiting backend confirmation
+            // Student Player state
+            activeAssessmentId: null,
+            currentPageIndex: 0,
+            submissionId: null,
+            userAnswers: {},
+            activePages: [],
+            timeLeft: 0,
+            timerInterval: null,
+
+            // Admin state
+            isAdmin: false,
+            adminTab: 'assessments',
+            adminSyncInterval: 30000, // Sync every 30 seconds instead of potential flood
+            manageDragPageId: null,
+            liveNoticePollInterval: 15000, // Poll every 15 seconds
+            lastLiveNoticeId: null,
+            lastLiveNoticeSignature: null,
+            liveNoticeHideTimer: null,
+            liveNoticeSeq: 0,
+            availableRounds: [],
+            manageAssessmentId: null,
+            editorPageId: null,
+            editorFields: [],
+
+            // Interaction state
+            drawing: false,
+            dragIndex: -1,
+            isResizing: false,
+            isEditing: false,
+            startX: 0, startY: 0,
+            origL: 0, origT: 0, origW: 0, origH: 0,
+
+            // Audio
+            notificationSound: new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg')
+        };
+
+        function updateColor() {
+            document.documentElement.style.setProperty('--student-color', document.getElementById('font-color').value);
+        }
+
+        function toBool(value) {
+            if (typeof value === 'boolean') return value;
+            if (typeof value === 'number') return value === 1;
+            if (typeof value === 'string') {
+                const v = value.trim().toLowerCase();
+                return v === 'true' || v === '1' || v === 'yes';
+            }
+            return false;
+        }
+
+        function normalizeAnswerKey(str) {
+            if (!str) return '';
+            return str.toString().trim().toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/gi, '');
+        }
+
+        function parseJSONValue(value, fallback) {
+            if (typeof value !== 'string') return value ?? fallback;
+            const text = value.trim();
+            if (!text) return fallback;
+            try {
+                const parsed = JSON.parse(text);
+                if (typeof parsed === 'string') {
+                    const nestedText = parsed.trim();
+                    if ((nestedText.startsWith('{') && nestedText.endsWith('}')) || (nestedText.startsWith('[') && nestedText.endsWith(']'))) {
+                        try { return JSON.parse(nestedText); } catch (e) { }
+                    }
+                }
+                return parsed;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function parseSettingsObject(rawSettings) {
+            const parsed = parseJSONValue(rawSettings, {});
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+            return parsed;
+        }
+
+        function parsePagesArray(rawPages) {
+            const parsed = parseJSONValue(rawPages, []);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && typeof parsed === 'object' && Array.isArray(parsed.pages)) return parsed.pages;
+            return [];
+        }
+
+        function applyPageOrder(pages, settings) {
+            const list = Array.isArray(pages) ? [...pages] : [];
+            const orderIds = settings && Array.isArray(settings.pageOrder) ? settings.pageOrder.map(x => String(x)) : [];
+            if (!orderIds.length) return list;
+            const rank = new Map(orderIds.map((id, idx) => [id, idx]));
+            return list.sort((a, b) => {
+                const ar = rank.has(String(a.pageId)) ? rank.get(String(a.pageId)) : Number.MAX_SAFE_INTEGER;
+                const br = rank.has(String(b.pageId)) ? rank.get(String(b.pageId)) : Number.MAX_SAFE_INTEGER;
+                if (ar !== br) return ar - br;
+                return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
+            });
+        }
+
+        function normalizeData(assessments) {
+            const list = Array.isArray(assessments)
+                ? assessments
+                : (assessments && typeof assessments === 'object' ? Object.values(assessments) : []);
+            return list.map((row, idx) => {
+                const a = (row && typeof row === 'object') ? { ...row } : { id: 'invalid_' + idx, title: 'Untitled' };
+
+                const rawActive = a.isActive ?? a.IsActive ?? a.active ?? a.Active;
+                a.isActive = toBool(rawActive);
+
+                const rawSettings =
+                    a.settings ?? a.settingsJSON ?? a.SettingsJSON ?? a.settingsJson ??
+                    a.settings_json ?? a.Settings ?? a.setting ?? a.settingJSON ?? a.settingJson ?? null;
+                a.settings = parseSettingsObject(rawSettings);
+
+                const rawTpl = a.settings.isTemplate ?? a.isTemplate ?? a.IsTemplate;
+                a.settings.isTemplate = toBool(rawTpl);
+                if (typeof a.settings.submitMessage !== 'string' || !a.settings.submitMessage.trim()) {
+                    a.settings.submitMessage = "Assessment Successfully Submitted! Thank you.";
+                }
+                const styleObj = (a.settings.submitMessageStyle && typeof a.settings.submitMessageStyle === 'object') ? a.settings.submitMessageStyle : {};
+                a.settings.submitMessageStyle = {
+                    color: (typeof styleObj.color === 'string' && styleObj.color.trim()) ? styleObj.color : '#22c55e',
+                    fontSize: Number(styleObj.fontSize) > 0 ? Number(styleObj.fontSize) : 19,
+                    fontFamily: (typeof styleObj.fontFamily === 'string' && styleObj.fontFamily.trim()) ? styleObj.fontFamily : "'Outfit', sans-serif"
+                };
+                const liveObj = (a.settings.liveNotice && typeof a.settings.liveNotice === 'object') ? a.settings.liveNotice : {};
+                a.settings.liveNotice = {
+                    id: liveObj.id ? String(liveObj.id) : '',
+                    assessmentId: liveObj.assessmentId ? String(liveObj.assessmentId) : String(a.id || ''),
+                    message: liveObj.message ? String(liveObj.message) : '',
+                    durationSec: Math.max(1, Math.min(120, parseInt(liveObj.durationSec) || 8)),
+                    createdAt: liveObj.createdAt ? String(liveObj.createdAt) : ''
+                };
+                a.settings.liveNoticeDefaultDuration = Math.max(1, Math.min(120, parseInt(a.settings.liveNoticeDefaultDuration) || 8));
+
+                const rawPages = a.pages ?? a.Pages ?? a.pagesJSON ?? a.PagesJSON ?? a.pagesJson ?? a.pages_json ?? [];
+                a.pages = applyPageOrder(parsePagesArray(rawPages), a.settings);
+                const rawCount = a.submissionCount ?? a.SubmissionCount ?? a.submissions ?? a.Submissions ?? 0;
+                a.submissionCount = Number(rawCount) || 0;
+
+                return a;
+            });
+        }
+
+        function pickFirstDefined(obj, keys) {
+            if (!obj || typeof obj !== 'object') return undefined;
+            for (const key of keys) {
+                if (Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined) {
+                    return obj[key];
+                }
+            }
+            return undefined;
+        }
+
+        async function loadBase64(fileId) {
+            return new Promise((resolve, reject) => {
+                if (!fileId) return resolve(null);
+                google.script.run
+                    .withSuccessHandler(res => resolve(res.success ? res.base64 : null))
+                    .withFailureHandler(() => resolve(null))
+                    .getBase64Image(fileId);
+            });
+        }
+
+        function renderPageOnCanvas(bgBase64, page, rawAnswers) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const baseW = 1600;
+                    const scale = baseW / img.naturalWidth;
+                    canvas.width = baseW;
+                    canvas.height = img.naturalHeight * scale;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
+
+                    const nestedAnswers = rawAnswers[page.pageId] || rawAnswers; // Handle both nested and flat answers
+                    page.fields.forEach(f => {
+                        let val = null;
+                        if (nestedAnswers && typeof nestedAnswers === 'object') {
+                            val = (nestedAnswers[f.id] !== undefined) ? nestedAnswers[f.id] : nestedAnswers[f.name];
+                        } else {
+                            val = (rawAnswers[f.id] !== undefined) ? rawAnswers[f.id] : rawAnswers[f.name];
+                        }
+
+                        if (val === undefined || val === null || val === "") return;
+
+                        const x = (f.left / 100) * canvas.width;
+                        const y = (f.top / 100) * canvas.height;
+                        const w = (f.width / 100) * canvas.width;
+                        const h = (f.height / 100) * canvas.height;
+
+                        const fontSize = Math.max(12, Math.min(50, Math.round(h * 0.35)));
+                        ctx.font = `bold ${fontSize}px Arial`;
+                        ctx.fillStyle = getComputedStyle(document.documentElement)
+                            .getPropertyValue('--student-color').trim() || '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        const words = val.toString().split(/\s+/);
+                        let line = '', lines = [];
+                        for (const word of words) {
+                            const test = line ? line + ' ' + word : word;
+                            if (ctx.measureText(test).width > w - 10 && line) {
+                                lines.push(line); line = word;
+                            } else { line = test; }
+                        }
+                        if (line) lines.push(line);
+
+                        const lineH = fontSize * 1.2;
+                        const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
+
+                        if (f.type === 'checkbox') {
+                            if (val === 'true' || val === true) {
+                                ctx.font = `bold ${fontSize * 1.5}px Arial`;
+                                ctx.fillText('✓', x + w / 2, y + h / 2, w - 10);
+                            }
+                        } else {
+                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH, w - 10));
+                        }
+                    });
+
+                    resolve(canvas.toDataURL('image/jpeg', 0.92));
+                };
+                img.onerror = () => resolve(null);
+                img.src = bgBase64;
+            });
+        }
+
+        async function generateSubmissionExport(sid, aid, userAnswers, teamName, assm, preloadedImages = null) {
+            const pageImages = preloadedImages || {};
+            if (!preloadedImages) {
+                for (const page of assm.pages) {
+                    pageImages[page.pageId] = page.fileId ? await loadBase64(page.fileId) : null;
+                }
+            }
+
+            let folderUrl = '';
+            let lastFolderId = null;
+            let imageIds = [];
+            for (let i = 0; i < assm.pages.length; i++) {
+                const page = assm.pages[i];
+                const bgBase64 = pageImages[page.pageId];
+                if (!bgBase64) continue;
+
+                const dataUrl = await renderPageOnCanvas(bgBase64, page, userAnswers);
+                if (dataUrl) {
+                    const fileName = `${teamName}_P${i + 1}.jpg`;
+                    const res = await new Promise(r =>
+                        google.script.run
+                            .withSuccessHandler(r)
+                            .saveExportImage(dataUrl, fileName, aid, teamName)
+                    );
+                    if (res && res.fileId) imageIds.push(res.fileId);
+                    if (res && res.folderUrl) folderUrl = res.folderUrl;
+                    if (res && res.folderId) lastFolderId = res.folderId;
+                }
+            }
+
+            if (imageIds.length > 0) {
+                await new Promise(r =>
+                    google.script.run
+                        .withSuccessHandler(r)
+                        .groupImagesInDoc(`${teamName} - ${assm.title}`, imageIds, lastFolderId)
+                );
+            }
+
+            if (folderUrl) {
+                await new Promise(r =>
+                    google.script.run
+                        .withSuccessHandler(r)
+                        .updateSubmissionFolderLink(aid, sid, folderUrl)
+                );
+            }
+            return folderUrl;
+        }
+
+        function applyFetchedState(res) {
+            if (!res || res.success === false) return;
+
+            // Handle various levels of nesting from API
+            const payload = (res.data && typeof res.data === 'object' && !Array.isArray(res.data)) ? res.data : res;
+
+            let rawAssessments = pickFirstDefined(payload, ['assessments', 'Assessments', 'assessmentList', 'items', 'rows']);
+
+            // If data is directly an array, assume it's the assessment list
+            if (rawAssessments === undefined && Array.isArray(payload)) {
+                rawAssessments = payload;
+            } else if (rawAssessments === undefined && res.data && Array.isArray(res.data)) {
+                rawAssessments = res.data;
+            }
+
+            const rawTeams = pickFirstDefined(payload, ['teams', 'Teams']) ?? pickFirstDefined(res, ['teams', 'Teams']);
+            const rawRounds = pickFirstDefined(payload, ['availableRounds', 'rounds', 'AvailableRounds']) ?? pickFirstDefined(res, ['availableRounds', 'rounds', 'AvailableRounds']);
+
+            if (rawAssessments !== undefined) {
+                const normalized = normalizeData(rawAssessments).filter(a => {
+                    return a && typeof a === 'object' && hasIdOrTitle(a);
+                });
+                state.assessments = normalized;
+            }
+
+            if (Array.isArray(rawTeams)) state.teams = rawTeams;
+            if (Array.isArray(rawRounds)) state.availableRounds = rawRounds;
+
+            // Reconcile pending assessments
+            state._pendingAssessments = state._pendingAssessments.filter(p => {
+                const inBackend = state.assessments.some(a =>
+                    (a.id && p.id && String(a.id) === String(p.id)) ||
+                    (a.title && p.title && String(a.title).trim().toLowerCase() === String(p.title).trim().toLowerCase())
+                );
+                if (!inBackend) {
+                    // Prepend non-confirmed ones to stay on top
+                    state.assessments.unshift(p);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function hasIdOrTitle(a) {
+            const id = String(a.id || '').trim();
+            const title = String(a.title || '').trim();
+            return (id !== '' && !id.startsWith('invalid_')) || title !== '';
+        }
+
+        // Router
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            if (viewId !== 'admin-dashboard') stopAdminAutoSync();
+            if (viewId !== 'assessment') stopLiveNoticePolling();
+
+            if (viewId === 'home') {
+                const navHome = document.getElementById('nav-home');
+                if (navHome) navHome.classList.add('active');
+                loadStudentHome();
+            }
+            if (viewId.startsWith('admin')) document.getElementById('nav-admin').classList.add('active');
+
+            if (viewId === 'admin-dashboard') {
+                if (!state.isAdmin) return showView('admin-login');
+                loadAdminDashboard(true);
+            }
+            if (viewId === 'admin-editor' && !state.isEditing) resetEditor();
+            if (viewId === 'admin-submissions') { } // handled by openSubmissions
+        }
+
+        function openSubmissions(aid) {
+            state.manageAssessmentId = aid;
+            const assm = state.assessments.find(a => a.id === aid);
+            document.getElementById('sub-explorer-title').innerText = `${assm.title} - Submissions`;
+            document.getElementById('sub-team-list').innerHTML = `<div style="text-align:center; padding:2rem; width:100%;">Loading Submissions...</div>`;
+            document.getElementById('sub-viewer').style.display = 'none';
+            showView('admin-submissions');
+
+
+            google.script.run.withSuccessHandler(res => {
+                if (!res.success) { Modal.alert("Error", res.message); return; }
+                state.activeSubmissions = res.submissions;
+                renderSubTeamList();
+            }).fetchSubmissionData(aid);
+        }
+
+        function renderSubTeamList() {
+            const list = document.getElementById('sub-team-list');
+            list.innerHTML = '';
+            document.getElementById('sub-count-badge').innerText = `${state.activeSubmissions.length} Teams`;
+
+            if (state.activeSubmissions.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted); width:100%;">No submissions found for this assessment.</div>`;
+                return;
+            }
+
+            state.activeSubmissions.forEach(s => {
+                const el = document.createElement('div');
+                el.className = 'admin-card';
+                el.style.textAlign = 'center';
+                el.style.cursor = 'pointer';
+                el.innerHTML = `
+                    <h3 style="margin:0;">${s.team}</h3>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${new Date(s.timestamp).toLocaleTimeString()}</div>
+                    <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
+                        <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')">Review</button>
+                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')">📁 Drive</button>` : ''}
+                    </div>
+                `;
+                el.onclick = () => launchSubmissionViewer(s, state.manageAssessmentId);
+                list.appendChild(el);
+            });
+        }
+
+        function launchSubmissionViewer(sub, aid) {
+            if (aid) state.manageAssessmentId = aid;
+            state.selectedSubmissionId = sub.id;
+            state.subSub = sub;
+            state.subPageIndex = 0;
+            document.getElementById('sub-viewer').style.display = 'flex';
+            document.getElementById('sub-viewer-team').innerText = sub.team;
+            document.getElementById('sub-viewer-time').innerText = `Submitted: ${new Date(sub.timestamp).toLocaleString()}`;
+
+            // Add a temporary Debug button to see raw data if missing
+            let dbg = document.getElementById('sub-viewer-debug');
+            if (dbg) dbg.onclick = () => Modal.alert("Raw Data", JSON.stringify(sub.answers, null, 2));
+
+            // Scroll to viewer
+            document.getElementById('sub-viewer').scrollIntoView({ behavior: 'smooth' });
+
+            renderSubmissionPage();
+        }
+
+        function renderSubmissionPage() {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            const page = assm.pages[state.subPageIndex];
+            const sub = state.subSub;
+
+            document.getElementById('sub-page-counter').innerText = `Page ${state.subPageIndex + 1} of ${assm.pages.length}`;
+
+            const img = document.getElementById('sub-image');
+            const fieldsContainer = document.getElementById('sub-fields');
+            img.src = '';
+            img.style.opacity = '0';
+            fieldsContainer.innerHTML = '';
+            img.parentElement.classList.add('skeleton');
+            document.getElementById('sub-img-loader').style.display = 'block';
+
+            const rawAnswers = sub.answers;
+            const nestedAnswers = rawAnswers[page.pageId];
+            page.fields.forEach(f => {
+                // Deep lookup: Try id, then name, in nested, then flat
+                let val = null;
+                const getFromObj = (obj) => {
+                    if (!obj || typeof obj !== 'object') return null;
+                    if (obj[f.id] !== undefined) return obj[f.id];
+                    if (obj[f.name] !== undefined) return obj[f.name];
+
+                    // Fallback: If student used the ID system but ID changed, maybe they also saved the name?
+                    const norm = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                    if (obj[norm] !== undefined) return obj[norm];
+
+                    // HEURISTIC: Search through ALL keys. If a key's label (old name) matches exactly, use it.
+                    // This handles cases where ID shifted but Name remained the same.
+                    for (const key in obj) {
+                        if (normalizeAnswerKey(key) === norm) return obj[key];
+                    }
+                    return null;
+                };
+
+                val = getFromObj(nestedAnswers);
+                if (val === null || val === undefined) val = getFromObj(rawAnswers);
+
+                if (val == null || val === '') return; // Skip empty
+                const div = document.createElement('div');
+                div.style.cssText = [
+                    'position:absolute',
+                    `top:${f.top}%`,
+                    `left:${f.left}%`,
+                    `width:${f.width}%`,
+                    `height:${f.height}%`,
+                    'padding:4px 6px',
+                    'font-size:13px',
+                    'font-weight:800',
+                    'color: #000000', // Hardcode black for review as it's on white paper
+                    'text-shadow: 0 0 1px #fff', // Subtle glow for readablity
+                    'background: rgba(250, 204, 21, 0.1)', // Light yellow highlight to show where the field is
+                    'border-bottom: 1px dotted rgba(0,0,0,0.2)',
+                    'text-align:center',
+                    'white-space:pre-wrap',
+                    'overflow:hidden',
+                    'position:absolute',
+                    'z-index:20',
+                    'pointer-events:none',
+                    'display:flex',
+                    'align-items:center',
+                    'justify-content:center',
+                    'line-height:1.1'
+                ].join(';');
+                if (f.type === 'checkbox') {
+                    if (val === 'true' || val === true) {
+                        div.innerHTML = '<span style="font-size:1.5rem;">✓</span>';
+                    } else {
+                        return; // don't show anything for unchecked
+                    }
+                } else {
+                    div.innerText = val.toString();
+                }
+                fieldsContainer.appendChild(div);
+            });
+
+            const revealOverlay = () => {
+                img.style.opacity = '1';
+                img.parentElement.classList.remove('skeleton');
+                document.getElementById('sub-img-loader').style.display = 'none';
+            };
+
+            img.src = page.url;
+            img.onload = revealOverlay;
+            img.onerror = revealOverlay;
+
+            renderSubNavDots();
+        }
+
+        function renderSubNavDots() {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            const list = document.getElementById('sub-nav-dots');
+            list.innerHTML = '';
+            assm.pages.forEach((p, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot';
+                if (i === state.subPageIndex) dot.classList.add('active');
+                dot.innerText = i + 1;
+                dot.onclick = () => { state.subPageIndex = i; renderSubmissionPage(); };
+                list.appendChild(dot);
+            });
+        }
+
+        function prevSubPage() {
+            if (state.subPageIndex > 0) {
+                state.subPageIndex--;
+                renderSubmissionPage();
+            }
+        }
+
+        function nextSubPage() {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            if (state.subPageIndex < assm.pages.length - 1) {
+                state.subPageIndex++;
+                renderSubmissionPage();
+            }
+        }
+
+        // ----- GLOBAL FETCH -----
+        function renderError(msg) {
+            Modal.alert("Error", msg);
+        }
+
+        async function fetchData(callback) {
+            try {
+                // Fetch basic data from all 4 core tables based on our new PostgreSQL schema
+                const { data: aData, error: aErr } = await supabaseClient.from('assessments').select('*');
+                if (aErr) throw new Error("Assessments: " + aErr.message);
+
+                const { data: pData, error: pErr } = await supabaseClient.from('pages').select('*');
+                if (pErr) throw new Error("Pages: " + pErr.message);
+
+                const { data: fData, error: fErr } = await supabaseClient.from('fields').select('*');
+                if (fErr) throw new Error("Fields: " + fErr.message);
+
+                const { data: tData, error: tErr } = await supabaseClient.from('teams').select('*');
+                if (tErr) throw new Error("Teams: " + tErr.message);
+
+                // Build the fields format
+                let fieldsMap = {};
+                fData.forEach(r => {
+                    let pid = r.page_id;
+                    if (!fieldsMap[pid]) fieldsMap[pid] = [];
+                    fieldsMap[pid].push({
+                        id: r.id,
+                        top: Number(r.top_percent),
+                        left: Number(r.left_percent),
+                        width: Number(r.width_percent),
+                        height: Number(r.height_percent),
+                        name: r.field_name,
+                        type: r.type || 'text'
+                    });
+                });
+
+                // Build the pages format
+                let pagesMap = {};
+                pData.forEach(r => {
+                    let aid = r.assessment_id, url = r.image_url || '';
+                    if (!pagesMap[aid]) pagesMap[aid] = [];
+                    pagesMap[aid].push({
+                        pageId: r.id, url: url, fileId: null,
+                        timestamp: r.created_at,
+                        fields: fieldsMap[r.id] || []
+                    });
+                });
+
+                // Build teams / rounds
+                let roundsSet = new Set();
+                let teams = tData.map(r => {
+                    let rnd = r.round ? r.round.toString() : '1';
+                    roundsSet.add(rnd);
+                    return {
+                        name: r.team_name,
+                        password: r.password,
+                        round: rnd,
+                        folderUrl: r.team_assessment_folder || ''
+                    };
+                });
+
+                // Build assessments
+                let assessments = aData.map(r => {
+                    let aid = r.id;
+                    let aPages = pagesMap[aid] || [];
+                    aPages.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp));
+                    return {
+                        id: aid,
+                        title: r.title,
+                        isActive: r.is_active,
+                        timestamp: r.created_at,
+                        settings: r.settings_json || {},
+                        pages: aPages,
+                        submissionCount: 0, // Migrated to direct queries or sub-counts later
+                        submittedTeams: [] // Migrated to direct queries later
+                    };
+                }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                // Send payload down format pipeline
+                const payload = {
+                    success: true,
+                    assessments: assessments,
+                    teams: teams,
+                    availableRounds: Array.from(roundsSet).sort()
+                };
+
+                applyFetchedState(payload);
+                if (callback) callback();
+            } catch (err) {
+                console.error("Supabase Database Error:", err);
+                // Kill all loaders so the user isn't stuck on a blank screen
+                ['home-loader', 'dash-loader', 'login-loader', 'team-loader', 'save-overlay'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                if (callback) callback(); // Proceed anyway to show partial state if possible
+
+                const existing = document.getElementById('mobile-debug-err');
+                if (!existing) {
+                    let errBox = document.createElement('div');
+                    errBox.id = 'mobile-debug-err';
+                    errBox.style = "position: fixed; top: 10px; left: 10px; right: 10px; background: rgba(220, 38, 38, 0.95); color: white; padding: 1.5rem; border-radius: 12px; z-index: 9999; font-weight: bold; border: 2px solid #fff; text-align: center;";
+                    errBox.innerHTML = '<div style="font-size: 1.1rem; color: #fecaca;">Database Alert</div><div class="err-msg">' + (err.message || String(err)) + '</div>';
+                    document.body.appendChild(errBox);
+                }
+            }
+        }
+
+        // ----- STUDENT LOGIC -----
+        function loadStudentHome() {
+            document.getElementById('home-loader').style.display = 'block';
+            document.getElementById('home-assessment-list').innerHTML = '';
+            document.getElementById('home-message').style.display = 'none';
+
+            fetchData(() => {
+                document.getElementById('home-loader').style.display = 'none';
+                // Filter out templates and ensure we have pages
+                const activeList = state.assessments.filter(a => a.isActive && !a.settings.isTemplate && a.pages.length > 0);
+
+                if (activeList.length === 0) {
+                    document.getElementById('home-message').innerText = "No assessments available right now.";
+                    document.getElementById('home-message').style.display = 'block';
+                    return;
+                }
+
+                const list = document.getElementById('home-assessment-list');
+                activeList.forEach(a => {
+                    const el = document.createElement('div');
+                    el.className = 'assessment-row';
+                    el.innerHTML = `
+                        <div>
+                            <h3 style="color:var(--text-main); margin-bottom:0.2rem;">${a.title}</h3>
+                            <span style="font-size:0.9rem; color:var(--text-muted);">${a.pages.length} Pages</span>
+                        </div>
+                        <button class="btn" onclick="startAssessment('${a.id}')">Begin &#8594;</button>
+                    `;
+                    list.appendChild(el);
+                });
+            });
+        }
+
+        function startAssessment(assessmentId) {
+            state.activeAssessmentId = assessmentId;
+            state.lastLiveNoticeId = null;
+            state.lastLiveNoticeSignature = null;
+            state.currentPageIndex = 0;
+            state.submissionId = 'sub_' + Math.random().toString(36).substring(2, 9);
+            state.userAnswers = {};
+
+            clearInterval(state.timerInterval); // Reset any old timer
+
+            const assm = state.assessments.find(a => a.id === assessmentId);
+            if (!assm) return renderError("Assessment not found.");
+
+            // Show/Hide Member Name field based on multi-submission setting
+            document.getElementById('member-name').style.display = (assm.settings && assm.settings.allowMulti) ? 'block' : 'none';
+            document.getElementById('member-name').value = '';
+
+            // Filter Teams by Round if assigned
+            let filteredTeams = state.teams;
+            if (assm.settings && assm.settings.round && assm.settings.round !== 'all') {
+                filteredTeams = state.teams.filter(t => t.round == assm.settings.round);
+            }
+
+            if (!filteredTeams || filteredTeams.length === 0) {
+                renderError("Access Denied: No Teams found for this assessment's assigned round (" + (assm.settings.round || '1') + ").");
+                return;
+            }
+
+            // Shuffle if enabled
+            state.activePages = JSON.parse(JSON.stringify(assm.pages));
+            if (assm.settings && assm.settings.shuffle) {
+                state.activePages.sort(() => Math.random() - 0.5);
+            }
+            // Sort normally if not shuffled (by timestamp is best)
+            else {
+                const orderIds = assm.settings && Array.isArray(assm.settings.pageOrder) ? assm.settings.pageOrder.map(x => String(x)) : [];
+                if (orderIds.length) {
+                    const rank = new Map(orderIds.map((id, idx) => [id, idx]));
+                    state.activePages.sort((a, b) => {
+                        const ar = rank.has(String(a.pageId)) ? rank.get(String(a.pageId)) : Number.MAX_SAFE_INTEGER;
+                        const br = rank.has(String(b.pageId)) ? rank.get(String(b.pageId)) : Number.MAX_SAFE_INTEGER;
+                        if (ar !== br) return ar - br;
+                        return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
+                    });
+                } else {
+                    state.activePages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                }
+            }
+
+            // Always show Team Authentication view
+            showView('team-auth');
+            const sel = document.getElementById('team-select');
+            sel.innerHTML = '<option value="" disabled selected>-- Select Your Team --</option>';
+
+            filteredTeams.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.name;
+
+                const hasSubmitted = assm.submittedTeams && assm.submittedTeams.includes(t.name.toString());
+                const isBlocked = hasSubmitted && (assm.settings && assm.settings.allowMulti === false);
+
+                if (isBlocked) {
+                    opt.disabled = true;
+                    opt.innerText = t.name + " (Already Submitted)";
+                    opt.style.background = "rgba(40, 40, 40, 0.4)"; // Darker for inactive
+                    opt.style.color = "#555";
+                } else {
+                    opt.innerText = t.name;
+                }
+                sel.appendChild(opt);
+            });
+            document.getElementById('team-password').style.display = 'none';
+            document.getElementById('team-password').value = '';
+            document.getElementById('team-error').style.display = 'none';
+        }
+
+        function toggleTeamPassField() {
+            const teamName = document.getElementById('team-select').value;
+            const match = state.teams.find(t => t.name === teamName);
+            document.getElementById('team-password').style.display = (match && match.password) ? 'block' : 'none';
+        }
+
+        function verifyTeamAuth() {
+            const teamName = document.getElementById('team-select').value;
+            if (!teamName) return alert("Please select a team.");
+
+            const match = state.teams.find(t => t.name === teamName);
+            if (match && match.password) {
+                const pass = document.getElementById('team-password').value;
+                if (pass !== match.password) {
+                    document.getElementById('team-error').innerText = "Incorrect team password.";
+                    document.getElementById('team-error').style.display = 'block';
+                    return;
+                }
+            }
+
+            const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
+            const memberName = document.getElementById('member-name').value.trim();
+            if (assm && assm.settings && assm.settings.allowMulti && !memberName) {
+                document.getElementById('team-error').innerText = "Please enter your name.";
+                document.getElementById('team-error').style.display = 'block';
+                return;
+            }
+            state.memberName = memberName;
+
+            // User has interacted, warm up the notification sound if needed
+            if (state.notificationSound) {
+                state.notificationSound.play().then(() => {
+                    state.notificationSound.pause();
+                    state.notificationSound.currentTime = 0;
+                }).catch(() => { });
+            }
+
+            state.activeTeam = teamName;
+            launchPlayer();
+        }
+
+        function launchPlayer() {
+            showView('assessment');
+            startLiveNoticePolling();
+            document.getElementById('player-message').style.display = 'none';
+            document.getElementById('player-wrapper').style.display = 'flex';
+
+            // Generate unique session ID for this attempt
+            state.submissionId = 'SUB-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+            state.currentPageIndex = 0;
+            state.userAnswers = {};
+
+            const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
+            document.getElementById('player-title').innerText = assm.title;
+
+            // Timer Logic
+            const timerEl = document.getElementById('player-timer');
+            if (assm.settings && assm.settings.timerEnabled) {
+                state.timeLeft = (assm.settings.timerDuration || 30) * 60;
+                timerEl.style.display = 'block';
+                startTimer();
+            } else {
+                timerEl.style.display = 'none';
+            }
+
+            updateColor(); // set initial text color
+            renderPlayerPage();
+        }
+
+        function startTimer() {
+            clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                state.timeLeft--;
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timerInterval);
+                    state.timeLeft = 0;
+                    autoSubmit();
+                }
+                updateTimerUI();
+            }, 1000);
+            updateTimerUI();
+        }
+
+        function updateTimerUI() {
+            const m = Math.floor(state.timeLeft / 60);
+            const s = state.timeLeft % 60;
+            const display = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            document.getElementById('player-timer').innerText = display;
+
+            // Warning color when under 1 min
+            if (state.timeLeft < 60) {
+                document.getElementById('player-timer').style.background = '#ff0000';
+            } else {
+                document.getElementById('player-timer').style.background = 'var(--danger)';
+            }
+        }
+
+        function autoSubmit() {
+            alert("⏰ TIME IS UP! Your assessment is being submitted automatically.");
+            // Jump to last page and trigger submission
+            state.currentPageIndex = state.activePages.length - 1;
+            nextPage();
+        }
+
+        function renderPlayerPage() {
+            const page = state.activePages[state.currentPageIndex];
+
+            // Update Page Counter HUD
+            document.getElementById('player-page-count').innerText = Language.get('page_x_of_y', { x: state.currentPageIndex + 1, y: state.activePages.length });
+
+            const prog = ((state.currentPageIndex) / state.activePages.length) * 100;
+            document.getElementById('progress-fill').style.width = prog + '%';
+
+            let img = document.getElementById('player-image');
+            img.src = ''; img.style.opacity = '0';
+            img.parentElement.classList.add('skeleton');
+            document.getElementById('player-img-loader').style.display = 'block';
+
+            const fieldsContainer = document.getElementById('player-fields');
+            fieldsContainer.innerHTML = '';
+            state.userAnswers[page.pageId] = state.userAnswers[page.pageId] || {};
+
+            const populateFields = () => {
+                fieldsContainer.innerHTML = '';
+                page.fields.forEach(f => {
+                    if (f.type === 'checkbox') {
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.className = 'checkbox-overlay';
+                        input.style.top = f.top + '%';
+                        input.style.left = f.left + '%';
+                        input.style.width = f.width + '%';
+                        input.style.height = f.height + '%';
+                        input.title = f.name || '';
+                        input.checked = state.userAnswers[page.pageId][f.id] === 'true' || state.userAnswers[page.pageId][f.id] === true;
+                        input.addEventListener('change', e => { state.userAnswers[page.pageId][f.id] = e.target.checked; });
+                        fieldsContainer.appendChild(input);
+                    } else {
+                        const input = document.createElement('textarea');
+                        input.className = 'input-overlay';
+                        input.style.top = f.top + '%';
+                        input.style.left = f.left + '%';
+                        input.style.width = f.width + '%';
+                        input.style.height = f.height + '%';
+                        input.placeholder = f.name || '';
+                        input.title = f.name || '';
+                        input.value = state.userAnswers[page.pageId][f.id] || '';
+                        input.addEventListener('input', e => { state.userAnswers[page.pageId][f.id] = e.target.value; });
+                        fieldsContainer.appendChild(input);
+                    }
+                });
+            };
+
+            // Force Blob loading to bypass CORS/vanishing image issues
+            if (page.url) {
+                fetch(page.url, { mode: 'cors' })
+                    .then(r => r.blob())
+                    .then(b => {
+                        const localUrl = URL.createObjectURL(b);
+                        img.src = localUrl;
+                        img.onload = () => {
+                            img.style.opacity = '1';
+                            img.parentElement.classList.remove('skeleton');
+                            document.getElementById('player-img-loader').style.display = 'none';
+                            if (typeof populateFields === 'function') populateFields();
+                        };
+                    })
+                    .catch(e => {
+                        console.error("Blob Load Fail:", e);
+                        img.src = page.url; // Fallback to direct
+                        img.onload = () => {
+                            img.style.opacity = '1';
+                            img.parentElement.classList.remove('skeleton');
+                            document.getElementById('player-img-loader').style.display = 'none';
+                            if (typeof populateFields === 'function') populateFields();
+                        };
+                    });
+            } else {
+                img.src = '';
+                img.onload = () => {
+                    img.style.opacity = '1';
+                    img.parentElement.classList.remove('skeleton');
+                    document.getElementById('player-img-loader').style.display = 'none';
+                    if (typeof populateFields === 'function') populateFields();
+                };
+            }
+            img.onerror = () => {
+                img.style.opacity = '1';
+                img.parentElement.classList.remove('skeleton');
+                document.getElementById('player-img-loader').style.display = 'none';
+                populateFields();
+            };
+
+            const btnNext = document.getElementById('btn-next');
+            const btnPrev = document.getElementById('btn-prev');
+
+            btnPrev.style.visibility = (state.currentPageIndex === 0) ? 'hidden' : 'visible';
+
+            if (state.currentPageIndex === state.activePages.length - 1) {
+                btnNext.innerText = Language.get('submit'); btnNext.className = "btn success";
+            } else {
+                btnNext.innerText = Language.get('next_page'); btnNext.className = "btn";
+            }
+
+            renderPlayerNavBar();
+        }
+
+        function renderPlayerNavBar() {
+            const navBar = document.getElementById('player-nav-list');
+            navBar.innerHTML = '';
+            state.activePages.forEach((p, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot';
+                if (i === state.currentPageIndex) dot.classList.add('active');
+
+                // Mark as answered if any fields are filled
+                const ans = state.userAnswers[p.pageId];
+                if (ans && Object.values(ans).some(v => v && v.trim() !== '')) {
+                    dot.classList.add('answered');
+                }
+
+                dot.innerText = i + 1;
+                dot.onclick = () => jumpToPage(i);
+                navBar.appendChild(dot);
+            });
+        }
+
+        function jumpToPage(idx) {
+            state.currentPageIndex = idx;
+            renderPlayerPage();
+        }
+
+        function prevPage() {
+            if (state.currentPageIndex > 0) {
+                state.currentPageIndex--;
+                renderPlayerPage();
+            }
+        }
+
+        function nextPage() {
+            const btn = document.getElementById('btn-next');
+
+            if (state.currentPageIndex >= state.activePages.length - 1) {
+                // Confirm before submission
+                Modal.confirm(Language.get('submit'), Language.get('confirm_submit_msg', { defaultValue: "Are you sure you want to submit your assessment? You won't be able to change your answers after this." }), (confirmed) => {
+                    if (!confirmed) return;
+
+                    clearInterval(state.timerInterval); // Stop timer on submit
+                    const origText = btn.innerText;
+                    btn.innerText = Language.get('submitting', { defaultValue: "Submitting..." });
+                    btn.disabled = true;
+
+                    if (typeof supabaseClient !== 'undefined') {
+                        const payload = buildAnswersPayload(state.userAnswers);
+                        supabaseClient.from('submissions').insert([{
+                            id: state.submissionId,
+                            assessment_id: state.activeAssessmentId,
+                            team_name: state.activeTeam,
+                            member_name: state.memberName,
+                            answers_data: payload
+                        }]).then(({ error }) => {
+                            if (!error) {
+                                btn.disabled = false; btn.innerText = origText;
+                                document.getElementById('player-wrapper').style.display = 'none';
+                                document.getElementById('player-title').innerText = '';
+                                const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
+                                const successMessage = (assm && assm.settings && assm.settings.submitMessage) ? assm.settings.submitMessage : "Assessment Successfully Submitted! Thank you.";
+                                document.getElementById('player-message').innerText = successMessage;
+                                const msgEl = document.getElementById('player-message');
+                                const msgStyle = (assm && assm.settings && assm.settings.submitMessageStyle) ? assm.settings.submitMessageStyle : {};
+                                msgEl.style.color = msgStyle.color || "var(--success)";
+                                msgEl.style.fontSize = ((Number(msgStyle.fontSize) > 0 ? Number(msgStyle.fontSize) : 19)) + 'px';
+                                msgEl.style.fontFamily = msgStyle.fontFamily || "'Outfit', sans-serif";
+                                msgEl.style.display = 'block';
+                                document.getElementById('progress-fill').style.width = '100%';
+                                stopLiveNoticePolling();
+                                if (state.isAdmin && document.getElementById('view-admin-dashboard').classList.contains('active')) {
+                                    loadAdminDashboard(true);
+                                }
+                            } else {
+                                alert(error.message || "Submission failed.");
+                                btn.disabled = false; btn.innerText = origText;
+                            }
+                        });
+                    }
+                });
+            } else {
+                state.currentPageIndex++;
+                renderPlayerPage();
+            }
+        }
+
+        function normalizeAnswerKey(key) {
+            const base = String(key || '').trim();
+            if (!base) return 'Answer';
+            // Also clean up common noise
+            return base.replace(/[\s_-]*[a-z0-9]{8,}$/i, '').trim() || base;
+        }
+
+        function buildAnswersPayload(rawAnswers) {
+            const merged = {};
+            Object.values(rawAnswers || {}).forEach(pageAnswers => {
+                if (!pageAnswers || typeof pageAnswers !== 'object') return;
+                Object.entries(pageAnswers).forEach(([k, v]) => {
+                    const cleanKey = normalizeAnswerKey(k);
+                    const value = (v == null) ? '' : String(v);
+                    if (!value.trim()) return;
+                    if (!Object.prototype.hasOwnProperty.call(merged, cleanKey)) {
+                        merged[cleanKey] = value;
+                        return;
+                    }
+                    if (!Array.isArray(merged[cleanKey])) merged[cleanKey] = [merged[cleanKey]];
+                    merged[cleanKey].push(value);
+                });
+            });
+            return merged;
+        }
+
+        function toggleMenu() {
+            document.getElementById('menu-links').classList.toggle('open');
+        }
+
+        function showLiveNotice(message, seconds) {
+            const el = document.getElementById('live-notice');
+            if (!el) return;
+            const text = String(message || '').trim();
+            if (!text) return;
+            state.liveNoticeSeq += 1;
+            const seq = state.liveNoticeSeq;
+
+            if (state.liveNoticeHideTimer) {
+                clearTimeout(state.liveNoticeHideTimer);
+                state.liveNoticeHideTimer = null;
+            }
+
+            el.classList.remove('show');
+            el.style.display = 'block';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(-50%) translateY(-20px)';
+            el.style.pointerEvents = 'none';
+            el.innerText = text;
+
+            // Play short alert sound
+            if (state.notificationSound) {
+                state.notificationSound.currentTime = 0;
+                state.notificationSound.play().catch(e => console.warn('Sound playback blocked:', e));
+            }
+
+            setTimeout(() => {
+                if (seq !== state.liveNoticeSeq) return;
+                el.classList.add('show');
+                el.style.opacity = '1';
+                el.style.transform = 'translateX(-50%) translateY(0)';
+            }, 40);
+
+            const duration = Math.max(1, Math.min(120, parseInt(seconds) || 8)) * 1000;
+            state.liveNoticeHideTimer = setTimeout(() => {
+                if (seq !== state.liveNoticeSeq) return;
+                el.classList.remove('show');
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(-50%) translateY(-20px)';
+                el.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    if (seq !== state.liveNoticeSeq) return;
+                    el.style.display = 'none';
+                    el.innerText = '';
+                    state.liveNoticeHideTimer = null;
+                }, 420);
+            }, duration);
+        }
+
+        function pullLiveNoticeFromCurrentAssessment() {
+            const assmId = state.activeAssessmentId;
+            if (!assmId) return;
+            if (!document.getElementById('view-assessment').classList.contains('active')) return;
+            if (!state.activeTeam) return;
+            const assm = state.assessments.find(a => a.id === assmId);
+            if (!assm || !assm.settings || !assm.settings.liveNotice) return;
+            const live = assm.settings.liveNotice;
+            if (!String(live.message || '').trim()) return;
+            if (live.assessmentId && String(live.assessmentId) !== String(assmId)) return;
+            const noticeId = String(live.id || '');
+            const signature = [noticeId, live.createdAt || '', live.durationSec || '', live.message || ''].join('||');
+            if (signature === state.lastLiveNoticeSignature) return;
+            state.lastLiveNoticeId = noticeId;
+            state.lastLiveNoticeSignature = signature;
+            showLiveNotice(live.message, live.durationSec || assm.settings.liveNoticeDefaultDuration || 8);
+        }
+
+        function fetchLiveNoticeData(callback) {
+            const isLocal = window.location.protocol.indexOf('file') !== -1 || window.location.hostname === '';
+            if (isLocal && typeof google === 'undefined') return;
+            const SCRIPT_URL = window.location.href.split('?')[0];
+            fetch(SCRIPT_URL + '?api=fetchData&_ts=' + Date.now())
+                .then(res => res.json())
+                .then(res => {
+                    if (res && res.success) {
+                        const raw = pickFirstDefined(res, ['assessments', 'Assessments', 'assessmentList', 'data']);
+                        if (raw !== undefined) {
+                            state.assessments = normalizeData(raw);
+                            if (callback) callback();
+                        }
+                    }
+                })
+                .catch(() => {
+
+                    google.script.run.withSuccessHandler(res => {
+                        if (res && res.success) {
+                            const raw = pickFirstDefined(res, ['assessments', 'Assessments', 'assessmentList', 'data']);
+                            if (raw !== undefined) {
+                                state.assessments = normalizeData(raw);
+                                if (callback) callback();
+                            }
+                        }
+                    }).fetchAppData();
+                });
+        }
+
+        function startLiveNoticePolling() {
+            stopLiveNoticePolling();
+            if (!state.activeAssessmentId) return;
+            if (!document.getElementById('view-assessment').classList.contains('active')) return;
+            fetchLiveNoticeData(pullLiveNoticeFromCurrentAssessment);
+            state.liveNoticePollIntervalId = setInterval(() => {
+                if (!state.activeAssessmentId) return;
+                if (!document.getElementById('view-assessment').classList.contains('active')) return;
+                fetchLiveNoticeData(pullLiveNoticeFromCurrentAssessment);
+            }, state.liveNoticePollInterval);
+        }
+
+        function stopLiveNoticePolling() {
+            if (state.liveNoticePollIntervalId) {
+                clearInterval(state.liveNoticePollIntervalId);
+                state.liveNoticePollIntervalId = null;
+            }
+            const el = document.getElementById('live-notice');
+            if (el) {
+                el.classList.remove('show');
+                el.style.display = 'none';
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(-50%) translateY(-20px)';
+                el.style.pointerEvents = 'none';
+                el.innerText = '';
+            }
+            if (state.liveNoticeHideTimer) {
+                clearTimeout(state.liveNoticeHideTimer);
+                state.liveNoticeHideTimer = null;
+            }
+        }
+
+        function switchAdminTab(tab) {
+            state.adminTab = tab;
+            loadAdminDashboard(false); // Do not fetch, just re-render
+        }
+
+        // ----- ADMIN LOGIC -----
+        async function attemptLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            document.getElementById('login-loader').style.display = 'block';
+            document.getElementById('login-error').style.display = 'none';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('admins')
+                    .select('*')
+                    .eq('username', u)
+                    .eq('password', p);
+
+                document.getElementById('login-loader').style.display = 'none';
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    state.isAdmin = true;
+                    showView('admin-dashboard');
+                } else {
+                    document.getElementById('login-error').innerText = "Invalid credentials";
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('login-loader').style.display = 'none';
+                document.getElementById('login-error').innerText = err.message || "Login failed";
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        function loadAdminDashboard(forceFetch = false, callback = null, silent = false) {
+            const list = document.getElementById('dash-assessment-list');
+            const isTempTab = state.adminTab === 'templates';
+
+            document.getElementById('admin-dash-title').innerText = isTempTab ? "Templates" : "Assessments";
+            document.getElementById('btn-new-assessment').style.display = 'inline-flex';
+            if (document.getElementById('view-admin-dashboard').classList.contains('active')) startAdminAutoSync();
+
+            // Highlight active tab
+            document.getElementById('tab-btn-assm').style.background = isTempTab ? 'transparent' : 'var(--accent)';
+            document.getElementById('tab-btn-assm').style.color = isTempTab ? 'var(--text-muted)' : '#000';
+            document.getElementById('tab-btn-temp').style.background = isTempTab ? 'var(--accent)' : 'transparent';
+            document.getElementById('tab-btn-temp').style.color = isTempTab ? '#000' : 'var(--text-muted)';
+
+            const render = () => {
+                document.getElementById('dash-loader').style.display = 'none';
+                list.innerHTML = '';
+                list.className = isTempTab ? 'dash-list' : 'admin-grid';
+
+                // isTemplate is guaranteed boolean after normalizeData — use it directly
+                const filtered = state.assessments.filter(a => {
+                    const isTemp = !!(a.settings && (a.settings.isTemplate === true || a.settings.isTemplate === 'true'));
+                    return isTempTab ? isTemp : !isTemp;
+                });
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted);">
+                        No ${isTempTab ? 'Templates' : 'Assessments'} found.<br>
+                        <small style="opacity:0.7;">(Database currently has ${state.assessments.length} total records)</small>
+                    </div>`;
+                    if (callback) callback();
+                    return;
+                }
+
+                filtered.forEach(a => {
+                    const el = document.createElement('div');
+                    if (isTempTab) {
+                        el.className = 'assessment-row';
+                        el.innerHTML = `
+                            <div style="flex-grow:1;">
+                                <h3 style="color:var(--text-main); margin-bottom:0.2rem;">${a.title}</h3>
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <span style="font-size:0.9rem; color:var(--text-muted);">${(a.pages || []).length} Pages</span>
+                                    <span style="background:var(--accent); color:#000; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.8rem;">${a.submissionCount || 0} Submissions</span>
+                                    ${a.settings && a.settings.round && a.settings.round !== 'all' ? `<span style="background:var(--success); color:white; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.8rem;">Round ${a.settings.round}</span>` : ''}
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap: 0.8rem;">
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Settings">&#9881;</button>
+                                <button class="btn info" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.6rem; min-width:auto;" title="Rename">&#9998;</button>
+                                <button class="btn" onclick="duplicateAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Duplicate" >&#10064;</button>
+                                <button class="btn outline" onclick="managePages('${a.id}')">Manage</button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Delete">&times;</button>
+                            </div>
+                        `;
+                    } else {
+                        el.className = 'admin-card';
+                        el.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <h3>${a.title}</h3>
+                                <label class="switch" title="Toggle Public Access">
+                                    <input type="checkbox" ${a.isActive ? 'checked' : ''} onchange="toggleAssm('${a.id}', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="card-meta">
+                                <span style="background:var(--card-border); color:var(--text-main); padding:4px 10px; border-radius:6px; font-weight:600; font-size:0.85rem;">${(a.pages || []).length} Pages</span>
+                                <span style="background:var(--accent); color:#000; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer;" onclick="openSubmissions('${a.id}')">${a.submissionCount || 0} Submissions (View)</span>
+                                ${a.settings && a.settings.round && a.settings.round !== 'all' ? `<span style="background:var(--success); color:white; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.85rem;">Round ${a.settings.round}</span>` : ''}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.65rem; flex:1;" title="Settings">&#9881; Settings</button>
+                                <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice">&#128227; Notify</button>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">📸 Export</button>
+                                <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename">Rename</button>
+                                <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate">Duplicate</button>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn outline" onclick="managePages('${a.id}')" style="width:100%; padding:0.8rem;">Manage Content</button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.65rem; min-width:auto; margin-left:0.5rem;" title="Delete">&times;</button>
+                            </div>
+                        `;
+                    }
+                    list.appendChild(el);
+                });
+                if (callback) callback();
+            };
+
+            if (state.assessments.length > 0 && !forceFetch) {
+                render();
+            } else {
+                if (!silent) {
+                    document.getElementById('dash-loader').style.display = 'block';
+                    list.innerHTML = ''; // CLEAR HERE to fix tab-switching glitch
+                }
+                fetchData(render);
+            }
+        }
+
+        function openSettings(id) {
+            state.manageAssessmentId = id;
+            const a = state.assessments.find(x => x.id === id);
+            document.getElementById('settings-title').innerText = `Settings: ${a.title}`;
+
+            // Populate Rounds
+            const roundSel = document.getElementById('setting-round');
+            roundSel.innerHTML = '<option value="all">All Rounds</option>';
+            state.availableRounds.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.innerText = "Round " + r;
+                roundSel.appendChild(opt);
+            });
+
+            // Populate settings
+            document.getElementById('setting-allow-multi').checked = !!a.settings.allowMulti;
+            document.getElementById('setting-shuffle').checked = !!a.settings.shuffle;
+            document.getElementById('setting-timer-enabled').checked = !!a.settings.timerEnabled;
+            document.getElementById('setting-timer-duration').value = a.settings.timerDuration || 30;
+            document.getElementById('setting-is-template').checked = !!a.settings.isTemplate;
+            document.getElementById('setting-round').value = a.settings.round || 'all';
+            document.getElementById('setting-submit-message').value = a.settings.submitMessage || "Assessment Successfully Submitted! Thank you.";
+            document.getElementById('setting-submit-color').value = (a.settings.submitMessageStyle && a.settings.submitMessageStyle.color) ? a.settings.submitMessageStyle.color : '#22c55e';
+            document.getElementById('setting-submit-size').value = (a.settings.submitMessageStyle && a.settings.submitMessageStyle.fontSize) ? a.settings.submitMessageStyle.fontSize : 19;
+            document.getElementById('setting-submit-font').value = (a.settings.submitMessageStyle && a.settings.submitMessageStyle.fontFamily) ? a.settings.submitMessageStyle.fontFamily : "'Outfit', sans-serif";
+
+            showView('admin-settings');
+        }
+
+        function saveAssessmentSettings() {
+            const id = state.manageAssessmentId;
+            const current = state.assessments.find(a => a.id === id);
+            const existingSettings = (current && current.settings && typeof current.settings === 'object') ? current.settings : {};
+            const settings = {
+                ...existingSettings,
+                allowMulti: document.getElementById('setting-allow-multi').checked,
+                shuffle: document.getElementById('setting-shuffle').checked,
+                timerEnabled: document.getElementById('setting-timer-enabled').checked,
+                timerDuration: parseInt(document.getElementById('setting-timer-duration').value) || 30,
+                isTemplate: document.getElementById('setting-is-template').checked,
+                round: document.getElementById('setting-round').value,
+                submitMessage: (document.getElementById('setting-submit-message').value || '').trim() || "Assessment Successfully Submitted! Thank you.",
+                submitMessageStyle: {
+                    color: document.getElementById('setting-submit-color').value || '#22c55e',
+                    fontSize: Math.max(12, Math.min(72, parseInt(document.getElementById('setting-submit-size').value) || 19)),
+                    fontFamily: document.getElementById('setting-submit-font').value || "'Outfit', sans-serif"
+                }
+            };
+            if (typeof google !== 'undefined') {
+                google.script.run.withSuccessHandler(() => {
+                    fetchData(() => showView('admin-dashboard'));
+                }).updateAssessmentSettings(id, settings);
+            }
+        }
+
+        function quickSendNotification(id) {
+            const assm = state.assessments.find(a => a.id === id);
+            if (!assm) return;
+
+            // Custom modal for Live Notification with duration
+            const overlay = document.getElementById('global-modal');
+            const title = overlay.querySelector('.modal-title');
+            const text = overlay.querySelector('.modal-text');
+            const input = overlay.querySelector('.modal-input');
+            const btnCancel = overlay.querySelector('#modal-btn-cancel');
+            const btnOk = overlay.querySelector('#modal-btn-ok');
+
+            title.innerText = "Live Notification";
+            text.innerHTML = "<b>Send a floating message</b> to users currently inside this assessment.<br>This will appear at the top of their screen with an alert sound.";
+            input.placeholder = "Type urgent message for participants...";
+            input.value = '';
+            input.style.display = 'block';
+            btnCancel.style.display = 'block';
+            overlay.style.display = 'flex';
+
+            // Add duration input temporarily
+            let durationWrap = document.getElementById('modal-duration-wrap');
+            if (!durationWrap) {
+                durationWrap = document.createElement('div');
+                durationWrap.id = 'modal-duration-wrap';
+                durationWrap.style = "margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem;";
+                durationWrap.innerHTML = `
+                    <span>Disappear after</span>
+                    <input type="number" id="modal-duration-input" min="1" max="120" value="${assm.settings.liveNoticeDefaultDuration || 8}" 
+                        style="width: 60px; padding: 0.4rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; color: var(--text-main); text-align: center;">
+                    <span>seconds</span>
+                `;
+                input.parentNode.insertBefore(durationWrap, input.nextSibling);
+            } else {
+                durationWrap.style.display = 'flex';
+                document.getElementById('modal-duration-input').value = assm.settings.liveNoticeDefaultDuration || 8;
+            }
+
+            Modal.activeCallback = (confirmed) => {
+                const message = input.value.trim();
+                const seconds = parseInt(document.getElementById('modal-duration-input').value) || 8;
+                durationWrap.style.display = 'none';
+
+                if (confirmed && message) {
+                    const settings = {
+                        ...(assm.settings || {}),
+                        liveNoticeDefaultDuration: seconds,
+                        liveNotice: {
+                            id: 'LN-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+                            assessmentId: String(id),
+                            message: message,
+                            durationSec: seconds,
+                            createdAt: new Date().toISOString()
+                        }
+                    };
+                    assm.settings = { ...settings };
+                    if (typeof google === 'undefined') {
+                        showLiveNotice(message, seconds);
+                        return;
+                    }
+                    google.script.run.withSuccessHandler(() => {
+                        Modal.alert("Sent", "Notification sent successfully.");
+                    }).updateAssessmentSettings(id, settings);
+                }
+            };
+        }
+
+        function startAdminAutoSync() {
+            if (state.adminSyncIntervalId) return;
+            state.adminSyncIntervalId = setInterval(() => {
+                if (!state.isAdmin) return;
+                if (!document.getElementById('view-admin-dashboard').classList.contains('active')) return;
+                loadAdminDashboard(true, null, true); // silent=true
+            }, state.adminSyncInterval);
+        }
+
+        function stopAdminAutoSync() {
+            if (!state.adminSyncIntervalId) return;
+            clearInterval(state.adminSyncIntervalId);
+            state.adminSyncIntervalId = null;
+        }
+
+        async function exportToImages(idArg) {
+            const assmId = idArg || state.manageAssessmentId;
+            const assm = state.assessments.find(a => a.id === assmId);
+            const btn = document.getElementById(idArg ? `btn-export-${idArg}` : 'btn-export-images');
+            const orig = btn.innerHTML;
+
+            if (!assm || !assm.pages || assm.pages.length === 0) {
+                Modal.alert("Export Error", "No pages found for this assessment."); return;
+            }
+            if (typeof google === 'undefined') {
+                Modal.alert("Not Available", "Export requires the Google Apps Script environment."); return;
+            }
+
+            btn.innerHTML = "⏳ Preparing...";
+            btn.disabled = true;
+
+            const subRes = await new Promise(r => google.script.run.withSuccessHandler(r).fetchSubmissionData(assmId));
+            if (!subRes.success || subRes.submissions.length === 0) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Modal.alert("Export", subRes.message || "No submissions to export."); return;
+            }
+
+            const submissions = subRes.submissions;
+            let lastFolderUrl = '';
+
+            btn.innerHTML = `⏳ Loading Backgrounds...`;
+            const pageImages = {};
+            for (const page of assm.pages) {
+                pageImages[page.pageId] = page.fileId ? await loadBase64(page.fileId) : null;
+            }
+
+            for (let i = 0; i < submissions.length; i++) {
+                const sub = submissions[i];
+                btn.innerHTML = `⏳ Exporting ${sub.team} (${i + 1}/${submissions.length})`;
+                const folderUrl = await generateSubmissionExport(sub.id, assmId, sub.answers, sub.team, assm, pageImages);
+                if (folderUrl) lastFolderUrl = folderUrl;
+            }
+
+            btn.innerHTML = orig;
+            btn.disabled = false;
+
+            const msg = `✅ Export Complete!\n\n- Created visual reports for ${submissions.length} teams.\n- Folders and Docs have been updated in Google Drive.`;
+            Modal.confirm("Export Success", msg, (choice) => {
+                if (choice && lastFolderUrl) window.open(lastFolderUrl, '_blank');
+            });
+        }
+
+
+
+        function createNewAssessment() {
+            Modal.prompt("New Assessment", "Enter a title for your new template:", (title) => {
+                if (!title || !title.trim()) return;
+                const trimmedTitle = title.trim();
+                const isTemplate = true;
+
+                // Immediately add to local state so it shows up right away
+                const tempId = 'tmp_' + Date.now();
+                const optimistic = {
+                    id: tempId,
+                    title: trimmedTitle,
+                    isActive: false,
+                    settings: { isTemplate: isTemplate },
+                    pages: [],
+                    submissionCount: 0,
+                    _isOptimistic: true
+                };
+                state._pendingAssessments.push(optimistic);
+                state.assessments.push(optimistic);
+
+                // Render immediately — no network call needed
+                loadAdminDashboard(false);
+
+
+
+                // Background backend save — never triggers a force re-fetch
+                google.script.run
+                    .withFailureHandler(err => {
+                        // Backend failed — remove the optimistic entry and re-render
+                        state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
+                        state.assessments = state.assessments.filter(a => a.id !== tempId);
+                        loadAdminDashboard(false);
+                        Modal.alert('Create Failed', 'Could not save assessment: ' + (err.message || String(err)));
+                    })
+                    .withSuccessHandler(res => {
+                        if (res && res.assessmentId) {
+                            const realId = res.assessmentId;
+                            const idx = state.assessments.findIndex(a => a.id === tempId);
+                            if (idx !== -1) {
+                                state.assessments[idx].id = realId;
+                                state.assessments[idx]._isOptimistic = false;
+                            }
+                            state._pendingAssessments = state._pendingAssessments.map(a => {
+                                if (a.id === tempId) return { ...a, id: realId, _isOptimistic: false };
+                                return a;
+                            });
+
+                            // If we were currently managing this temporary ID, update it
+                            if (state.manageAssessmentId === tempId) {
+                                state.manageAssessmentId = realId;
+                            }
+                        }
+                        loadAdminDashboard(false);
+                    })
+                    .createAssessment(trimmedTitle);
+            });
+        }
+
+        function toggleAssm(id, state) {
+            google.script.run.withSuccessHandler(() => { }).toggleAssessment(id, state);
+        }
+
+        function deleteAssm(id) {
+            Modal.confirm("Delete Assessment", "Are you sure? This will delete all pages, fields, and student records for this assessment.", (confirmed) => {
+                if (!confirmed) return;
+                const overlay = document.getElementById('save-overlay');
+                const overlayText = document.getElementById('save-overlay-text');
+                overlayText.innerText = "Deleting Assessment...";
+                overlay.style.display = 'flex';
+                google.script.run.withSuccessHandler(() => fetchData(() => {
+                    overlay.style.display = 'none';
+                    loadAdminDashboard(true);
+                })).deleteAssessment(id);
+            });
+        }
+
+        function renameAssm(id, oldTitle) {
+            Modal.prompt("Rename Assessment", "Enter a new title for this assessment:", (newTitle) => {
+                if (!newTitle || newTitle === oldTitle) return;
+                document.getElementById('dash-loader').style.display = 'block';
+                google.script.run.withSuccessHandler(() => loadAdminDashboard(true)).renameAssessment(id, newTitle);
+            });
+        }
+
+        function duplicateAssm(id) {
+            Modal.confirm("Duplicate Assessment", "Duplicate this entire assessment including all pages and fields?", (confirmed) => {
+                if (!confirmed) return;
+                document.getElementById('dash-loader').style.display = 'block';
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler((res) => {
+                        if (res.success) {
+                            // Fetch then open settings for the new clone
+                            loadAdminDashboard(true, () => openSettings(res.newId));
+                        }
+                    }).duplicateAssessment(id);
+                }
+            });
+        }
+
+        function openSpreadsheet() {
+            if (typeof google !== 'undefined') {
+                google.script.run.withSuccessHandler(url => {
+                    window.open(url, '_blank');
+                }).getSpreadsheetUrl();
+            }
+        }
+
+        function managePages(id) {
+            const assm = state.assessments.find(a => a.id === id);
+            if (!assm) return;
+            if (assm._isOptimistic || String(id).startsWith('tmp_')) {
+                Modal.alert("Please Wait", "This assessment is still being saved to the server. Please wait a moment and try again.");
+                return;
+            }
+            state.manageAssessmentId = id;
+            showView('admin-assessment');
+            document.getElementById('manage-title').innerText = assm.title + " - Pages";
+
+            const list = document.getElementById('manage-page-list');
+            list.innerHTML = '';
+            assm.pages.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'page-item';
+                item.draggable = true;
+                item.dataset.pageId = p.pageId;
+                item.innerHTML = `
+                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:0.85rem; font-weight:800; color:var(--accent);">Page ${idx + 1}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">↕ Drag</div>
+                    </div>
+                    <img id="thumb-${p.pageId}" src="" style="background: var(--card-border);" />
+                    <div style="font-size:0.9rem; color:var(--text-muted);">${p.fields.length} Fields</div>
+                    <div style="display:flex; gap:0.5rem; width:100%; margin-top:0.5rem;">
+                        <button class="btn info" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="editPageFields('${p.pageId}')">Edit Fields</button>
+                        <button class="btn danger" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="deletePage('${p.pageId}')">Delete</button>
+                    </div>
+                `;
+                item.addEventListener('dragstart', handleManageDragStart);
+                item.addEventListener('dragover', handleManageDragOver);
+                item.addEventListener('dragleave', handleManageDragLeave);
+                item.addEventListener('drop', handleManageDrop);
+                item.addEventListener('dragend', handleManageDragEnd);
+                list.appendChild(item);
+
+                if (p.fileId && typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler(res => {
+                        document.getElementById('thumb-' + p.pageId).src = res.success ? res.base64 : p.url;
+                    }).getBase64Image(p.fileId);
+                } else document.getElementById('thumb-' + p.pageId).src = p.url;
+            });
+        }
+
+        function persistManagePageOrder() {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            if (!assm) return;
+            const pageOrder = assm.pages.map(p => p.pageId);
+            assm.settings = assm.settings || {};
+            assm.settings.pageOrder = pageOrder;
+
+            google.script.run
+                .withFailureHandler(() => {
+                    Modal.alert("Order Sync Failed", "Page order changed locally but could not be saved to server.");
+                })
+                .updateAssessmentSettings(assm.id, assm.settings);
+        }
+
+        function handleManageDragStart(e) {
+            const pageId = e.currentTarget.dataset.pageId;
+            state.manageDragPageId = pageId;
+            e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', pageId);
+            }
+        }
+
+        function handleManageDragOver(e) {
+            e.preventDefault();
+            const target = e.currentTarget;
+            if (target.dataset.pageId === state.manageDragPageId) return;
+            target.classList.add('drop-target');
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleManageDragLeave(e) {
+            e.currentTarget.classList.remove('drop-target');
+        }
+
+        function handleManageDrop(e) {
+            e.preventDefault();
+            const targetItem = e.currentTarget;
+            targetItem.classList.remove('drop-target');
+            const toPageId = targetItem.dataset.pageId;
+            const fromPageId = state.manageDragPageId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : '');
+            if (!fromPageId || !toPageId || fromPageId === toPageId) return;
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            if (!assm || !Array.isArray(assm.pages)) return;
+            const fromIdx = assm.pages.findIndex(p => String(p.pageId) === String(fromPageId));
+            const toIdx = assm.pages.findIndex(p => String(p.pageId) === String(toPageId));
+            if (fromIdx === -1 || toIdx === -1) return;
+            const [moved] = assm.pages.splice(fromIdx, 1);
+            assm.pages.splice(toIdx, 0, moved);
+            persistManagePageOrder();
+            managePages(state.manageAssessmentId);
+        }
+
+        function handleManageDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            state.manageDragPageId = null;
+            document.querySelectorAll('#manage-page-list .drop-target').forEach(el => el.classList.remove('drop-target'));
+        }
+
+        function editPageFields(pid) {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            const page = assm.pages.find(p => p.pageId === pid);
+            if (!page) return;
+
+            state.isEditing = true;
+            state.editorPageId = pid;
+            state.editorFields = JSON.parse(JSON.stringify(page.fields)); // Clone
+
+            showView('admin-editor');
+            document.getElementById('upload-card').style.display = 'none';
+            document.getElementById('editor-canvas').style.display = 'block';
+            document.getElementById('btn-save-page').style.display = 'inline-flex';
+            document.getElementById('btn-crop-page').style.display = 'inline-flex';
+            document.getElementById('editor-instructions').style.display = 'block';
+
+            loadEditorSidebar();
+            document.getElementById('btn-add-checkbox').style.display = 'inline-flex';
+            renderEditorFields(); // Ensure boxes are drawn for the new selected page
+
+            const img = document.getElementById('editor-image');
+            img.style.opacity = '0';
+            img.parentElement.classList.add('skeleton');
+            document.getElementById('editor-img-loader').style.display = 'block';
+
+            if (page.fileId && typeof google !== 'undefined') {
+                google.script.run.withSuccessHandler(res => {
+                    img.src = res.success ? res.base64 : page.url;
+                    img.onload = () => {
+                        img.parentElement.classList.remove('skeleton');
+                        img.style.opacity = '1';
+                        document.getElementById('editor-img-loader').style.display = 'none';
+                        renderEditorFields();
+                    };
+                }).getBase64Image(page.fileId);
+            } else {
+                img.src = page.url;
+                img.onload = () => {
+                    img.parentElement.classList.remove('skeleton');
+                    img.style.opacity = '1';
+                    document.getElementById('editor-img-loader').style.display = 'none';
+                    renderEditorFields();
+                };
+            }
+        }
+
+        function deletePage(pid) {
+            Modal.confirm("Delete Page", "Are you sure you want to delete this page? All fields on this page will be permanently lost.", (confirmed) => {
+                if (!confirmed) return;
+                const overlay = document.getElementById('save-overlay');
+                const overlayText = document.getElementById('save-overlay-text');
+                overlayText.innerText = "Deleting Page...";
+                overlay.style.display = 'flex';
+
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler(() => {
+                        fetchData(() => {
+                            overlay.style.display = 'none';
+                            managePages(state.manageAssessmentId);
+                        });
+                    }).deletePage(pid);
+                } else {
+                    overlay.style.display = 'none';
+                }
+            });
+        }
+
+        // ---------- Admin Editor Logic ----------
+        function resetEditor() {
+            state.editorPageId = null;
+            state.editorFields = [];
+            state.isEditing = false;
+            document.getElementById('upload-card').style.display = 'block';
+            document.getElementById('file-input').value = '';
+            document.getElementById('editor-canvas').style.display = 'none';
+            document.getElementById('btn-add-checkbox').style.display = 'none';
+            document.getElementById('editor-layer').innerHTML = '';
+            document.getElementById('editor-sidebar').style.display = 'none';
+        }
+
+        function createDirectCheckbox() {
+            if (!state.editorPageId) return;
+            // Add a 6x6% checkbox in the center
+            state.editorFields.push({
+                name: `Checkbox ${state.editorFields.length + 1}`,
+                type: 'checkbox',
+                left: 47,
+                top: 47,
+                width: 6,
+                height: 6
+            });
+            renderEditorFields();
+        }
+
+        function handleImageSelect(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+
+            const progressText = document.getElementById('upload-progress-text');
+            const loader = document.getElementById('upload-loader');
+            const btn = document.querySelector('#upload-card .btn');
+
+            progressText.style.display = 'block';
+            loader.style.display = 'block';
+            btn.style.display = 'none';
+
+            let completed = 0;
+            const total = files.length;
+
+            const processFile = (index) => {
+                if (index >= total) {
+                    // All finished
+                    fetchData(() => {
+                        progressText.style.display = 'none';
+                        loader.style.display = 'none';
+                        btn.style.display = 'inline-flex';
+                        loadEditorSidebar();
+                        // Open the first one from the new batch
+                        const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+                        if (assm && assm.pages.length > 0) {
+                            const lastPage = assm.pages[assm.pages.length - 1]; // Usually recently added are at end depending on sorting
+                            editPageFields(lastPage.pageId);
+                        }
+                    });
+                    return;
+                }
+
+                progressText.innerText = `Uploading image ${index + 1} of ${total}...`;
+                const file = files[index];
+                const reader = new FileReader();
+
+                reader.onload = function (evt) {
+                    const base64Data = evt.target.result;
+                    if (typeof google !== 'undefined') {
+                        google.script.run.withSuccessHandler(res => {
+                            if (res && res.success) {
+                                // For single uploads, open editor canvas immediately (no crop popup)
+                                if (total === 1) {
+                                    setupEditorCanvas(res.pageId, base64Data);
+                                }
+                                processFile(index + 1);
+                            } else {
+                                Modal.alert("Batch Upload Error", `Failed to upload ${file.name}: ${res.message}`);
+                                resetEditor();
+                            }
+                        }).uploadImageAndCreatePage(base64Data, file.name, state.manageAssessmentId);
+                    } else {
+                        // Demo mode
+                        setTimeout(() => processFile(index + 1), 500);
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+
+            processFile(0);
+        }
+
+        function loadEditorSidebar() {
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            const sidebar = document.getElementById('editor-sidebar');
+            const list = document.getElementById('editor-sidebar-list');
+
+            if (!assm || assm.pages.length === 0) {
+                sidebar.style.display = 'none';
+                return;
+            }
+
+            sidebar.style.display = 'block';
+            list.innerHTML = '';
+
+            assm.pages.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'sidebar-thumb' + (state.editorPageId === p.pageId ? ' active' : '');
+                item.onclick = () => editPageFields(p.pageId);
+
+                const img = document.createElement('img');
+                img.src = p.url;
+
+                if (p.fields && p.fields.length > 0) {
+                    const badge = document.createElement('div');
+                    badge.className = 'field-badge';
+                    badge.innerText = p.fields.length;
+                    item.appendChild(badge);
+                }
+
+                item.appendChild(img);
+                list.appendChild(item);
+
+                // Fetch high quality thumb if Drive
+                if (p.fileId && typeof google !== 'undefined' && !p.url.startsWith('data:')) {
+                    google.script.run.withSuccessHandler(res => {
+                        if (res.success) img.src = res.base64;
+                    }).getBase64Image(p.fileId);
+                }
+            });
+        }
+
+        function setupEditorCanvas(pageId, b64) {
+            state.editorPageId = pageId;
+            document.getElementById('upload-card').style.display = 'none';
+            const img = document.getElementById('editor-image');
+
+            img.onload = () => {
+                img.parentElement.classList.remove('skeleton');
+                img.style.opacity = '1';
+                document.getElementById('editor-img-loader').style.display = 'none';
+                renderEditorFields();
+            };
+
+            img.src = b64;
+            img.parentElement.classList.add('skeleton');
+            document.getElementById('editor-img-loader').style.display = 'block';
+            document.getElementById('editor-canvas').style.display = 'block';
+            document.getElementById('btn-save-page').style.display = 'inline-flex';
+            document.getElementById('btn-add-checkbox').style.display = 'inline-flex';
+            document.getElementById('btn-crop-page').style.display = 'inline-flex';
+            document.getElementById('editor-instructions').style.display = 'block';
+
+            state.isEditing = true; // Crucial: The page exists on server now
+            loadEditorSidebar(); // Show navigation in editor
+
+            state.editorFields = []; renderEditorFields();
+        }
+
+        function startCrop() {
+            const overlay = document.getElementById('crop-overlay');
+            const box = document.getElementById('crop-box');
+            const rect = canvas.getBoundingClientRect();
+            overlay.style.display = 'block';
+            document.getElementById('crop-controls').style.display = 'flex';
+            document.getElementById('editor-instructions').style.display = 'none';
+            document.getElementById('btn-crop-page').style.display = 'none';
+            const initW = Math.max(120, rect.width * 0.45);
+            const initH = Math.max(90, rect.height * 0.35);
+            box.style.width = initW + 'px';
+            box.style.height = initH + 'px';
+            box.style.left = Math.max(0, (rect.width - initW) / 2) + 'px';
+            box.style.top = Math.max(0, (rect.height - initH) / 2) + 'px';
+        }
+
+        function applyCrop() {
+            const img = document.getElementById('editor-image');
+            const box = document.getElementById('crop-box');
+            const canvasEl = document.createElement('canvas');
+            const ctx = canvasEl.getContext('2d');
+
+            const scale = img.naturalWidth / img.clientWidth;
+            const cropW = Math.max(1, box.clientWidth);
+            const cropH = Math.max(1, box.clientHeight);
+            canvasEl.width = cropW * scale;
+            canvasEl.height = cropH * scale;
+
+            ctx.drawImage(img, box.offsetLeft * scale, box.offsetTop * scale,
+                cropW * scale, cropH * scale,
+                0, 0, canvasEl.width, canvasEl.height);
+
+            img.onload = () => {
+                renderEditorFields();
+            };
+            img.src = canvasEl.toDataURL();
+            cancelCrop();
+        }
+
+        function cancelCrop() {
+            document.getElementById('crop-overlay').style.display = 'none';
+            document.getElementById('crop-controls').style.display = 'none';
+            document.getElementById('editor-instructions').style.display = 'block';
+            document.getElementById('btn-crop-page').style.display = 'inline-flex';
+            isMovingCrop = false;
+            isResizingCrop = false;
+            isDrawingCrop = false;
+        }
+
+        function savePage() {
+            const overlay = document.getElementById('save-overlay');
+            const overlayText = document.getElementById('save-overlay-text');
+            overlayText.innerText = "Saving Page Layout...";
+            overlay.style.display = 'flex';
+
+            const finalImg = document.getElementById('editor-image').src;
+
+            const finish = () => {
+                fetchData(() => {
+                    overlay.style.display = 'none';
+                    loadEditorSidebar(); // Refresh counts in sidebar
+                    Modal.alert("Success", "Page fields saved successfully!");
+                });
+            };
+
+            if (typeof google !== 'undefined') {
+                if (state.isEditing) {
+                    google.script.run.withSuccessHandler(finish).saveFields(state.editorPageId, state.editorFields);
+                } else {
+                    google.script.run.withSuccessHandler(res => {
+                        google.script.run.withSuccessHandler(finish).saveFields(res.pageId || state.editorPageId, state.editorFields);
+                    }).uploadImageAndCreatePage(finalImg, "cropped_page.png", state.manageAssessmentId);
+                }
+            } else {
+                // Local Demo Mode
+                setTimeout(finish, 1000);
+            }
+        }
+
+        const canvas = document.getElementById('editor-canvas');
+        const layer = document.getElementById('editor-layer');
+        const cropOverlay = document.getElementById('crop-overlay');
+        const cropBox = document.getElementById('crop-box');
+        const cropResizeHandle = document.getElementById('crop-resize-handle');
+        let isMovingCrop = false;
+        let isResizingCrop = false;
+        let isDrawingCrop = false;
+        let cropStartX = 0;
+        let cropStartY = 0;
+        let cropPointerOffsetX = 0;
+        let cropPointerOffsetY = 0;
+        let cropOrigLeft = 0;
+        let cropOrigTop = 0;
+        let cropOrigWidth = 0;
+        let cropOrigHeight = 0;
+
+        function setCropBox(leftPx, topPx, widthPx, heightPx) {
+            const rect = canvas.getBoundingClientRect();
+            const minW = 20;
+            const minH = 20;
+            const width = Math.max(minW, Math.min(widthPx, rect.width));
+            const height = Math.max(minH, Math.min(heightPx, rect.height));
+            const left = Math.max(0, Math.min(leftPx, rect.width - width));
+            const top = Math.max(0, Math.min(topPx, rect.height - height));
+            cropBox.style.left = left + 'px';
+            cropBox.style.top = top + 'px';
+            cropBox.style.width = width + 'px';
+            cropBox.style.height = height + 'px';
+        }
+
+        cropOverlay.addEventListener('mousedown', e => {
+            if (cropOverlay.style.display === 'none') return;
+            if (e.target !== cropOverlay) return;
+            const rect = canvas.getBoundingClientRect();
+            isDrawingCrop = true;
+            cropStartX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+            cropStartY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+            setCropBox(cropStartX, cropStartY, 20, 20);
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        cropBox.addEventListener('mousedown', e => {
+            if (cropOverlay.style.display === 'none') return;
+            if (e.target === cropResizeHandle) return;
+            isMovingCrop = true;
+            const rect = canvas.getBoundingClientRect();
+            const left = parseFloat(cropBox.style.left) || 0;
+            const top = parseFloat(cropBox.style.top) || 0;
+            cropPointerOffsetX = (e.clientX - rect.left) - left;
+            cropPointerOffsetY = (e.clientY - rect.top) - top;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        cropResizeHandle.addEventListener('mousedown', e => {
+            if (cropOverlay.style.display === 'none') return;
+            isResizingCrop = true;
+            cropStartX = e.clientX;
+            cropStartY = e.clientY;
+            cropOrigLeft = parseFloat(cropBox.style.left) || 0;
+            cropOrigTop = parseFloat(cropBox.style.top) || 0;
+            cropOrigWidth = cropBox.clientWidth;
+            cropOrigHeight = cropBox.clientHeight;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        window.addEventListener('mousemove', e => {
+            if (isMovingCrop) {
+                const rect = canvas.getBoundingClientRect();
+                const nextLeft = (e.clientX - rect.left) - cropPointerOffsetX;
+                const nextTop = (e.clientY - rect.top) - cropPointerOffsetY;
+                setCropBox(nextLeft, nextTop, cropBox.clientWidth, cropBox.clientHeight);
+                return;
+            }
+
+            if (isResizingCrop) {
+                const rect = canvas.getBoundingClientRect();
+                const dx = e.clientX - cropStartX;
+                const dy = e.clientY - cropStartY;
+                const nextWidth = Math.max(20, Math.min(cropOrigWidth + dx, rect.width - cropOrigLeft));
+                const nextHeight = Math.max(20, Math.min(cropOrigHeight + dy, rect.height - cropOrigTop));
+                setCropBox(cropOrigLeft, cropOrigTop, nextWidth, nextHeight);
+                return;
+            }
+
+            if (isDrawingCrop) {
+                const rect = canvas.getBoundingClientRect();
+                const curX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                const curY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+                const left = Math.min(cropStartX, curX);
+                const top = Math.min(cropStartY, curY);
+                const width = Math.max(20, Math.abs(curX - cropStartX));
+                const height = Math.max(20, Math.abs(curY - cropStartY));
+                setCropBox(left, top, width, height);
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+
+            // Drag / Resize
+            if (state.dragIndex !== -1) {
+                const f = state.editorFields[state.dragIndex];
+                let dx = ((e.clientX - state.startX) / rect.width) * 100;
+                let dy = ((e.clientY - state.startY) / rect.height) * 100;
+
+                // Smart Field Editor: Grid Snapping
+                if (window.snapToGridEnabled !== false) { // Default true
+                    const snapX = (20 / rect.width) * 100; // 20px grid
+                    const snapY = (20 / rect.height) * 100;
+                    dx = Math.round(dx / snapX) * snapX;
+                    dy = Math.round(dy / snapY) * snapY;
+                }
+
+                if (state.isResizing) {
+                    f.width = Math.max(2, state.origW + dx);
+                    f.height = Math.max(2, state.origH + dy);
+                } else {
+                    f.left = Math.max(0, Math.min(100 - f.width, state.origL + dx));
+                    f.top = Math.max(0, Math.min(100 - f.height, state.origT + dy));
+                }
+                renderEditorFields();
+                return;
+            }
+
+            if (!state.drawing) return;
+            let curX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+            let curY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+            const tb = document.getElementById('temp-box');
+            if (tb) {
+                tb.style.left = Math.min(state.startX, curX) + 'px';
+                tb.style.top = Math.min(state.startY, curY) + 'px';
+                tb.style.width = Math.abs(curX - state.startX) + 'px';
+                tb.style.height = Math.abs(curY - state.startY) + 'px';
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isMovingCrop = false;
+            isResizingCrop = false;
+            isDrawingCrop = false;
+            state.dragIndex = -1;
+            state.isResizing = false;
+            document.querySelectorAll('.moving').forEach(el => el.classList.remove('moving'));
+        });
+
+        canvas.addEventListener('mousedown', e => {
+            if (cropOverlay.style.display !== 'none') return;
+            if (e.target.closest('.delete-btn') || e.target.closest('.editor-box')) return;
+            state.selectedIndex = -1; // Deselect on background click
+            renderEditorFields();
+            state.drawing = true;
+            const rect = canvas.getBoundingClientRect();
+            state.startX = e.clientX - rect.left; state.startY = e.clientY - rect.top;
+            const tempBox = document.createElement('div');
+            tempBox.id = 'temp-box'; tempBox.className = 'editor-box temp';
+            tempBox.style.left = state.startX + 'px'; tempBox.style.top = state.startY + 'px';
+            layer.appendChild(tempBox);
+        });
+
+        canvas.addEventListener('mouseup', e => {
+            if (!state.drawing) return;
+            state.drawing = false;
+            const tb = document.getElementById('temp-box');
+            if (tb) {
+                const rect = canvas.getBoundingClientRect();
+                const tW = parseFloat(tb.style.width), tH = parseFloat(tb.style.height);
+                if (tW > 20 && tH > 10) {
+                    const lPercent = (parseFloat(tb.style.left) / rect.width) * 100;
+                    const tPercent = (parseFloat(tb.style.top) / rect.height) * 100;
+                    const wPercent = (tW / rect.width) * 100;
+                    const hPercent = (tH / rect.height) * 100;
+
+                    Modal.prompt("Field Label", "Enter a Name or Label for this Field:", (fieldName) => {
+                        if (fieldName) {
+                            state.editorFields.push({
+                                name: fieldName,
+                                type: 'text',
+                                left: lPercent,
+                                top: tPercent,
+                                width: wPercent,
+                                height: hPercent
+                            });
+                            renderEditorFields();
+                        }
+                    });
+                }
+                tb.remove();
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            if (state.drawing) {
+                state.drawing = false;
+                const tb = document.getElementById('temp-box');
+                if (tb) tb.remove();
+            }
+        });
+
+        function renderEditorFields() {
+            layer.innerHTML = '';
+            state.editorFields.forEach((f, i) => {
+                const box = document.createElement('div');
+                box.className = 'editor-box' + (f.type === 'checkbox' ? ' checkbox-type' : '');
+                box.style.left = f.left + '%'; box.style.top = f.top + '%';
+                box.style.width = f.width + '%'; box.style.height = f.height + '%';
+                box.style.cursor = 'move';
+
+                // Active State Styling
+                if (state.selectedIndex === i) {
+                    box.style.borderColor = '#ff4444';
+                    box.style.zIndex = '100';
+                }
+
+                // Label / Rename
+                const label = document.createElement('span');
+                label.style = "color:white; font-size: 11px; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius:3px; position:absolute; top:2px; left:2px; overflow:hidden; max-width:90%; white-space:nowrap; cursor:pointer;";
+                label.innerText = f.name || '';
+                label.onclick = (e) => {
+                    e.stopPropagation();
+                    Modal.prompt("Rename Field", "Change label for this box:", (name) => {
+                        if (name) { f.name = name; renderEditorFields(); }
+                    });
+                };
+
+                // Delete
+                const delBtn = document.createElement('div');
+                delBtn.className = 'delete-btn'; delBtn.innerHTML = '&times;';
+                delBtn.onclick = (e) => { e.stopPropagation(); state.editorFields.splice(i, 1); renderEditorFields(); };
+
+                // Resize Handle
+                const resizer = document.createElement('div');
+                resizer.className = 'resize-handle';
+                resizer.onmousedown = (e) => {
+                    e.stopPropagation(); e.preventDefault();
+                    state.isResizing = true; state.dragIndex = i;
+                    const rect = canvas.getBoundingClientRect();
+                    state.startX = e.clientX; state.startY = e.clientY;
+                    state.origW = f.width; state.origH = f.height;
+                };
+
+                // Move Logic
+                box.onmousedown = (e) => {
+                    if (e.target === delBtn || e.target === resizer || e.target === label) return;
+                    e.preventDefault();
+                    state.dragIndex = i; state.isResizing = false;
+                    state.selectedIndex = i;
+                    document.querySelectorAll('.editor-box').forEach(el => el.style.borderColor = '');
+                    box.style.borderColor = '#ff4444';
+                    box.style.zIndex = '100';
+                    state.startX = e.clientX; state.startY = e.clientY;
+                    state.origL = f.left; state.origT = f.top;
+                    box.classList.add('moving');
+                };
+
+                // Type Toggle Icon
+                const typeToggle = document.createElement('div');
+                typeToggle.style = "position:absolute; bottom:2px; left:2px; background:var(--accent); color:black; font-size:10px; font-weight:800; padding:1px 4px; border-radius:3px; cursor:pointer;";
+                typeToggle.innerText = f.type === 'checkbox' ? '☑' : 'T';
+                typeToggle.title = "Click to Toggle Type (Text/Checkbox)";
+                typeToggle.onclick = (e) => {
+                    e.stopPropagation();
+                    f.type = f.type === 'checkbox' ? 'text' : 'checkbox';
+                    renderEditorFields();
+                };
+
+                box.appendChild(label);
+                box.appendChild(delBtn);
+                box.appendChild(resizer);
+                box.appendChild(typeToggle);
+                layer.appendChild(box);
+            });
+        }
+
+        // Keyboard logic: Nudging & Duplication
+        window.addEventListener('keydown', e => {
+            if (state.isEditing && state.selectedIndex !== undefined && state.selectedIndex !== -1) {
+                const f = state.editorFields[state.selectedIndex];
+                const shift = e.shiftKey ? 2 : 0.5; // percent
+                let handled = true;
+
+                if (e.key === 'ArrowUp') f.top = Math.max(0, f.top - shift);
+                else if (e.key === 'ArrowDown') f.top = Math.min(100 - f.height, f.top + shift);
+                else if (e.key === 'ArrowLeft') f.left = Math.max(0, f.left - shift);
+                else if (e.key === 'ArrowRight') f.left = Math.min(100 - f.width, f.left + shift);
+                else if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) {
+                    e.preventDefault(); // prevent browser bookmark
+                    const clone = JSON.parse(JSON.stringify(f));
+                    clone.left = Math.min(100 - clone.width, clone.left + 2);
+                    clone.top = Math.min(100 - clone.height, clone.top + 2);
+                    clone.name += " (Copy)";
+                    state.editorFields.push(clone);
+                    state.selectedIndex = state.editorFields.length - 1;
+                } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                    // Prevent backspace from interacting with input unless in an input
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        state.editorFields.splice(state.selectedIndex, 1);
+                        state.selectedIndex = -1;
+                    } else {
+                        handled = false;
+                    }
+                } else {
+                    handled = false;
+                }
+
+                if (handled) {
+                    if (e.key !== 'Delete' && e.key !== 'Backspace') e.preventDefault();
+                    renderEditorFields();
+                }
+            }
+        });
+
+        // Team Manager JS
+        function openTeamManager() {
+            showView('admin-teams');
+            renderTeamManagerList();
+        }
+
+        function renderTeamManagerList() {
+            const tbody = document.getElementById('team-list-body');
+            tbody.innerHTML = '';
+            document.getElementById('team-count').innerText = state.teams.length;
+            state.teams.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--card-border)';
+                tr.innerHTML = `
+                    <td style="padding: 0.8rem 1rem;">${t.name}</td>
+                    <td style="padding: 0.8rem 1rem;">${t.password}</td>
+                    <td style="padding: 0.8rem 1rem;">${t.round || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function downloadTeamCsvTemplate() {
+            const csv = "TeamName,Password,Round\nTeam Alpha,1234,1\nTeam Beta,5678,2";
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'teams_template.csv';
+            a.click();
+        }
+
+        function exportTeamsCsv() {
+            let csv = "TeamName,Password,Round\n";
+            state.teams.forEach(t => {
+                csv += `"${t.name}","${t.password}","${t.round || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'exported_teams.csv';
+            a.click();
+        }
+
+        function handleTeamCsvUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const csvData = evt.target.result;
+                document.getElementById('team-loader').style.display = 'block';
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler(res => {
+                        fetchData(() => {
+                            document.getElementById('team-loader').style.display = 'none';
+                            if (res.success) {
+                                Modal.alert("Success", `Imported ${res.imported} teams successfully.`);
+                                renderTeamManagerList();
+                            } else {
+                                Modal.alert("Error", res.message);
+                            }
+                        });
+                    }).bulkImportTeams(csvData);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('team-loader').style.display = 'none';
+                        Modal.alert("Demo Mode", "CSV processed successfully.");
+                    }, 1000);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        showView('home');
+    </script>
+
+    <!-- Initialize Supabase Client -->
+
+</body>
+
+</html>
