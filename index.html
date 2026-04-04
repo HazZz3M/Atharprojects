@@ -1627,11 +1627,24 @@
                         if (this._s) this._s({ success: true, newId: n.id });
                     },
                     async uploadImageAndCreatePage(fd, fn, aid) {
-                        const res = await fetch(fd); const b = await res.blob(); const fp = aid + '/' + Date.now() + '_' + fn;
-                        await supabaseClient.storage.from('assessment_images').upload(fp, b, { contentType: 'image/png' });
-                        const { data: ud } = supabaseClient.storage.from('assessment_images').getPublicUrl(fp);
-                        const { data: pd } = await supabaseClient.from('pages').insert([{ assessment_id: aid, image_url: ud.publicUrl }]).select().single();
-                        if (this._s) this._s({ success: true, pageId: pd.id, url: ud.publicUrl });
+                        try {
+                            const res = await fetch(fd);
+                            const b = await res.blob();
+                            const fp = (aid || 'general') + '/' + Date.now() + '_' + fn;
+                            
+                            const { error: uploadError } = await supabaseClient.storage.from('assessment_images').upload(fp, b, { contentType: 'image/png' });
+                            if (uploadError) throw new Error("Upload failed: " + uploadError.message);
+
+                            const { data: ud } = supabaseClient.storage.from('assessment_images').getPublicUrl(fp);
+                            const { data: pd, error: dbError } = await supabaseClient.from('pages').insert([{ assessment_id: aid, image_url: ud.publicUrl }]).select().single();
+                            if (dbError) throw new Error("Database update failed: " + dbError.message);
+
+                            if (this._s) this._s({ success: true, pageId: pd.id, url: ud.publicUrl });
+                        } catch (e) {
+                            console.error(e);
+                            if (this._f) this._f(e.message || "Upload Error");
+                            Modal.alert("Upload Error", e.message || "Failed to process image.");
+                        }
                     },
                     async bulkImportTeams(csv) {
                         const r = csv.split('\n').filter(l => l.trim()).map(x => x.split(','));
@@ -3630,6 +3643,11 @@
                     img.style.opacity = '1';
                     document.getElementById('editor-img-loader').style.display = 'none';
                     renderEditorFields();
+                };
+                img.onerror = () => {
+                    img.parentElement.classList.remove('skeleton');
+                    document.getElementById('editor-img-loader').style.display = 'none';
+                    Modal.alert("Image Load Failed", "Could not load the page image. Please check your Supabase Storage permissions.");
                 };
             }
         }
