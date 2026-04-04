@@ -1674,14 +1674,22 @@
                         
                         const as = (a || []).map(r => { 
                             let pg = pm[r.id] || []; 
-                            pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
-                            // Case-insensitive count matching
-                            const count = sm[String(r.id).toLowerCase().trim()] || 0;
+                    const count = sm[String(r.id).toLowerCase().trim()] || 0;
                             return { id: r.id, title: r.title, isActive: r.is_active, settings: r.settings_json || {}, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
+                        
+                        // Force update global state immediately
+                        state.assessments = res.assessments;
+                        state.teams = res.teams;
+                        state.submissions = res.submissions;
+                        
                         if (this._s) this._s(res); return res;
+                    },
+                    async fetchData(cb) {
+                        const res = await this.fetchAppData();
+                        if (res.success && cb) cb(res);
                     },
                     createAssessment(t) { return this._x(supabaseClient.from('assessments').insert([{ title: t, is_active: false, settings_json: { isTemplate: true } }]).select().single()); },
                     toggleAssessment(id, st) { return this._x(supabaseClient.from('assessments').update({ is_active: st }).eq('id', id)); },
@@ -3249,7 +3257,7 @@
 
             // Always ensure the latest submission counts are loaded when opening the dashboard
             if (forceFetch || !state.submissions || state.submissions.length === 0) {
-                 fetchData(() => renderAdminDashboard(list, isTempTab, callback));
+                 google.script.run.fetchData(() => renderAdminDashboard(list, isTempTab, callback));
             } else {
                  renderAdminDashboard(list, isTempTab, callback);
             }
