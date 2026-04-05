@@ -1642,21 +1642,31 @@
             script: {
                 run: {
                     _s: null, _f: null,
-                    withSuccessHandler(h) { this._s = h; return this; },
-                    withFailureHandler(h) { this._f = h; return this; },
+                    withSuccessHandler(h) { 
+                        const clone = { ...this }; clone._s = h; return clone; 
+                    },
+                    withFailureHandler(h) { 
+                        const clone = { ...this }; clone._f = h; return clone; 
+                    },
                     async _x(p) {
                         try {
                             const { data, error } = await p;
-                            if (error) { if (this._f) this._f(error); return { success: false }; }
+                            if (error) { 
+                                if (this._f) this._f(error); 
+                                return { success: false, error: error }; 
+                            }
                             if (Array.isArray(data) && data.length === 0) {
                                 const err = new Error("Action blocked by Supabase Row Level Security (RLS). 0 rows affected.");
                                 if (this._f) this._f(err);
-                                return { success: false };
+                                return { success: false, error: err };
                             }
                             const r = data || { success: true };
                             if (r && r.id) { r.assessmentId = r.id; r.pageId = r.id; r.newId = r.id; }
                             if (this._s) this._s(r); return r;
-                        } catch (e) { if (this._f) this._f(e); return { success: false }; }
+                        } catch (e) { 
+                            if (this._f) this._f(e); 
+                            return { success: false, error: e }; 
+                        }
                     },
                     async fetchAppData() {
                         const { data: a } = await supabaseClient.from('assessments').select('*'); 
@@ -1682,14 +1692,11 @@
                             let pg = pm[r.id] || []; 
                             pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
                             const count = sm[String(r.id).toLowerCase().trim()] || 0;
-                            // Safe settings parsing for accurate counter and permission checks
                             const sets = parseSettingsObject(r.settings_json);
                             return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
-                        
-                        // Force update global state immediately
                         state.assessments = res.assessments;
                         state.teams = res.teams;
                         state.submissions = res.submissions;
@@ -1717,29 +1724,39 @@
                         if (this._s) this._s(r); return r;
                     },
                     async duplicateAssessment(id) {
-                        const { data: a } = await supabaseClient.from('assessments').select('*').eq('id', id).single();
-                        const { data: n } = await supabaseClient.from('assessments').insert([{ title: a.title + ' (Copy)', is_active: false, settings_json: a.settings_json }]).select().single();
-                        const { data: ps } = await supabaseClient.from('pages').select('*').eq('assessment_id', id);
-                        for (let p of ps) {
-                            const { data: np } = await supabaseClient.from('pages').insert([{ assessment_id: n.id, image_url: p.image_url }]).select().single();
-                            const { data: fs } = await supabaseClient.from('fields').select('*').eq('page_id', p.id);
-                            if (fs && fs.length > 0) await supabaseClient.from('fields').insert(fs.map(x => ({ page_id: np.id, field_name: x.field_name, top_percent: x.top_percent, left_percent: x.left_percent, width_percent: x.width_percent, height_percent: x.height_percent, type: x.type })));
+                        try {
+                            const { data: a, error: aErr } = await supabaseClient.from('assessments').select('*').eq('id', id).single();
+                            if (aErr) throw aErr;
+                            const { data: n, error: nErr } = await supabaseClient.from('assessments').insert([{ title: a.title + ' (Copy)', is_active: false, settings_json: a.settings_json }]).select().single();
+                            if (nErr) throw nErr;
+                            const { data: ps, error: pErr } = await supabaseClient.from('pages').select('*').eq('assessment_id', id);
+                            if (pErr) throw pErr;
+                            for (let p of ps) {
+                                const { data: np, error: npErr } = await supabaseClient.from('pages').insert([{ assessment_id: n.id, image_url: p.image_url }]).select().single();
+                                if (npErr) throw npErr;
+                                const { data: fs, error: fErr } = await supabaseClient.from('fields').select('*').eq('page_id', p.id);
+                                if (fErr) throw fErr;
+                                if (fs && fs.length > 0) {
+                                    const { error: iErr } = await supabaseClient.from('fields').insert(fs.map(x => ({ page_id: np.id, field_name: x.field_name, top_percent: x.top_percent, left_percent: x.left_percent, width_percent: x.width_percent, height_percent: x.height_percent, type: x.type })));
+                                    if (iErr) throw iErr;
+                                }
+                            }
+                            if (this._s) this._s({ success: true, newId: n.id });
+                        } catch (e) {
+                            if (this._f) this._f(e);
+                            Modal.alert("Duplication Failed", e.message || "Failed to duplicate assessment.");
                         }
-                        if (this._s) this._s({ success: true, newId: n.id });
                     },
                     async uploadImageAndCreatePage(fd, fn, aid) {
                         try {
                             const res = await fetch(fd);
                             const b = await res.blob();
                             const fp = (aid || 'general') + '/' + Date.now() + '_' + fn;
-                            
                             const { error: uploadError } = await supabaseClient.storage.from('assessment_images').upload(fp, b, { contentType: 'image/png' });
                             if (uploadError) throw new Error("Upload failed: " + uploadError.message);
-
                             const { data: ud } = supabaseClient.storage.from('assessment_images').getPublicUrl(fp);
                             const { data: pd, error: dbError } = await supabaseClient.from('pages').insert([{ assessment_id: aid, image_url: ud.publicUrl }]).select().single();
                             if (dbError) throw new Error("Database update failed: " + dbError.message);
-
                             if (this._s) this._s({ success: true, pageId: pd.id, url: ud.publicUrl });
                         } catch (e) {
                             console.error(e);
@@ -3398,6 +3415,9 @@
         }
 
         function openSettings(id) {
+            if (!id || id === 'undefined' || String(id).startsWith('tmp_')) {
+                return Modal.alert("Please Wait", "This assessment is still being created or has an invalid ID. Please wait a moment and try again.");
+            }
             state.manageAssessmentId = id;
             const a = state.assessments.find(x => x.id === id);
             document.getElementById('settings-title').innerText = `Settings: ${a.title}`;
@@ -3428,6 +3448,9 @@
 
         async function saveAssessmentSettings() {
             const id = state.manageAssessmentId;
+            if (!id || id === 'undefined' || String(id).startsWith('tmp_')) {
+                return Modal.alert("Error", "Invalid Assessment ID. Please close and reopen the settings.");
+            }
             const current = state.assessments.find(a => a.id === id);
             const existingSettings = (current && current.settings && typeof current.settings === 'object') ? current.settings : {};
             const settings = {
