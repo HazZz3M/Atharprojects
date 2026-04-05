@@ -2203,15 +2203,22 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
 
-                        const words = val.toString().split(/\s+/);
-                        let line = '', lines = [];
-                        for (const word of words) {
-                            const test = line ? line + ' ' + word : word;
-                            if (ctx.measureText(test).width > w - 10 && line) {
-                                lines.push(line); line = word;
-                            } else { line = test; }
-                        }
-                        if (line) lines.push(line);
+                        const lines = [];
+                        const paragraphs = val.toString().split(/\r?\n/);
+                        paragraphs.forEach(p => {
+                            const words = p.split(/\s+/);
+                            let currentLine = '';
+                            words.forEach(word => {
+                                const testLine = currentLine ? currentLine + ' ' + word : word;
+                                if (ctx.measureText(testLine).width > w - 10 && currentLine) {
+                                    lines.push(currentLine);
+                                    currentLine = word;
+                                } else {
+                                    currentLine = testLine;
+                                }
+                            });
+                            if (currentLine) lines.push(currentLine);
+                        });
 
                         const lineH = fontSize * 1.2;
                         const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
@@ -4795,15 +4802,22 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
 
-                        const words = val.toString().split(/\s+/);
-                        let line = '', lines = [];
-                        for (const word of words) {
-                            const test = line ? line + ' ' + word : word;
-                            if (ctx.measureText(test).width > w - 10 && line) {
-                                lines.push(line); line = word;
-                            } else { line = test; }
-                        }
-                        if (line) lines.push(line);
+                        const lines = [];
+                        const paragraphs = val.toString().split(/\r?\n/);
+                        paragraphs.forEach(p => {
+                            const words = p.split(/\s+/);
+                            let currentLine = '';
+                            words.forEach(word => {
+                                const testLine = currentLine ? currentLine + ' ' + word : word;
+                                if (ctx.measureText(testLine).width > w - 10 && currentLine) {
+                                    lines.push(currentLine);
+                                    currentLine = word;
+                                } else {
+                                    currentLine = testLine;
+                                }
+                            });
+                            if (currentLine) lines.push(currentLine);
+                        });
 
                         const lineH = fontSize * 1.2;
                         const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
@@ -4818,7 +4832,11 @@
                         }
                     });
 
-                    canvas.toBlob(b => resolve(b), 'image/jpeg', 0.95);
+                    document.body.appendChild(canvas); // Temporary attach for text metrics if needed
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                    document.body.removeChild(canvas);
+                    
+                    fetch(dataUrl).then(res => res.blob()).then(blob => resolve(blob));
                 };
                 img.onerror = () => {
                     console.error("Failed to load backgound image for export.");
