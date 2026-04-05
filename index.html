@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <title>Athar Incubator</title>
+    <title>Premium Assessment Hub</title>
     <!-- Supabase & Rendering Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 
 
     <style>
@@ -23,34 +21,30 @@
         :root {
             --bg-start: #0f172a;
             --bg-end: #020617;
-            --card-bg: rgba(15, 23, 42, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(255, 255, 255, 0.1);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #ca8a04;
-            --accent-glow: rgba(202, 138, 4, 0.3);
+            --accent-glow: rgba(202, 138, 4, 0.4);
             --success: #22c55e;
             --danger: #ef4444;
             --student-color: #000000;
-            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
             --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --panel-bg: rgba(30, 41, 59, 0.5);
-            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.4);
-            --ui-font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* Light Mode Variables */
         [data-theme="light"] {
-            --bg-start: #f8fafc;
-            --bg-end: #f1f5f9;
-            --card-bg: rgba(255, 255, 255, 0.7);
-            --card-border: rgba(0, 0, 0, 0.06);
+            --bg-start: #f1f5f9;
+            --bg-end: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-border: rgba(148, 163, 184, 0.3);
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --accent: #ca8a04;
-            --accent-glow: rgba(202, 138, 4, 0.15);
-            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #475569 100%);
-            --panel-bg: rgba(241, 245, 249, 0.6);
-            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.1);
+            --accent: #eab308;
+            --accent-glow: rgba(234, 179, 8, 0.2);
+            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #334155 100%);
         }
 
 
@@ -62,7 +56,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: var(--ui-font);
+            font-family: 'Outfit', sans-serif;
             color: var(--text-main);
         }
 
@@ -77,9 +71,8 @@
 
         nav {
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 0.8rem 2rem;
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -87,7 +80,6 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
 
         nav .logo {
@@ -233,31 +225,12 @@
         }
 
         h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
             background: var(--h1-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -1.5px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         p {
@@ -1160,7 +1133,7 @@
         </div>
     </div>
     <!-- Premium Global Modal -->
-    <div id="global-modal" class="modal-overlay" style="display:none;">
+    <div id="global-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-title">Notice</div>
             <div class="modal-text">Message goes here...</div>
@@ -1174,31 +1147,27 @@
     </div>
 
     <nav>
-        <div class="logo" id="nav-home" onclick="showView('home')" style="cursor:pointer;">
-            ATHAR <span>INCUBATOR</span>
+        <div class="logo" id="nav-home" onclick="showView('home')" style="cursor:pointer;" data-i18n="logo">Athar inc
         </div>
+
         <div class="nav-actions">
-            <button class="delete-btn theme-btn" onclick="state.theme.toggle()" title="Toggle Theme">
-                <i data-lucide="sun-moon" id="theme-icon"></i>
+            <button class="lang-btn" onclick="Language.toggle()">
+                <span id="lang-icon">AR</span>
             </button>
-            <div class="hamburger" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+            <button class="theme-btn" onclick="Theme.toggle()">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
         <div class="nav-links" id="menu-links">
-            <a onclick="showView('home'); toggleMenu();">Home</a>
-            <a onclick="showView('admin-login'); toggleMenu();">Admin Portal</a>
-            <div style="margin-top:auto; padding-top:2rem; border-top:1px solid var(--card-border);">
-                <button class="btn outline" onclick="Language.toggle()" style="width:100%;">
-                    <i data-lucide="languages" style="width:16px;"></i> Language
-                </button>
-            </div>
+            <a onclick="showView('admin-login'); toggleMenu();" id="nav-admin" data-i18n="admin_portal">Admin Portal</a>
         </div>
     </nav>
-
-
 
     <!-- Student Home -->
     <main id="view-home" class="view-section active">
@@ -1225,7 +1194,7 @@
             <button class="btn" onclick="verifyTeamAuth()" style="width: 100%; margin-top: 1rem;"
                 data-i18n="confirm_team">Confirm Team</button>
             <button class="btn outline" onclick="showView('home')"
-                style="width: 100%; margin-top: 0.8rem; border-color: rgba(255,255,255,0.05); color: var(--text-muted);"
+                style="width: 100%; margin-top: 0.8rem; border-color: rgba(255,255,255,0.2); color: var(--text-muted);"
                 data-i18n="back_to_home">Back
                 to Home</button>
             <div id="team-error" style="color: var(--danger); margin-top: 1rem; display:none;"></div>
@@ -1298,22 +1267,15 @@
                 </div>
             </div>
             <div style="display:flex; gap:0.8rem;">
-                <button class="delete-btn" onclick="showView('manage-teams')"
-                    style="border-color: var(--accent); color: var(--accent);">
-                    <i data-lucide="users" style="width:16px;"></i> Teams
-                </button>
-                <button class="delete-btn" onclick="showView('manage-admins')"
-                    style="border-color: var(--accent); color: var(--accent);">
-                    <i data-lucide="shield-check" style="width:16px;"></i> Admins
-                </button>
-                <button class="delete-btn" onclick="refreshAdminData()"
-                    title="Sync latest data from Supabase">
-                    <i data-lucide="refresh-cw" style="width:16px;"></i>
-                </button>
-                <button class="delete-btn" onclick="toggleDebugMode()"
-                    title="View raw responses and database records">
-                    <i data-lucide="database" style="width:16px;"></i>
-                </button>
+                <button class="btn outline" onclick="openTeamManager()" title="Bulk Manage Teams"
+                    style="border-color: var(--accent); color: var(--accent);">👥 Teams</button>
+                <button class="btn outline" onclick="openUserManager()" title="Manage Admin Users"
+                    style="border-color: var(--accent); color: var(--accent);">👤 Admins</button>
+                <button class="btn outline" onclick="loadAdminDashboard(true)" title="Sync latest data from Supabase">🔄
+                    Refresh</button>
+                <button class="btn outline" onclick="openSpreadsheet()"
+                    title="View raw responses and database records">📊
+                    Results</button>
                 <button id="btn-new-assessment" class="btn primary-btn" onclick="createNewAssessment()"
                     title="Create a brand new assessment or template">+ New</button>
             </div>
@@ -1553,7 +1515,7 @@
         </div>
     </main>
 
-    <!-- Admin Assessment Pages -->
+    <!-- Admin Manage Assessment Pages -->
     <!-- Admin User Manager -->
     <main id="view-admin-users" class="view-section">
         <div class="card" style="max-width: 800px; text-align: left;">
@@ -1681,8 +1643,6 @@
         } catch (e) {
             console.error("Supabase fail:", e);
         }
-        // After every view change, refresh icons
-        setTimeout(() => lucide.createIcons(), 50);
 
         window.google = {
             script: {
@@ -1723,7 +1683,7 @@
 
                         const fm = {}; (f || []).forEach(r => { if (!fm[r.page_id]) fm[r.page_id] = []; fm[r.page_id].push({ id: r.id, top: r.top_percent, left: r.left_percent, width: r.width_percent, height: r.height_percent, name: r.field_name, type: r.type }); });
                         const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
-                        const ts = (t || []).map(r => ({ name: r.team_name || r.name, password: r.password, round: r.round || '1' }));
+                        const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
 
                         const sm = {};
                         (s || []).forEach(r => {
@@ -1738,8 +1698,8 @@
                             let pg = pm[r.id] || [];
                             pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp));
                             const count = sm[String(r.id).toLowerCase().trim()] || 0;
-                            const sets = parseSettingsObject(r.settings_json || r.settings);
-                            return { id: r.id, title: r.title, isActive: r.is_active || r.isActive, settings: sets, pages: pg, submissionCount: count };
+                            const sets = parseSettingsObject(r.settings_json);
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count };
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
@@ -1840,7 +1800,7 @@
             current: 'en',
             translations: {
                 en: {
-                    logo: "Athar Incubator",
+                    logo: "Athar inc",
                     admin_portal: "Admin Portal",
                     available_assessments: "Available Assessments",
                     select_assessment: "Select an assessment below to begin.",
@@ -1888,41 +1848,41 @@
                 },
                 ar: {
                     logo: "مسرعة أعمال أثر",
-                    admin_portal: "بوابة المسؤول",
-                    available_assessments: "التقييمات المتاحة",
-                    select_assessment: "اختر التقييم للبدء.",
+                    admin_portal: "خاص بفريق التنظيم",
+                    available_assessments: "التدريبات المتاحة",
+                    select_assessment: "اختر تدريباً للبدء.",
                     no_assessments: "لا توجد تقييمات متاحة حالياً.",
-                    begin: "بدء التقييم",
-                    team_portal: "بوابة الفريق",
-                    select_team: "اختر الفريق وادخل الرقم السري.",
+                    begin: "ابدأ",
+                    team_portal: "الفريق",
+                    select_team: "اختر فريقك وأدخل كلمة المرور.",
                     choose_team: "-- اختر الفريق --",
-                    team_password: "كلمة سر الفريق",
+                    team_password: "كلمة مرور الفريق",
                     your_name: "اسمك",
                     confirm_team: "تأكيد الفريق",
-                    back_to_home: "العودة للرئيسية",
+                    back_to_home: "العودة للصفحة الرئيسية",
                     page_x_of_y: "صفحة {x} من {y}",
                     point: "نقطة",
                     points: "نقاط",
                     text_color: "لون الخط",
                     next_page: "الصفحة التالية",
                     prev_page: "السابق",
-                    submit: "تسليم النهائي",
+                    submit: "إرسال",
                     loading: "جاري التحميل...",
                     notice: "تنبيه",
                     cancel: "إلغاء",
                     confirm: "تأكيد",
-                    admin_login: "تسجيل دخول المسؤول",
+                    admin_login: "تسجيل دخول فريق التنظيم",
                     username: "اسم المستخدم",
                     password: "كلمة المرور",
                     login: "دخول",
                     logout: "خروج",
-                    confirm_submit_msg: "هل أنت متأكد من التسليم؟ لا يمكن تعديل الإجابات بعد ذلك.",
+                    confirm_submit_msg: "هل أنت متأكد من الإرسال ؟ لن تتمكن من تغيير إجاباتك بعد ذلك.",
                     submitting: "جاري الإرسال...",
                     error: "خطأ",
                     success: "تم بنجاح",
                     sent: "تم الإرسال",
                     export_error: "خطأ في التصدير",
-                    no_pages: "لا توجد صفحات في هذا التقييم.",
+                    no_pages: "لا توجد صفحات لهذا التقييم.",
                     not_available: "غير متاح",
                     export_success: "تم التصدير بنجاح",
                     new_assessment: "تقييم جديد",
@@ -1948,8 +1908,7 @@
                 const isRtl = this.current === 'ar';
                 document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
                 document.documentElement.lang = this.current;
-                const langIcon = document.getElementById('lang-icon');
-                if (langIcon) langIcon.innerText = isRtl ? 'EN' : 'AR';
+                document.getElementById('lang-icon').innerText = isRtl ? 'EN' : 'AR';
 
                 document.querySelectorAll('[data-i18n]').forEach(el => {
                     const key = el.getAttribute('data-i18n');
@@ -1996,72 +1955,49 @@
 
         // Professional Modal Utility
         const Modal = {
-            alert(title, msg, onOk) {
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.innerHTML = `
-                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                        <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
-                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                <i data-lucide="info" style="width:24px; height:24px;"></i>
-                            </div>
-                        </div>
-                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
-                        <p style="font-size:0.95rem; margin-bottom:1.8rem; white-space:pre-wrap;">${msg}</p>
-                        <button class="btn" style="width:100%;" onclick="this.parentElement.parentElement.remove(); if(${!!onOk}) (${onOk})();">Got it</button>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-                lucide.createIcons();
+            activeCallback: null,
+            _show(title, text, type = 'alert', callback = null) {
+                const overlay = document.getElementById('global-modal');
+                const content = overlay.querySelector('.modal-content');
+                overlay.querySelector('.modal-title').innerText = title;
+                overlay.querySelector('.modal-text').innerHTML = text;
+
+                const input = overlay.querySelector('.modal-input');
+                const btnCancel = overlay.querySelector('#modal-btn-cancel');
+
+                input.style.display = (type === 'prompt') ? 'block' : 'none';
+                btnCancel.style.display = (type === 'alert') ? 'none' : 'block';
+
+                input.value = '';
+                overlay.style.display = 'flex';
+                this.activeCallback = callback;
+
+                if (type === 'prompt') setTimeout(() => input.focus(), 100);
             },
-            confirm(title, msg, onValue) {
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.innerHTML = `
-                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                         <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
-                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                <i data-lucide="help-circle" style="width:24px; height:24px;"></i>
-                            </div>
-                        </div>
-                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
-                        <p style="font-size:0.95rem; margin-bottom:1.8rem; white-space:pre-wrap;">${msg}</p>
-                        <div style="display:flex; gap:0.8rem;">
-                            <button class="btn outline" style="flex:1;" id="modal-cancel">Cancel</button>
-                            <button class="btn" style="flex:1;" id="modal-ok">Confirm</button>
-                        </div>
-                    </div>
-                `;
-                overlay.querySelector('#modal-cancel').onclick = () => { overlay.remove(); onValue(false); };
-                overlay.querySelector('#modal-ok').onclick = () => { overlay.remove(); onValue(true); };
-                document.body.appendChild(overlay);
-                lucide.createIcons();
+            alert(title, text, cb) { this._show(title, text, 'alert', cb); },
+            confirm(title, text, cb) { this._show(title, text, 'confirm', cb); },
+            prompt(title, text, cb) { this._show(title, text, 'prompt', cb); },
+            showLoader(text = "Loading...") {
+                this._show("Please Wait", `<div class="loader" style="margin: 1rem auto;"></div><p>${text}</p>`, 'alert');
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'none';
             },
-            prompt(title, msg, onValue) {
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.innerHTML = `
-                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                         <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
-                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                <i data-lucide="edit-3" style="width:24px; height:24px;"></i>
-                            </div>
-                        </div>
-                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
-                        <p style="font-size:0.95rem; margin-bottom:1rem; white-space:pre-wrap;">${msg}</p>
-                        <input type="text" id="modal-input-field" class="form-control" style="width:100%; margin-bottom:1.5rem; background:var(--card-bg); border:1px solid var(--card-border); color:var(--text-main); padding:0.8rem; border-radius:8px;">
-                        <div style="display:flex; gap:0.8rem;">
-                            <button class="btn outline" style="flex:1;" id="modal-cancel">Cancel</button>
-                            <button class="btn" style="flex:1;" id="modal-ok">Submit</button>
-                        </div>
-                    </div>
-                `;
-                const input = overlay.querySelector('#modal-input-field');
-                overlay.querySelector('#modal-cancel').onclick = () => { overlay.remove(); onValue(null); };
-                overlay.querySelector('#modal-ok').onclick = () => { overlay.remove(); onValue(input.value); };
-                document.body.appendChild(overlay);
-                lucide.createIcons();
-                input.focus();
+            hideLoader() {
+                this.close();
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'flex';
+            },
+            close(confirmed) {
+                const overlay = document.getElementById('global-modal');
+                const input = overlay.querySelector('.modal-input');
+                const val = input.value;
+                overlay.style.display = 'none';
+                if (this.activeCallback) {
+                    if (input.style.display !== 'none') {
+                        this.activeCallback(confirmed ? val : null);
+                    } else {
+                        this.activeCallback(confirmed);
+                    }
+                }
+                this.activeCallback = null;
             }
         };
 
@@ -2461,9 +2397,6 @@
             }
             if (viewId === 'admin-editor' && !state.isEditing) resetEditor();
             if (viewId === 'admin-submissions') { } // handled by openSubmissions
-            
-            // Refresh icons after view change
-            setTimeout(() => lucide.createIcons(), 50);
         }
 
         function openSubmissions(aid) {
@@ -2502,15 +2435,14 @@
                     <h3 style="margin:0;">${s.team}${memberText}</h3>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${new Date(s.timestamp).toLocaleTimeString()}</div>
                     <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
-                        <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')"><i data-lucide="eye"></i> Review</button>
-                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')"><i data-lucide="folder-open"></i> Drive</button>` : ''}
-                        <button class="btn danger outline" style="flex:0.5; padding:0.6rem;" onclick="event.stopPropagation(); deleteSubmission('${s.id}')"><i data-lucide="trash-2"></i></button>
+                        <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')">Review</button>
+                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')">Drive</button>` : ''}
+                        <button class="btn danger outline" style="flex:0.5; padding:0.6rem;" onclick="event.stopPropagation(); deleteSubmission('${s.id}')">Del</button>
                     </div>
                 `;
                 el.onclick = () => launchSubmissionViewer(s, state.manageAssessmentId);
                 list.appendChild(el);
             });
-            lucide.createIcons();
         }
 
         function launchSubmissionViewer(sub, aid) {
@@ -2560,7 +2492,7 @@
             document.getElementById('sub-viewer').style.display = 'none';
         }
 
-        async function renderSubmissionPage() {
+        function renderSubmissionPage() {
             const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
             const page = assm.pages[state.subPageIndex];
             const sub = state.subSub;
@@ -2575,31 +2507,77 @@
             img.parentElement.classList.add('skeleton');
             document.getElementById('sub-img-loader').style.display = 'block';
 
-            try {
-                // Use the same high-fidelity engine as the exporter (Canvas)
-                const base64Back = await loadBase64(page.fileId);
-                const pageWithData = await renderPageOnCanvas(base64Back, page, sub.answers);
+            const rawAnswers = sub.answers;
+            const nestedAnswers = rawAnswers[page.pageId];
+            page.fields.forEach(f => {
+                // Deep lookup: Try id, then name, in nested, then flat
+                let val = null;
+                const getFromObj = (obj) => {
+                    if (!obj || typeof obj !== 'object') return null;
+                    if (obj[f.id] !== undefined) return obj[f.id];
+                    if (obj[f.name] !== undefined) return obj[f.name];
 
-                if (pageWithData) {
-                    img.src = pageWithData;
-                    img.onload = () => {
-                        img.style.opacity = '1';
-                        img.parentElement.classList.remove('skeleton');
-                        document.getElementById('sub-img-loader').style.display = 'none';
-                    };
-                } else {
-                    throw new Error("Canvas render failed");
-                }
-            } catch (err) {
-                console.error("Sub Viewer Render Fail:", err);
-                // Simple fallback to background only if canvas fails
-                img.src = page.url;
-                img.onload = () => {
-                    img.style.opacity = '1';
-                    img.parentElement.classList.remove('skeleton');
-                    document.getElementById('sub-img-loader').style.display = 'none';
+                    // Fallback: If student used the ID system but ID changed, maybe they also saved the name?
+                    const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                    const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
+
+                    for (const key in obj) {
+                        const normKey = normalizeAnswerKey(key);
+                        if (normKey === normName || normKey === normId) return obj[key];
+                    }
+                    return null;
                 };
-            }
+
+                val = getFromObj(nestedAnswers);
+                if (val === null || val === undefined) val = getFromObj(rawAnswers);
+
+                if (val == null || val === '') return; // Skip empty
+                const div = document.createElement('div');
+                div.style.cssText = [
+                    'position:absolute',
+                    `top:${f.top}%`,
+                    `left:${f.left}%`,
+                    `width:${f.width}%`,
+                    `height:${f.height}%`,
+                    'padding:4px 6px',
+                    'font-size:13px',
+                    'font-weight:800',
+                    'color: #000000', // Hardcode black for review as it's on white paper
+                    'text-shadow: 0 0 1px #fff', // Subtle glow for readablity
+                    'background: rgba(250, 204, 21, 0.1)', // Light yellow highlight to show where the field is
+                    'border-bottom: 1px dotted rgba(0,0,0,0.2)',
+                    'text-align:center',
+                    'white-space:pre-wrap',
+                    'overflow:hidden',
+                    'position:absolute',
+                    'z-index:20',
+                    'pointer-events:none',
+                    'display:flex',
+                    'align-items:center',
+                    'justify-content:center',
+                    'line-height:1.1'
+                ].join(';');
+                if (f.type === 'checkbox') {
+                    if (val === 'true' || val === true) {
+                        div.innerHTML = '<span style="font-size:1.5rem;">✓</span>';
+                    } else {
+                        return; // don't show anything for unchecked
+                    }
+                } else {
+                    div.innerText = val.toString();
+                }
+                fieldsContainer.appendChild(div);
+            });
+
+            const revealOverlay = () => {
+                img.style.opacity = '1';
+                img.parentElement.classList.remove('skeleton');
+                document.getElementById('sub-img-loader').style.display = 'none';
+            };
+
+            img.src = page.url;
+            img.onload = revealOverlay;
+            img.onerror = revealOverlay;
 
             renderSubNavDots();
         }
@@ -2616,7 +2594,6 @@
                 dot.onclick = () => { state.subPageIndex = i; renderSubmissionPage(); };
                 list.appendChild(dot);
             });
-            lucide.createIcons();
         }
 
         function prevSubPage() {
@@ -2764,7 +2741,7 @@
                     const el = document.createElement('div');
                     el.className = 'assessment-row';
                     el.innerHTML = `
-                        <div style="flex:1;">
+                        <div>
                             <h3 style="color:var(--text-main); margin-bottom:0.2rem;">${a.title}</h3>
                             <span style="font-size:0.9rem; color:var(--text-muted);">${a.pages.length} Pages</span>
                         </div>
@@ -2889,12 +2866,9 @@
 
                 // Final background sync check to prevent RLS race conditions
                 if (!state.submissions || state.submissions.length === 0) {
-                    try {
-                        const { data: s } = await supabaseClient.from('submissions').select('id, assessment_id, team_name');
-                        if (s) state.submissions = s;
-                    } catch (e) {
-                        console.warn("Silent submission fetch fail:", e);
-                    }
+                    await google.script.run.withSuccessHandler(res => {
+                        if (res && res.submissions) state.submissions = res.submissions;
+                    }).fetchAppData();
                 }
                 const memberName = document.getElementById('member-name').value.trim();
 
@@ -2992,7 +2966,7 @@
         }
 
         function autoSubmit() {
-            Modal.alert("Time's Up", "Your time of this assessment has ended. Your answers are being submitted automatically.");
+            alert("⏰ TIME IS UP! Your assessment is being submitted automatically.");
             // Jump to last page and trigger submission
             state.currentPageIndex = state.activePages.length - 1;
             nextPage();
@@ -3439,11 +3413,11 @@
                                 </div>
                             </div>
                             <div style="display:flex; align-items:center; gap: 0.8rem;">
-                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Settings"><i data-lucide="settings" style="width:14px;"></i></button>
-                                <button class="btn info" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.6rem; min-width:auto;" title="Rename"><i data-lucide="edit-2" style="width:14px;"></i></button>
-                                <button class="btn" onclick="duplicateAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Duplicate" ><i data-lucide="copy" style="width:14px;"></i></button>
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Settings">&#9881;</button>
+                                <button class="btn info" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.6rem; min-width:auto;" title="Rename">&#9998;</button>
+                                <button class="btn" onclick="duplicateAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Duplicate" >&#10064;</button>
                                 <button class="btn outline" onclick="managePages('${a.id}')">Manage</button>
-                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Delete"><i data-lucide="trash-2" style="width:14px;"></i></button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Delete">&times;</button>
                             </div>
                         `;
                 } else {
@@ -3462,23 +3436,22 @@
                                 ${a.settings && a.settings.round && a.settings.round !== 'all' ? `<span style="background:var(--success); color:white; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.85rem;">Round ${a.settings.round}</span>` : ''}
                             </div>
                             <div class="card-actions">
-                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.65rem; flex:1;" title="Settings"><i data-lucide="settings" style="width:14px;"></i> Settings</button>
-                                <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice"><i data-lucide="megaphone" style="width:14px;"></i> Notify</button>
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.65rem; flex:1;" title="Settings">&#9881; Settings</button>
+                                <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice">&#128227; Notify</button>
                             </div>
                             <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button id="btn-export-${a.id}" class="btn info outline" onclick="extractResultsForAssessment('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;"><i data-lucide="download" style="width:14px;"></i> Export ZIP</button>
-                                <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename"><i data-lucide="edit-2" style="width:14px;"></i></button>
-                                <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate"><i data-lucide="copy" style="width:14px;"></i></button>
+                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">📸 Export</button>
+                                <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename">Rename</button>
+                                <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate">Duplicate</button>
                             </div>
                             <div class="card-footer">
                                 <button class="btn outline" onclick="managePages('${a.id}')" style="width:100%; padding:0.8rem;">Manage Content</button>
-                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.65rem; min-width:auto; margin-left:0.5rem;" title="Delete"><i data-lucide="trash-2"></i></button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.65rem; min-width:auto; margin-left:0.5rem;" title="Delete">&times;</button>
                             </div>
                         `;
                 }
                 list.appendChild(el);
             });
-            lucide.createIcons();
             if (callback) callback();
         }
 
@@ -3588,31 +3561,67 @@
             const assm = state.assessments.find(a => a.id === id);
             if (!assm) return;
 
-            Modal.prompt("Live Notification", "Enter an urgent message for all participants in this assessment:", (message) => {
-                if (!message || !message.trim()) return;
-                const trimmed = message.trim();
-                const seconds = 10; // Default 10s for quick notify
+            // Custom modal for Live Notification with duration
+            const overlay = document.getElementById('global-modal');
+            const title = overlay.querySelector('.modal-title');
+            const text = overlay.querySelector('.modal-text');
+            const input = overlay.querySelector('.modal-input');
+            const btnCancel = overlay.querySelector('#modal-btn-cancel');
+            const btnOk = overlay.querySelector('#modal-btn-ok');
 
-                const updatePayload = {
-                    ...(assm.settings || {}),
-                    liveNotice: {
-                        id: 'LN-' + Date.now(),
-                        assessmentId: String(id),
-                        message: trimmed,
-                        durationSec: seconds,
-                        createdAt: new Date().toISOString()
-                    }
-                };
+            title.innerText = "Live Notification";
+            text.innerHTML = "<b>Send a floating message</b> to users currently inside this assessment.<br>This will appear at the top of their screen with an alert sound.";
+            input.placeholder = "Type urgent message for participants...";
+            input.value = '';
+            input.style.display = 'block';
+            btnCancel.style.display = 'block';
+            overlay.style.display = 'flex';
 
-                supabaseClient.from('assessments').update({ settings_json: updatePayload }).eq('id', id)
-                    .then(res => {
-                        if (res.error) Modal.alert("Error", "Failed to send notification: " + res.error.message);
-                        else {
-                           assm.settings = updatePayload;
-                           Modal.alert("Success", "Notification sent successfully!");
+            // Add duration input temporarily
+            let durationWrap = document.getElementById('modal-duration-wrap');
+            if (!durationWrap) {
+                durationWrap = document.createElement('div');
+                durationWrap.id = 'modal-duration-wrap';
+                durationWrap.style = "margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem;";
+                durationWrap.innerHTML = `
+                    <span>Disappear after</span>
+                    <input type="number" id="modal-duration-input" min="1" max="120" value="${assm.settings.liveNoticeDefaultDuration || 8}" 
+                        style="width: 60px; padding: 0.4rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; color: var(--text-main); text-align: center;">
+                    <span>seconds</span>
+                `;
+                input.parentNode.insertBefore(durationWrap, input.nextSibling);
+            } else {
+                durationWrap.style.display = 'flex';
+                document.getElementById('modal-duration-input').value = assm.settings.liveNoticeDefaultDuration || 8;
+            }
+
+            Modal.activeCallback = (confirmed) => {
+                const message = input.value.trim();
+                const seconds = parseInt(document.getElementById('modal-duration-input').value) || 8;
+                durationWrap.style.display = 'none';
+
+                if (confirmed && message) {
+                    const settings = {
+                        ...(assm.settings || {}),
+                        liveNoticeDefaultDuration: seconds,
+                        liveNotice: {
+                            id: 'LN-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+                            assessmentId: String(id),
+                            message: message,
+                            durationSec: seconds,
+                            createdAt: new Date().toISOString()
                         }
-                    });
-            });
+                    };
+                    assm.settings = { ...settings };
+                    if (typeof google === 'undefined') {
+                        showLiveNotice(message, seconds);
+                        return;
+                    }
+                    google.script.run.withSuccessHandler(() => {
+                        Modal.alert("Sent", "Notification sent successfully.");
+                    }).updateAssessmentSettings(id, settings);
+                }
+            };
         }
 
         function startAdminAutoSync() {
@@ -3706,68 +3715,82 @@
                 state._pendingAssessments.push(optimistic);
                 state.assessments.push(optimistic);
 
-                supabaseClient.from('assessments')
-                    .insert([{ title: trimmedTitle, isActive: false, settings_json: { isTemplate: isTemplate } }])
-                    .select()
-                    .then(({ data, error }) => {
-                        if (error) {
-                            state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
-                            state.assessments = state.assessments.filter(a => a.id !== tempId);
-                            loadAdminDashboard(false);
-                            Modal.alert('Create Failed', 'Could not save assessment: ' + error.message);
-                        } else {
-                            const realId = data[0].id;
+                // Render immediately — no network call needed
+                loadAdminDashboard(false);
+
+
+
+                // Background backend save — never triggers a force re-fetch
+                google.script.run
+                    .withFailureHandler(err => {
+                        // Backend failed — remove the optimistic entry and re-render
+                        state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
+                        state.assessments = state.assessments.filter(a => a.id !== tempId);
+                        loadAdminDashboard(false);
+                        Modal.alert('Create Failed', 'Could not save assessment: ' + (err.message || String(err)));
+                    })
+                    .withSuccessHandler(res => {
+                        if (res && res.assessmentId) {
+                            const realId = res.assessmentId;
                             const idx = state.assessments.findIndex(a => a.id === tempId);
                             if (idx !== -1) {
                                 state.assessments[idx].id = realId;
                                 state.assessments[idx]._isOptimistic = false;
-                                state.assessments[idx].pages = [];
                             }
-                            if (state.manageAssessmentId === tempId) state.manageAssessmentId = realId;
-                            loadAdminDashboard(false);
+                            state._pendingAssessments = state._pendingAssessments.map(a => {
+                                if (a.id === tempId) return { ...a, id: realId, _isOptimistic: false };
+                                return a;
+                            });
+
+                            // If we were currently managing this temporary ID, update it
+                            if (state.manageAssessmentId === tempId) {
+                                state.manageAssessmentId = realId;
+                            }
                         }
-                    });
-            });
-        }
-        function toggleAssm(id, status) {
-            supabaseClient.from('assessments').update({ isActive: status }).eq('id', id).then(() => {
-                const a = state.assessments.find(x => x.id === id);
-                if (a) a.isActive = status;
+                        loadAdminDashboard(false);
+                    })
+                    .createAssessment(trimmedTitle);
             });
         }
 
+        function toggleAssm(id, state) {
+            google.script.run.withSuccessHandler(() => { }).toggleAssessment(id, state);
+        }
+
         function deleteAssm(id) {
-            Modal.confirm("Delete Assessment", "Are you sure? This will delete all student records for this assessment.", (confirmed) => {
+            Modal.confirm("Delete Assessment", "Are you sure? This will delete all pages, fields, and student records for this assessment.", (confirmed) => {
                 if (!confirmed) return;
-                supabaseClient.from('assessments').delete().eq('id', id).then(() => {
-                    fetchData(() => loadAdminDashboard(true));
-                });
+                const overlay = document.getElementById('save-overlay');
+                const overlayText = document.getElementById('save-overlay-text');
+                overlayText.innerText = "Deleting Assessment...";
+                overlay.style.display = 'flex';
+                google.script.run.withSuccessHandler(() => fetchData(() => {
+                    overlay.style.display = 'none';
+                    loadAdminDashboard(true);
+                })).deleteAssessment(id);
             });
         }
 
         function renameAssm(id, oldTitle) {
-            Modal.prompt("Rename Assessment", "Enter a new title:", (newTitle) => {
+            Modal.prompt("Rename Assessment", "Enter a new title for this assessment:", (newTitle) => {
                 if (!newTitle || newTitle === oldTitle) return;
-                supabaseClient.from('assessments').update({ title: newTitle }).eq('id', id).then(() => {
-                    fetchData(() => loadAdminDashboard(true));
-                });
+                document.getElementById('dash-loader').style.display = 'block';
+                google.script.run.withSuccessHandler(() => loadAdminDashboard(true)).renameAssessment(id, newTitle);
             });
         }
 
         function duplicateAssm(id) {
-            Modal.confirm("Duplicate Assessment", "Duplicate this entire assessment (Pages + Layout)?", (confirmed) => {
+            Modal.confirm("Duplicate Assessment", "Duplicate this entire assessment including all pages and fields?", (confirmed) => {
                 if (!confirmed) return;
-                const assm = state.assessments.find(a => a.id === id);
-                if (!assm) return;
-                
-                supabaseClient.from('assessments').insert([{ 
-                    title: assm.title + " (Copy)", 
-                    isActive: false, 
-                    settings_json: assm.settings 
-                }]).select().then(({ data, error }) => {
-                    if (error) return Modal.alert("Error", error.message);
-                    fetchData(() => loadAdminDashboard(true));
-                });
+                document.getElementById('dash-loader').style.display = 'block';
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler((res) => {
+                        if (res.success) {
+                            // Fetch then open settings for the new clone
+                            loadAdminDashboard(true, () => openSettings(res.newId));
+                        }
+                    }).duplicateAssessment(id);
+                }
             });
         }
 
@@ -3802,11 +3825,11 @@
                         <div style="font-size:0.85rem; font-weight:800; color:var(--accent);">Page ${idx + 1}</div>
                         <div style="font-size:0.8rem; color:var(--text-muted);">↕ Drag</div>
                     </div>
-                    <img id="thumb-${p.pageId}" src="${p.url}" style="background: var(--card-border); border-radius: 8px; width: 100%; height: 120px; object-fit: cover; margin: 0.5rem 0;" onerror="this.src='https://placehold.co/200x120?text=Page+${idx + 1}'" />
+                    <img id="thumb-${p.pageId}" src="" style="background: var(--card-border);" />
                     <div style="font-size:0.9rem; color:var(--text-muted);">${p.fields.length} Fields</div>
                     <div style="display:flex; gap:0.5rem; width:100%; margin-top:0.5rem;">
-                        <button class="btn info" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="editPageFields('${p.pageId}')"><i data-lucide="edit"></i> Fields</button>
-                        <button class="btn danger" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="deletePage('${p.pageId}')"><i data-lucide="trash-2"></i></button>
+                        <button class="btn info" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="editPageFields('${p.pageId}')">Edit Fields</button>
+                        <button class="btn danger" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="deletePage('${p.pageId}')">Delete</button>
                     </div>
                 `;
                 item.addEventListener('dragstart', handleManageDragStart);
@@ -3825,16 +3848,17 @@
         }
 
         function persistManagePageOrder() {
-            const id = state.manageAssessmentId;
-            const assm = state.assessments.find(a => a.id === id);
+            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
             if (!assm) return;
             const pageOrder = assm.pages.map(p => p.pageId);
-            const settings = { ...(assm.settings || {}), pageOrder: pageOrder };
-            
-            supabaseClient.from('assessments').update({ settings_json: settings }).eq('id', id).then(res => {
-                if (res.error) Modal.alert("Order Sync Failed", res.error.message);
-                else assm.settings = settings;
-            });
+            assm.settings = assm.settings || {};
+            assm.settings.pageOrder = pageOrder;
+
+            google.script.run
+                .withFailureHandler(() => {
+                    Modal.alert("Order Sync Failed", "Page order changed locally but could not be saved to server.");
+                })
+                .updateAssessmentSettings(assm.id, assm.settings);
         }
 
         function handleManageDragStart(e) {
@@ -3942,11 +3966,16 @@
                 overlayText.innerText = "Deleting Page...";
                 overlay.style.display = 'flex';
 
-                supabaseClient.from('pages').delete().eq('id', pid).then(({ error }) => {
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler(() => {
+                        fetchData(() => {
+                            overlay.style.display = 'none';
+                            managePages(state.manageAssessmentId);
+                        });
+                    }).deletePage(pid);
+                } else {
                     overlay.style.display = 'none';
-                    if (error) Modal.alert("Error", "Failed to delete page: " + error.message);
-                    else fetchData(() => managePages(state.manageAssessmentId));
-                });
+                }
             });
         }
 
@@ -3994,14 +4023,17 @@
 
             const processFile = (index) => {
                 if (index >= total) {
+                    // All finished
                     fetchData(() => {
                         progressText.style.display = 'none';
                         loader.style.display = 'none';
                         btn.style.display = 'inline-flex';
                         loadEditorSidebar();
+                        // Open the first one from the new batch
                         const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
                         if (assm && assm.pages.length > 0) {
-                            editPageFields(assm.pages[assm.pages.length - 1].pageId);
+                            const lastPage = assm.pages[assm.pages.length - 1]; // Usually recently added are at end depending on sorting
+                            editPageFields(lastPage.pageId);
                         }
                     });
                     return;
@@ -4013,23 +4045,27 @@
 
                 reader.onload = function (evt) {
                     const base64Data = evt.target.result;
-                    if (typeof google === 'undefined') {
-                        Modal.alert("Action Required", "Direct image upload is currently disabled in the standalone GitHub version. \n\nPlease upload templates directly to your Supabase Storage bucket and link them in the database manually.");
-                        resetEditor();
-                        return;
+                    if (typeof google !== 'undefined') {
+                        google.script.run.withSuccessHandler(res => {
+                            if (res && res.success) {
+                                // For single uploads, open editor canvas immediately (no crop popup)
+                                if (total === 1) {
+                                    setupEditorCanvas(res.pageId, base64Data);
+                                }
+                                processFile(index + 1);
+                            } else {
+                                Modal.alert("Batch Upload Error", `Failed to upload ${file.name}: ${res.message}`);
+                                resetEditor();
+                            }
+                        }).uploadImageAndCreatePage(base64Data, file.name, state.manageAssessmentId);
+                    } else {
+                        // Demo mode
+                        setTimeout(() => processFile(index + 1), 500);
                     }
-                    google.script.run.withSuccessHandler(res => {
-                        if (res && res.success) {
-                            if (total === 1) setupEditorCanvas(res.pageId, base64Data);
-                            processFile(index + 1);
-                        } else {
-                            Modal.alert("Batch Upload Error", `Failed to upload ${file.name}: ${res.message}`);
-                            resetEditor();
-                        }
-                    }).uploadImageAndCreatePage(base64Data, file.name, state.manageAssessmentId);
                 };
                 reader.readAsDataURL(file);
             };
+
             processFile(0);
         }
 
@@ -4069,7 +4105,7 @@
                     google.script.run.withSuccessHandler(res => {
                         if (res.success) img.src = res.base64;
                     }).getBase64Image(p.fileId);
-                } else document.getElementById('thumb-' + p.pageId).src = p.url;
+                }
             });
         }
 
@@ -4439,9 +4475,7 @@
                 // Type Toggle Icon
                 const typeToggle = document.createElement('div');
                 typeToggle.style = "position:absolute; bottom:2px; left:2px; background:var(--accent); color:black; font-size:10px; font-weight:800; padding:1px 4px; border-radius:3px; cursor:pointer;";
-                typeToggle.innerHTML = f.type === 'checkbox' 
-                    ? '<i data-lucide="check-square" style="width:14px;"></i>' 
-                    : '<i data-lucide="type" style="width:14px;"></i>';
+                typeToggle.innerText = f.type === 'checkbox' ? '☑' : 'T';
                 typeToggle.title = "Click to Toggle Type (Text/Checkbox)";
                 typeToggle.onclick = (e) => {
                     e.stopPropagation();
@@ -4636,71 +4670,68 @@
             }).createAdmin(u, p);
         }
 
-        async function extractResultsForAssessment(assmId) {
-            try {
-                const assm = state.assessments.find(a => a.id === assmId);
-                if (!assm) return Modal.alert("Error", "Assessment not found.");
-                
-                const subs = state.submissions.filter(s => String(s.assessment_id) === String(assmId));
-                if (subs.length === 0) return Modal.alert("Empty", "No submissions found for " + assm.title);
-
-                Modal.showLoader("Preparing All Teams for " + assm.title + "...");
-                const zip = new JSZip();
-
-                // Distinct teams that submitted for this assessment
-                const teams = Array.from(new Set(subs.map(s => normalizeAnswerKey(s.team_name || s.team || ''))));
-                
-                for (const tKey of teams) {
-                    const teamName = state.teams.find(xt => normalizeAnswerKey(xt.name) === tKey)?.name || tKey;
-                    await addTeamToZip(zip, tKey, teamName, assmId);
-                }
-
-                const content = await zip.generateAsync({ type: "blob" });
-                saveAs(content, `${assm.title.replace(/\s+/g, '_')}_Submissions.zip`);
-                Modal.hideLoader();
-            } catch (err) {
-                console.error(err);
-                Modal.hideLoader();
-                Modal.alert("Error", "Export failed: " + err.message);
-            }
-        }
-
-        async function addTeamToZip(zip, tKey, teamName, assmId) {
-            try {
-                const teamFolder = zip.folder(teamName.replace(/[\\/:*?"<>|]/g, '_'));
-                const { data: fullSubs } = await supabaseClient.from('submissions')
-                    .select('*')
-                    .eq('assessment_id', assmId);
-                
-                const activeSubs = (fullSubs || []).filter(s => normalizeAnswerKey(s.team_name || '') === tKey);
-                const assm = state.assessments.find(a => String(a.id) === String(assmId));
-
-                for(let sub of activeSubs) {
-                    const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
-                    const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
-                    const folderName = `${assm.title || "Assessment"}${studentTag} (${safeDate})`;
-                    const assmFolder = teamFolder.folder(folderName.replace(/[\\/:*?"<>|]/g, '_'));
-                    const answers = sub.answers_data || {};
-                    
-                    for(let i = 0; i < assm.pages.length; i++) {
-                        const page = assm.pages[i];
-                        const blob = await renderPageToBlob(page, answers);
-                        if (blob) {
-                            const fileName = `Page_${i+1}.jpg`;
-                            assmFolder.file(fileName, blob);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Team zip error:", e);
-            }
-        }
-
         function deleteAdmin(id) {
             Modal.confirm("Delete Admin", "Are you sure you want to remove this user? They will lose access immediately.", (confirmed) => {
                 if (!confirmed) return;
                 google.script.run.withSuccessHandler(() => renderAdminUserList()).deleteAdmin(id);
             });
+        }
+
+        // ----- PREMIUM EXTRACTION SYSTEM -----
+        async function extractResultsForTeam(teamName) {
+            try {
+                const zip = new JSZip();
+                const teamFolder = zip.folder(teamName);
+                Modal.showLoader("Preparing " + teamName + "...");
+
+                const teamSubsBase = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === normalizeAnswerKey(teamName));
+                if (teamSubsBase.length === 0) {
+                    Modal.hideLoader();
+                    return Modal.alert("Empty", "No submissions found for " + teamName);
+                }
+
+                const submissionIds = teamSubsBase.map(s => s.id);
+                // Dynamically pull full payload using exact submission IDs
+                const { data: fullSubs, error } = await supabaseClient.from('submissions')
+                    .select('*')
+                    .in('id', submissionIds);
+
+                if (error) { Modal.hideLoader(); throw error; }
+                const activeSubs = fullSubs || [];
+
+                for (let subIdx = 0; subIdx < activeSubs.length; subIdx++) {
+                    const sub = activeSubs[subIdx];
+                    const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
+                    if (!assm) continue;
+
+                    const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
+                    // Prevent Overwrites on multi-submissions by adding index/date
+                    const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
+                    const folderName = `${assm.title || "Assessment_" + sub.assessment_id}${studentTag} (${safeDate})`;
+                    const assmFolder = teamFolder.folder(folderName);
+                    const answers = sub.answers_data || {};
+
+                    for (let i = 0; i < assm.pages.length; i++) {
+                        const page = assm.pages[i];
+                        try {
+                            const blob = await renderPageToBlob(page, answers);
+                            if (blob) {
+                                const fileName = `Page_${i + 1}${studentTag}.jpg`.replace(/[\/\\:*?"<>|]/g, '-');
+                                assmFolder.file(fileName, blob);
+                            }
+                        } catch (e) { console.error("Page render fail:", e); }
+                    }
+                }
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement('a'); a.href = url; a.download = teamName + "_Results.zip"; a.click();
+                Modal.hideLoader();
+            } catch (err) {
+                console.error(err);
+                Modal.hideLoader();
+                Modal.alert("Error", "Extraction failed: " + err.message);
+            }
         }
 
         async function extractAllResults() {
