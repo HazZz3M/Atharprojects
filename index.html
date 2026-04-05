@@ -1647,6 +1647,11 @@
                         try {
                             const { data, error } = await p;
                             if (error) { if (this._f) this._f(error); return { success: false }; }
+                            if (Array.isArray(data) && data.length === 0) {
+                                const err = new Error("Action blocked by Supabase Row Level Security (RLS). 0 rows affected.");
+                                if (this._f) this._f(err);
+                                return { success: false };
+                            }
                             const r = data || { success: true };
                             if (r && r.id) { r.assessmentId = r.id; r.pageId = r.id; r.newId = r.id; }
                             if (this._s) this._s(r); return r;
@@ -1695,11 +1700,11 @@
                         if (res.success && cb) cb(res);
                     },
                     createAssessment(t) { return this._x(supabaseClient.from('assessments').insert([{ title: t, is_active: false, settings_json: { isTemplate: true } }]).select().single()); },
-                    toggleAssessment(id, st) { return this._x(supabaseClient.from('assessments').update({ is_active: st }).eq('id', id)); },
-                    deleteAssessment(id) { return this._x(supabaseClient.from('assessments').delete().eq('id', id)); },
-                    renameAssessment(id, t) { return this._x(supabaseClient.from('assessments').update({ title: t }).eq('id', id)); },
-                    updateAssessmentSettings(id, s) { return this._x(supabaseClient.from('assessments').update({ settings_json: s }).eq('id', id)); },
-                    deletePage(id) { return this._x(supabaseClient.from('pages').delete().eq('id', id)); },
+                    toggleAssessment(id, st) { return this._x(supabaseClient.from('assessments').update({ is_active: st }).eq('id', id).select()); },
+                    deleteAssessment(id) { return this._x(supabaseClient.from('assessments').delete().eq('id', id).select()); },
+                    renameAssessment(id, t) { return this._x(supabaseClient.from('assessments').update({ title: t }).eq('id', id).select()); },
+                    updateAssessmentSettings(id, s) { return this._x(supabaseClient.from('assessments').update({ settings_json: s }).eq('id', id).select()); },
+                    deletePage(id) { return this._x(supabaseClient.from('pages').delete().eq('id', id).select()); },
                     async saveFields(id, f) {
                         await supabaseClient.from('fields').delete().eq('page_id', id);
                         if (f && f.length > 0) await supabaseClient.from('fields').insert(f.map(x => ({ page_id: id, field_name: x.name, top_percent: x.top, left_percent: x.left, width_percent: x.width, height_percent: x.height, type: x.type })));
@@ -3420,10 +3425,15 @@
             try {
                 if (typeof supabaseClient !== 'undefined') {
                     // New Supabase Logic
-                    const { error } = await supabaseClient.from('assessments')
+                    const { data, error } = await supabaseClient.from('assessments')
                         .update({ settings_json: settings })
-                        .eq('id', id);
+                        .eq('id', id)
+                        .select();
+                        
                     if (error) throw error;
+                    if (Array.isArray(data) && data.length === 0) {
+                        throw new Error("Action blocked by Supabase Row Level Security (RLS). Ensure your policies allow UPDATE operations.");
+                    }
                     
                     if (current) current.settings = settings;
                     if (overlay) overlay.style.display = 'none';
