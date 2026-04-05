@@ -4714,7 +4714,24 @@
                 
                 const overlay = div.querySelector('div div');
                 (page.fields || []).forEach(f => {
-                    const val = nestedAns[f.id] || nestedAns[f.name] || '';
+                    const getFromObj = (obj) => {
+                        if (!obj || typeof obj !== 'object') return null;
+                        if (obj[f.id] !== undefined) return obj[f.id];
+                        if (obj[f.name] !== undefined) return obj[f.name];
+                        const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                        const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
+                        for (const key in obj) {
+                            const normKey = normalizeAnswerKey(key);
+                            if (normKey === normName || normKey === normId) return obj[key];
+                        }
+                        return null;
+                    };
+                    
+                    let val = getFromObj(nestedAns);
+                    if (val === null || val === undefined) val = getFromObj(ans);
+                    
+                    if (val === null || val === undefined || val === '') return;
+
                     const field = document.createElement('div');
                     field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
                     field.style.width = f.width + '%'; field.style.height = f.height + '%';
