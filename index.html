@@ -2542,18 +2542,22 @@
                     'border-bottom: 1px dotted rgba(0,0,0,0.2)',
                     'text-align:center',
                     'white-space:pre-wrap',
+                    'word-break:break-word',
+                    'overflow-wrap:anywhere',
                     'overflow:hidden',
                     'position:absolute',
                     'z-index:20',
                     'pointer-events:none',
                     'display:flex',
+                    'flex-direction:column',
                     'align-items:center',
                     'justify-content:center',
-                    'line-height:1.1'
+                    'line-height:1.25',
+                    'font-family: "Segoe UI", Tahoma, Arial, sans-serif'
                 ].join(';');
                 if (f.type === 'checkbox') {
                     if (val === 'true' || val === true) {
-                        div.innerHTML = '<span style="font-size:1.5rem;">✓</span>';
+                        div.innerHTML = '<span style="font-size:1.5rem;">✅</span>';
                     } else {
                         return; // don't show anything for unchecked
                     }
