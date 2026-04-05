@@ -4626,29 +4626,35 @@
                     return Modal.alert("Empty", "No submissions found for " + teamName);
                 }
 
-                const assessmentIds = teamSubsBase.map(s => s.assessment_id);
-                // Dynamically pull full payload using Supabase ILIKE wildcard
+                const submissionIds = teamSubsBase.map(s => s.id);
+                // Dynamically pull full payload using exact submission IDs
                 const { data: fullSubs, error } = await supabaseClient.from('submissions')
                     .select('*')
-                    .ilike('team_name', teamName)
-                    .in('assessment_id', assessmentIds);
+                    .in('id', submissionIds);
 
                 if (error) { Modal.hideLoader(); throw error; }
                 const activeSubs = fullSubs || [];
 
-                for (const sub of activeSubs) {
+                for (let subIdx = 0; subIdx < activeSubs.length; subIdx++) {
+                    const sub = activeSubs[subIdx];
                     const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                     if (!assm) continue;
 
                     const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
-                    const assmFolder = teamFolder.folder((assm.title || "Assessment_" + sub.assessment_id) + studentTag);
+                    // Prevent Overwrites on multi-submissions by adding index/date
+                    const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
+                    const folderName = `${assm.title || "Assessment_" + sub.assessment_id}${studentTag} (${safeDate})`;
+                    const assmFolder = teamFolder.folder(folderName);
                     const answers = sub.answers_data || {};
 
                     for (let i = 0; i < assm.pages.length; i++) {
                         const page = assm.pages[i];
                         try {
                             const blob = await renderPageToBlob(page, answers);
-                            if (blob) assmFolder.file(`Page_${i + 1}${studentTag}.png`, blob);
+                            if (blob) {
+                                const fileName = `Page_${i + 1}${studentTag}.jpg`.replace(/[\/\\:*?"<>|]/g, '-');
+                                assmFolder.file(fileName, blob);
+                            }
                         } catch (e) { console.error("Page render fail:", e); }
                     }
                 }
@@ -4675,19 +4681,35 @@
                     return Modal.alert("Empty", "No submissions found in the database.");
                 }
 
+                const allSubIds = state.submissions.map(s => s.id);
+                // Pre-fetch all real answers missing from state to prevent blank payloads
+                const { data: fullSubs, error } = await supabaseClient.from('submissions').select('*').in('id', allSubIds);
+                if (error) { Modal.hideLoader(); throw error; }
+
                 for (const tKey of teamsWithSubs) {
                     const tName = (state.teams.find(xt => normalizeAnswerKey(xt.name) === tKey)?.name || tKey).replace(/[\\/:*?"<>|]/g, '_');
                     const teamFolder = zip.folder(tName);
-                    const teamSubs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === tKey);
                     
-                    for (const sub of teamSubs) {
+                    const activeSubs = fullSubs.filter(s => normalizeAnswerKey(s.team_name || '') === tKey);
+                    
+                    for (let subIdx = 0; subIdx < activeSubs.length; subIdx++) {
+                        const sub = activeSubs[subIdx];
                         const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                         if (!assm) continue;
-                        const assmFolder = teamFolder.folder((assm.title || "Assm").replace(/[\\/:*?"<>|]/g, '_'));
+                        
+                        const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
+                        const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
+                        const folderName = `${assm.title || "Assm"}${studentTag} (${safeDate})`.replace(/[\\/:*?"<>|]/g, '_');
+                        
+                        const assmFolder = teamFolder.folder(folderName);
                         const answers = sub.answers_data || {};
+                        
                         for (let i = 0; i < assm.pages.length; i++) {
                             const blob = await renderPageToBlob(assm.pages[i], answers);
-                            if (blob) assmFolder.file("Page_" + (i + 1) + ".png", blob);
+                            if (blob) {
+                                const fileName = `Page_${i + 1}${studentTag}.jpg`.replace(/[\/\\:*?"<>|]/g, '-');
+                                assmFolder.file(fileName, blob);
+                            }
                         }
                     }
                 }
@@ -4704,51 +4726,83 @@
         }
 
         async function renderPageToBlob(page, ans) {
-            try {
-                const nestedAns = ans[page.pageId] || ans || {};
-                const div = document.createElement('div');
-                div.style.position = 'fixed'; div.style.left = '-9999px'; div.style.width = '1000px'; 
-                div.style.background = '#fff'; div.className = 'canvas-container';
-                div.innerHTML = `<img src="${page.url}" style="width:100%; display:block;"><div style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>`;
-                document.body.appendChild(div);
-                
-                const overlay = div.querySelector('div div');
-                (page.fields || []).forEach(f => {
-                    const getFromObj = (obj) => {
-                        if (!obj || typeof obj !== 'object') return null;
-                        if (obj[f.id] !== undefined) return obj[f.id];
-                        if (obj[f.name] !== undefined) return obj[f.name];
-                        const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
-                        const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
-                        for (const key in obj) {
-                            const normKey = normalizeAnswerKey(key);
-                            if (normKey === normName || normKey === normId) return obj[key];
+            return new Promise(resolve => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const baseW = 1600;
+                    const scale = baseW / img.naturalWidth;
+                    canvas.width = baseW;
+                    canvas.height = img.naturalHeight * scale;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
+
+                    const nestedAns = ans[page.pageId] || ans || {};
+
+                    (page.fields || []).forEach(f => {
+                        const getFromObj = (obj) => {
+                            if (!obj || typeof obj !== 'object') return null;
+                            if (obj[f.id] !== undefined) return obj[f.id];
+                            if (obj[f.name] !== undefined) return obj[f.name];
+                            const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                            const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
+                            for (const key in obj) {
+                                const normKey = normalizeAnswerKey(key);
+                                if (normKey === normName || normKey === normId) return obj[key];
+                            }
+                            return null;
+                        };
+                        
+                        let val = getFromObj(nestedAns);
+                        if (val === null || val === undefined) val = getFromObj(ans);
+                        if (val === undefined || val === null || val === "") return;
+
+                        const x = (f.left / 100) * canvas.width;
+                        const y = (f.top / 100) * canvas.height;
+                        const w = (f.width / 100) * canvas.width;
+                        const h = (f.height / 100) * canvas.height;
+
+                        const fontSize = Math.max(12, Math.min(50, Math.round(h * 0.35)));
+                        ctx.font = `bold ${fontSize}px Arial`;
+                        ctx.fillStyle = '#0a2540'; // Fallback student-color hex
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        const words = val.toString().split(/\s+/);
+                        let line = '', lines = [];
+                        for (const word of words) {
+                            const test = line ? line + ' ' + word : word;
+                            if (ctx.measureText(test).width > w - 10 && line) {
+                                lines.push(line); line = word;
+                            } else { line = test; }
                         }
-                        return null;
-                    };
-                    
-                    let val = getFromObj(nestedAns);
-                    if (val === null || val === undefined) val = getFromObj(ans);
-                    
-                    if (val === null || val === undefined || val === '') return;
+                        if (line) lines.push(line);
 
-                    const field = document.createElement('div');
-                    field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
-                    field.style.width = f.width + '%'; field.style.height = f.height + '%';
-                    field.style.color = '#0000FF'; field.style.fontWeight = 'bold'; field.style.fontSize = '14px';
-                    field.style.display = 'flex'; field.style.alignItems = 'center'; field.style.justifyContent = 'center';
-                    field.style.textAlign = 'center'; field.innerText = val;
-                    overlay.appendChild(field);
-                });
+                        const lineH = fontSize * 1.2;
+                        const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
 
-                await new Promise(r => setTimeout(r, 1200)); 
-                const canvas = await html2canvas(div, { useCORS: true, scale: 1, backgroundColor: null });
-                document.body.removeChild(div);
-                return new Promise(r => canvas.toBlob(r, 'image/png'));
-            } catch (e) {
-                console.error("Render error:", e);
-                return null;
-            }
+                        if (f.type === 'checkbox') {
+                            if (val === 'true' || val === true) {
+                                ctx.font = `bold ${fontSize * 1.5}px Arial`;
+                                ctx.fillText('✅', x + w / 2, y + h / 2, w - 10);
+                            }
+                        } else {
+                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH, w - 10));
+                        }
+                    });
+
+                    canvas.toBlob(b => resolve(b), 'image/jpeg', 0.95);
+                };
+                img.onerror = () => {
+                    console.error("Failed to load backgound image for export.");
+                    resolve(null);
+                };
+                img.src = page.url;
+            });
         }
 
         function viewTeamSubmissions(teamName) {
