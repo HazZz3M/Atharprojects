@@ -2207,9 +2207,11 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         
+                        const fontStack = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
+
                         // Recursive Shrink-to-Fit loop
                         while (fontSize > 8) {
-                            ctx.font = `bold ${fontSize}px Arial`;
+                            ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
                             lines = [];
                             const paragraphs = val.toString().split(/\r?\n/);
                             paragraphs.forEach(p => {
@@ -2217,7 +2219,10 @@
                                 let currentLine = '';
                                 words.forEach(word => {
                                     const testLine = currentLine ? currentLine + ' ' + word : word;
-                                    if (ctx.measureText(testLine).width > w - 10 && currentLine) {
+                                    const isTooWide = ctx.measureText(testLine).width > w - 10;
+                                    const isTooManyChars = testLine.length > 120; // Safety break for measurement failures
+                                    
+                                    if ((isTooWide || isTooManyChars) && currentLine) {
                                         lines.push(currentLine);
                                         currentLine = word;
                                     } else {
@@ -2227,7 +2232,7 @@
                                 if (currentLine) lines.push(currentLine);
                             });
                             
-                            lineH = fontSize * 1.3;
+                            lineH = fontSize * 1.35;
                             if (lines.length * lineH <= h - 4) break; 
                             fontSize -= 1;
                         }
@@ -4820,7 +4825,7 @@
 
                         // Recursive Shrink-to-Fit loop
                         while (fontSize > 8) {
-                            ctx.font = `bold ${fontSize}px Arial`;
+                            ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
                             lines = [];
                             const paragraphs = val.toString().split(/\r?\n/);
                             paragraphs.forEach(p => {
@@ -4828,7 +4833,10 @@
                                 let currentLine = '';
                                 words.forEach(word => {
                                     const testLine = currentLine ? currentLine + ' ' + word : word;
-                                    if (ctx.measureText(testLine).width > w - 10 && currentLine) {
+                                    const isTooWide = ctx.measureText(testLine).width > w - 10;
+                                    const isTooManyChars = testLine.length > 120; // Safety break
+                                    
+                                    if ((isTooWide || isTooManyChars) && currentLine) {
                                         lines.push(currentLine);
                                         currentLine = word;
                                     } else {
@@ -4838,7 +4846,7 @@
                                 if (currentLine) lines.push(currentLine);
                             });
 
-                            lineH = fontSize * 1.3;
+                            lineH = fontSize * 1.35;
                             if (lines.length * lineH <= h - 4) break;
                             fontSize -= 1;
                         }
