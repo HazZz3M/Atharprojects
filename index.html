@@ -2180,6 +2180,7 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
 
+                    canvas.style.position = 'fixed'; canvas.style.left = '-10000px'; canvas.style.top = '0';
                     document.body.appendChild(canvas); // Attach before measuring text
 
                     const nestedAnswers = rawAnswers[page.pageId] || rawAnswers; // Handle both nested and flat answers
@@ -2212,21 +2213,25 @@
                         // Recursive Shrink-to-Fit loop
                         while (fontSize > 8) {
                             ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
+                            const safeMeasure = (txt) => {
+                                let wpx = ctx.measureText(txt).width;
+                                if (wpx === 0) return txt.length * (fontSize * 0.55); // Char-count fallback
+                                return wpx;
+                            };
+                            
                             lines = [];
                             const paragraphs = val.toString().split(/\r?\n/);
                             paragraphs.forEach(p => {
                                 const words = p.split(/\s+/);
                                 let currentLine = '';
                                 words.forEach(word => {
-                                    // Helper to split a long word if it's wider than the field on its own
                                     const splitWord = (wrd, startLine) => {
                                         let test = startLine ? startLine + ' ' + wrd : wrd;
-                                        if (ctx.measureText(test).width <= w - 10) return test;
+                                        if (safeMeasure(test) <= w - 10) return test;
                                         if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
-                                        // If empty line but word still too wide, we MUST break the word mid-char
                                         let sub = '';
                                         for (let char of wrd) {
-                                            if (ctx.measureText(sub + char).width > w - 10) {
+                                            if (safeMeasure(sub + char) > w - 10) {
                                                 lines.push(sub); sub = char;
                                             } else { sub += char; }
                                         }
@@ -4794,6 +4799,7 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
 
+                    canvas.style.position = 'fixed'; canvas.style.left = '-10000px'; canvas.style.top = '0';
                     document.body.appendChild(canvas); // Attach before measuring text
 
                     const nestedAns = ans[page.pageId] || ans || {};
@@ -4831,6 +4837,12 @@
                         // Recursive Shrink-to-Fit loop
                         while (fontSize > 8) {
                             ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
+                            const safeMeasure = (txt) => {
+                                let wpx = ctx.measureText(txt).width;
+                                if (wpx === 0) return txt.length * (fontSize * 0.55); // Fallback
+                                return wpx;
+                            };
+
                             lines = [];
                             const paragraphs = val.toString().split(/\r?\n/);
                             paragraphs.forEach(p => {
@@ -4839,11 +4851,11 @@
                                 words.forEach(word => {
                                     const splitWord = (wrd, startLine) => {
                                         let test = startLine ? startLine + ' ' + wrd : wrd;
-                                        if (ctx.measureText(test).width <= w - 10) return test;
+                                        if (safeMeasure(test) <= w - 10) return test;
                                         if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
                                         let sub = '';
                                         for (let char of wrd) {
-                                            if (ctx.measureText(sub + char).width > w - 10) {
+                                            if (safeMeasure(sub + char) > w - 10) {
                                                 lines.push(sub); sub = char;
                                             } else { sub += char; }
                                         }
