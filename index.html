@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <title>Athar Incubator</title>
+    <title>Premium Assessment Hub</title>
     <!-- Supabase & Rendering Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 
 
     <style>
@@ -23,34 +21,30 @@
         :root {
             --bg-start: #0f172a;
             --bg-end: #020617;
-            --card-bg: rgba(15, 23, 42, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(255, 255, 255, 0.1);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #ca8a04;
-            --accent-glow: rgba(202, 138, 4, 0.3);
+            --accent-glow: rgba(202, 138, 4, 0.4);
             --success: #22c55e;
             --danger: #ef4444;
             --student-color: #000000;
-            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
             --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --panel-bg: rgba(30, 41, 59, 0.5);
-            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.4);
-            --ui-font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* Light Mode Variables */
         [data-theme="light"] {
-            --bg-start: #f8fafc;
-            --bg-end: #f1f5f9;
-            --card-bg: rgba(255, 255, 255, 0.7);
-            --card-border: rgba(0, 0, 0, 0.06);
+            --bg-start: #f1f5f9;
+            --bg-end: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-border: rgba(148, 163, 184, 0.3);
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --accent: #ca8a04;
-            --accent-glow: rgba(202, 138, 4, 0.15);
-            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #475569 100%);
-            --panel-bg: rgba(241, 245, 249, 0.6);
-            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.1);
+            --accent: #eab308;
+            --accent-glow: rgba(234, 179, 8, 0.2);
+            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #334155 100%);
         }
 
 
@@ -62,7 +56,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: var(--ui-font);
+            font-family: 'Outfit', sans-serif;
             color: var(--text-main);
         }
 
@@ -77,9 +71,8 @@
 
         nav {
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 0.8rem 2rem;
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -87,7 +80,6 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
 
         nav .logo {
@@ -233,31 +225,12 @@
         }
 
         h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
             background: var(--h1-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -1.5px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         p {
@@ -437,10 +410,9 @@
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             background: #000;
-            line-height: 0;
+            line-height: 0; 
             font-size: 0;
-            display: inline-block;
-            /* Fuses container to image size precisely */
+            display: inline-block; /* Fuses container to image size precisely */
             vertical-align: top;
         }
 
@@ -457,13 +429,12 @@
         /* The input text fix and styles */
         textarea.input-overlay {
             position: absolute;
-            background: rgba(0, 0, 0, 0);
+            background: rgba(0,0,0,0);
             border: none;
             border-radius: 4px;
             color: var(--student-color);
             font-weight: 700;
-            padding: 4px;
-            /* Reduced for mobile safety */
+            padding: 4px; /* Reduced for mobile safety */
             margin: 0;
             box-shadow: none;
             text-align: center;
@@ -513,13 +484,6 @@
             background: var(--accent);
         }
 
-        .spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
         /* Checkbox styling on canvas */
         .checkbox-overlay {
             position: absolute;
@@ -1166,31 +1130,40 @@
             <p id="save-overlay-text" style="color:white; margin-top:1rem; font-weight:bold;">Saving Changes...</p>
         </div>
     </div>
-    <!-- Dynamic Modals only -->
-
+    <!-- Premium Global Modal -->
+    <div id="global-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Notice</div>
+            <div class="modal-text">Message goes here...</div>
+            <input type="text" class="modal-input" placeholder="Type here...">
+            <div class="modal-buttons">
+                <button id="modal-btn-cancel" class="btn outline" onclick="Modal.close(false)"
+                    data-i18n="cancel">Cancel</button>
+                <button id="modal-btn-ok" class="btn" onclick="Modal.close(true)" data-i18n="confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
 
     <nav>
-        <div class="logo" id="nav-home" onclick="showView('home')" style="cursor:pointer;">
-            ATHAR <span>INCUBATOR</span>
+        <div class="logo" id="nav-home" onclick="showView('home')" style="cursor:pointer;" data-i18n="logo">Athar inc
         </div>
+
         <div class="nav-actions">
-            <button class="delete-btn theme-btn" onclick="state.theme.toggle()" title="Toggle Theme">
-                <i data-lucide="sun-moon" id="theme-icon"></i>
+            <button class="lang-btn" onclick="Language.toggle()">
+                <span id="lang-icon">AR</span>
             </button>
-            <div class="hamburger" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+            <button class="theme-btn" onclick="Theme.toggle()">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
         <div class="nav-links" id="menu-links">
-            <a onclick="showView('home'); toggleMenu();">Home</a>
-            <a onclick="showView('admin-login'); toggleMenu();">Admin Portal</a>
-            <div style="margin-top:auto; padding-top:2rem; border-top:1px solid var(--card-border);">
-                <button class="btn outline" onclick="Language.toggle()" style="width:100%;">
-                    <i data-lucide="languages" style="width:16px;"></i> Language
-                </button>
-            </div>
+            <a onclick="showView('admin-login'); toggleMenu();" id="nav-admin" data-i18n="admin_portal">Admin Portal</a>
         </div>
     </nav>
 
@@ -1219,7 +1192,7 @@
             <button class="btn" onclick="verifyTeamAuth()" style="width: 100%; margin-top: 1rem;"
                 data-i18n="confirm_team">Confirm Team</button>
             <button class="btn outline" onclick="showView('home')"
-                style="width: 100%; margin-top: 0.8rem; border-color: rgba(255,255,255,0.05); color: var(--text-muted);"
+                style="width: 100%; margin-top: 0.8rem; border-color: rgba(255,255,255,0.2); color: var(--text-muted);"
                 data-i18n="back_to_home">Back
                 to Home</button>
             <div id="team-error" style="color: var(--danger); margin-top: 1rem; display:none;"></div>
@@ -1292,30 +1265,23 @@
                 </div>
             </div>
             <div style="display:flex; gap:0.8rem;">
-                <button class="delete-btn" onclick="showView('manage-teams')"
-                    style="border-color: var(--accent); color: var(--accent);">
-                    <i data-lucide="users" style="width:16px;"></i> Teams
-                </button>
-                <button class="delete-btn" onclick="showView('manage-admins')"
-                    style="border-color: var(--accent); color: var(--accent);">
-                    <i data-lucide="shield-check" style="width:16px;"></i> Admins
-                </button>
-                <button class="delete-btn" onclick="refreshAdminData()"
-                    title="Sync latest data from Supabase">
-                    <i data-lucide="refresh-cw" style="width:16px;"></i>
-                </button>
-                <button class="delete-btn" onclick="toggleDebugMode()"
-                    title="View raw responses and database records">
-                    <i data-lucide="database" style="width:16px;"></i>
-                </button>
+                <button class="btn outline" onclick="openTeamManager()" title="Bulk Manage Teams"
+                    style="border-color: var(--accent); color: var(--accent);">👥 Teams</button>
+                <button class="btn outline" onclick="openUserManager()" title="Manage Admin Users"
+                    style="border-color: var(--accent); color: var(--accent);">👤 Admins</button>
+                <button class="btn outline" onclick="loadAdminDashboard(true)"
+                    title="Sync latest data from Supabase">🔄
+                    Refresh</button>
+                <button class="btn outline" onclick="openSpreadsheet()"
+                    title="View raw responses and database records">📊
+                    Results</button>
                 <button id="btn-new-assessment" class="btn primary-btn" onclick="createNewAssessment()"
                     title="Create a brand new assessment or template">+ New</button>
             </div>
         </div>
         <div class="loader" id="dash-loader"></div>
         <div class="assessment-list" id="dash-assessment-list"></div>
-        <div
-            style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 2rem;">
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 2rem;">
             Assessment Hub v3.1 - Security Locked & Synchronized
         </div>
     </main>
@@ -1339,11 +1305,9 @@
             </div>
             <div class="loader" id="team-loader" style="margin-top: 1rem; display: none;"></div>
 
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem; margin-bottom:1rem;">
                 <h3 style="margin:0;">Current Teams (<span id="team-count">0</span>)</h3>
-                <button class="btn accent-btn" onclick="extractAllResults()"
-                    style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
+                <button class="btn accent-btn" onclick="extractAllResults()" style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
             </div>
             <div
                 style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2);">
@@ -1494,11 +1458,8 @@
                     <h2 id="sub-explorer-title" style="margin:0;">Submissions</h2>
                 </div>
                 <div style="display:flex; align-items:center; gap:1rem;">
-                    <div id="sub-count-badge"
-                        style="background:var(--card-border); padding:0.4rem 1rem; border-radius:999px; font-size:0.9rem; font-weight:700;">
-                        0 Teams</div>
-                    <button class="btn danger" style="padding:0.4rem 1rem;"
-                        onclick="deleteAllSubmissions(state.manageAssessmentId)">Delete All</button>
+                    <div id="sub-count-badge" style="background:var(--card-border); padding:0.4rem 1rem; border-radius:999px; font-size:0.9rem; font-weight:700;">0 Teams</div>
+                    <button class="btn danger" style="padding:0.4rem 1rem;" onclick="deleteAllSubmissions(state.manageAssessmentId)">Delete All</button>
                 </div>
             </div>
 
@@ -1523,7 +1484,8 @@
                 </div>
 
                 <div class="assessment-wrapper">
-                    <div id="sub-canvas-container" class="canvas-container" style="position: relative;">
+                    <div id="sub-canvas-container" class="canvas-container"
+                        style="position: relative;">
                         <div id="sub-img-loader" class="loader"
                             style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
                         </div>
@@ -1547,7 +1509,7 @@
         </div>
     </main>
 
-    <!-- Admin Assessment Pages -->
+    <!-- Admin Manage Assessment Pages -->
     <!-- Admin User Manager -->
     <main id="view-admin-users" class="view-section">
         <div class="card" style="max-width: 800px; text-align: left;">
@@ -1667,7 +1629,7 @@
         // Supabase Configuration
         const SUPABASE_URL = 'https://yhtcpqmfpgiflyajygik.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlodGNwcW1mcGdpZmx5YWp5Z2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzMwMTYsImV4cCI6MjA5MDcwOTAxNn0.UisFYAqYPV9t7jtyv0hvxs1nc4cb3oXW8mLsk20sUeQ';
-
+        
         // Safe Initialization
         let supabaseClient;
         try {
@@ -1675,25 +1637,23 @@
         } catch (e) {
             console.error("Supabase fail:", e);
         }
-        // After every view change, refresh icons
-        setTimeout(() => lucide.createIcons(), 50);
 
         window.google = {
             script: {
                 run: {
                     _s: null, _f: null,
-                    withSuccessHandler(h) {
-                        const clone = { ...this }; clone._s = h; return clone;
+                    withSuccessHandler(h) { 
+                        const clone = { ...this }; clone._s = h; return clone; 
                     },
-                    withFailureHandler(h) {
-                        const clone = { ...this }; clone._f = h; return clone;
+                    withFailureHandler(h) { 
+                        const clone = { ...this }; clone._f = h; return clone; 
                     },
                     async _x(p) {
                         try {
                             const { data, error } = await p;
-                            if (error) {
-                                if (this._f) this._f(error);
-                                return { success: false, error: error };
+                            if (error) { 
+                                if (this._f) this._f(error); 
+                                return { success: false, error: error }; 
                             }
                             if (Array.isArray(data) && data.length === 0) {
                                 const err = new Error("Action blocked by Supabase Row Level Security (RLS). 0 rows affected.");
@@ -1703,44 +1663,44 @@
                             const r = data || { success: true };
                             if (r && r.id) { r.assessmentId = r.id; r.pageId = r.id; r.newId = r.id; }
                             if (this._s) this._s(r); return r;
-                        } catch (e) {
-                            if (this._f) this._f(e);
-                            return { success: false, error: e };
+                        } catch (e) { 
+                            if (this._f) this._f(e); 
+                            return { success: false, error: e }; 
                         }
                     },
                     async fetchAppData() {
-                        const { data: a } = await supabaseClient.from('assessments').select('*');
+                        const { data: a } = await supabaseClient.from('assessments').select('*'); 
                         const { data: p } = await supabaseClient.from('pages').select('*');
-                        const { data: f } = await supabaseClient.from('fields').select('*');
+                        const { data: f } = await supabaseClient.from('fields').select('*'); 
                         const { data: t } = await supabaseClient.from('teams').select('*');
                         const { data: s } = await supabaseClient.from('submissions').select('id, assessment_id, team_name');
-
+                        
                         const fm = {}; (f || []).forEach(r => { if (!fm[r.page_id]) fm[r.page_id] = []; fm[r.page_id].push({ id: r.id, top: r.top_percent, left: r.left_percent, width: r.width_percent, height: r.height_percent, name: r.field_name, type: r.type }); });
                         const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
                         const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
-
-                        const sm = {};
-                        (s || []).forEach(r => {
+                        
+                        const sm = {}; 
+                        (s || []).forEach(r => { 
                             const aid = String(r.assessment_id || '').toLowerCase().trim();
                             if (aid) {
-                                if (!sm[aid]) sm[aid] = 0;
-                                sm[aid]++;
+                                if (!sm[aid]) sm[aid] = 0; 
+                                sm[aid]++; 
                             }
                         });
-
-                        const as = (a || []).map(r => {
-                            let pg = pm[r.id] || [];
-                            pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp));
+                        
+                        const as = (a || []).map(r => { 
+                            let pg = pm[r.id] || []; 
+                            pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp)); 
                             const count = sm[String(r.id).toLowerCase().trim()] || 0;
                             const sets = parseSettingsObject(r.settings_json);
-                            return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count };
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count }; 
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
+                        
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
                         state.assessments = res.assessments;
                         state.teams = res.teams;
                         state.submissions = res.submissions;
-
+                        
                         if (this._s) this._s(res); return res;
                     },
                     async fetchData(cb) {
@@ -1822,14 +1782,6 @@
                         const { data, error } = await supabaseClient.from('admins').insert([{ username: u, password: p }]).select();
                         if (this._s) this._s({ success: !error, message: error ? error.message : "Admin created" });
                     },
-                    async fetchAdmins() {
-                        const { data } = await supabaseClient.from('admins').select('*').order('username');
-                        if (this._s) this._s({ success: true, admins: data || [] });
-                    },
-                    async addAdmin(u, p) {
-                        const { error } = await supabaseClient.from('admins').insert([{ username: u, password: p }]);
-                        if (this._s) this._s({ success: !error, message: error ? error.message : null });
-                    },
                     async deleteAdmin(id) {
                         const { error } = await supabaseClient.from('admins').delete().eq('id', id);
                         if (this._s) this._s({ success: !error });
@@ -1842,7 +1794,7 @@
             current: 'en',
             translations: {
                 en: {
-                    logo: "Athar Incubator",
+                    logo: "Athar inc",
                     admin_portal: "Admin Portal",
                     available_assessments: "Available Assessments",
                     select_assessment: "Select an assessment below to begin.",
@@ -1890,41 +1842,41 @@
                 },
                 ar: {
                     logo: "مسرعة أعمال أثر",
-                    admin_portal: "بوابة المسؤول",
-                    available_assessments: "التقييمات المتاحة",
-                    select_assessment: "اختر التقييم للبدء.",
+                    admin_portal: "خاص بفريق التنظيم",
+                    available_assessments: "التدريبات المتاحة",
+                    select_assessment: "اختر تدريباً للبدء.",
                     no_assessments: "لا توجد تقييمات متاحة حالياً.",
-                    begin: "بدء التقييم",
-                    team_portal: "بوابة الفريق",
-                    select_team: "اختر الفريق وادخل الرقم السري.",
+                    begin: "ابدأ",
+                    team_portal: "الفريق",
+                    select_team: "اختر فريقك وأدخل كلمة المرور.",
                     choose_team: "-- اختر الفريق --",
-                    team_password: "كلمة سر الفريق",
+                    team_password: "كلمة مرور الفريق",
                     your_name: "اسمك",
                     confirm_team: "تأكيد الفريق",
-                    back_to_home: "العودة للرئيسية",
+                    back_to_home: "العودة للصفحة الرئيسية",
                     page_x_of_y: "صفحة {x} من {y}",
                     point: "نقطة",
                     points: "نقاط",
                     text_color: "لون الخط",
                     next_page: "الصفحة التالية",
                     prev_page: "السابق",
-                    submit: "تسليم النهائي",
+                    submit: "إرسال",
                     loading: "جاري التحميل...",
                     notice: "تنبيه",
                     cancel: "إلغاء",
                     confirm: "تأكيد",
-                    admin_login: "تسجيل دخول المسؤول",
+                    admin_login: "تسجيل دخول فريق التنظيم",
                     username: "اسم المستخدم",
                     password: "كلمة المرور",
                     login: "دخول",
                     logout: "خروج",
-                    confirm_submit_msg: "هل أنت متأكد من التسليم؟ لا يمكن تعديل الإجابات بعد ذلك.",
+                    confirm_submit_msg: "هل أنت متأكد من الإرسال ؟ لن تتمكن من تغيير إجاباتك بعد ذلك.",
                     submitting: "جاري الإرسال...",
                     error: "خطأ",
                     success: "تم بنجاح",
                     sent: "تم الإرسال",
                     export_error: "خطأ في التصدير",
-                    no_pages: "لا توجد صفحات في هذا التقييم.",
+                    no_pages: "لا توجد صفحات لهذا التقييم.",
                     not_available: "غير متاح",
                     export_success: "تم التصدير بنجاح",
                     new_assessment: "تقييم جديد",
@@ -1950,8 +1902,7 @@
                 const isRtl = this.current === 'ar';
                 document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
                 document.documentElement.lang = this.current;
-                const langIcon = document.getElementById('lang-icon');
-                if (langIcon) langIcon.innerText = isRtl ? 'EN' : 'AR';
+                document.getElementById('lang-icon').innerText = isRtl ? 'EN' : 'AR';
 
                 document.querySelectorAll('[data-i18n]').forEach(el => {
                     const key = el.getAttribute('data-i18n');
@@ -1988,8 +1939,7 @@
             },
             updateIcon() {
                 const icon = document.getElementById('theme-icon');
-                if (icon) icon.innerHTML = this.current === 'dark' ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
-                lucide.createIcons();
+                if (icon) icon.innerText = this.current === 'dark' ? '☀️' : '🌙';
             }
         };
 
@@ -1999,46 +1949,49 @@
 
         // Professional Modal Utility
         const Modal = {
-            alert(title, msg, onOk) {
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.innerHTML = `
-                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                        <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
-                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                <i data-lucide="info" style="width:24px; height:24px;"></i>
-                            </div>
-                        </div>
-                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
-                        <p style="font-size:0.95rem; margin-bottom:1.8rem; white-space:pre-wrap;">${msg}</p>
-                        <button class="btn" style="width:100%;" onclick="this.parentElement.parentElement.remove(); if(${!!onOk}) (${onOk})();">Got it</button>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-                lucide.createIcons();
+            activeCallback: null,
+            _show(title, text, type = 'alert', callback = null) {
+                const overlay = document.getElementById('global-modal');
+                const content = overlay.querySelector('.modal-content');
+                overlay.querySelector('.modal-title').innerText = title;
+                overlay.querySelector('.modal-text').innerHTML = text;
+
+                const input = overlay.querySelector('.modal-input');
+                const btnCancel = overlay.querySelector('#modal-btn-cancel');
+
+                input.style.display = (type === 'prompt') ? 'block' : 'none';
+                btnCancel.style.display = (type === 'alert') ? 'none' : 'block';
+
+                input.value = '';
+                overlay.style.display = 'flex';
+                this.activeCallback = callback;
+
+                if (type === 'prompt') setTimeout(() => input.focus(), 100);
             },
-            confirm(title, msg, onValue) {
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.innerHTML = `
-                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                         <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
-                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                                <i data-lucide="help-circle" style="width:24px; height:24px;"></i>
-                            </div>
-                        </div>
-                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
-                        <p style="font-size:0.95rem; margin-bottom:1.8rem; white-space:pre-wrap;">${msg}</p>
-                        <div style="display:flex; gap:0.8rem;">
-                            <button class="btn outline" style="flex:1;" id="modal-cancel">Cancel</button>
-                            <button class="btn" style="flex:1;" id="modal-ok">Confirm</button>
-                        </div>
-                    </div>
-                `;
-                overlay.querySelector('#modal-cancel').onclick = () => { overlay.remove(); onValue(false); };
-                overlay.querySelector('#modal-ok').onclick = () => { overlay.remove(); onValue(true); };
-                document.body.appendChild(overlay);
-                lucide.createIcons();
+            alert(title, text, cb) { this._show(title, text, 'alert', cb); },
+            confirm(title, text, cb) { this._show(title, text, 'confirm', cb); },
+            prompt(title, text, cb) { this._show(title, text, 'prompt', cb); },
+            showLoader(text = "Loading...") {
+                this._show("Please Wait", `<div class="loader" style="margin: 1rem auto;"></div><p>${text}</p>`, 'alert');
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'none';
+            },
+            hideLoader() {
+                this.close();
+                document.getElementById('global-modal').querySelector('.modal-buttons').style.display = 'flex';
+            },
+            close(confirmed) {
+                const overlay = document.getElementById('global-modal');
+                const input = overlay.querySelector('.modal-input');
+                const val = input.value;
+                overlay.style.display = 'none';
+                if (this.activeCallback) {
+                    if (input.style.display !== 'none') {
+                        this.activeCallback(confirmed ? val : null);
+                    } else {
+                        this.activeCallback(confirmed);
+                    }
+                }
+                this.activeCallback = null;
             }
         };
 
@@ -2254,7 +2207,7 @@
                             .getPropertyValue('--student-color').trim() || '#000000';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-
+                        
                         const fontStack = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
 
                         // Recursive Shrink-to-Fit loop
@@ -2265,7 +2218,7 @@
                                 if (wpx === 0) return txt.length * (fontSize * 0.55); // Char-count fallback
                                 return wpx;
                             };
-
+                            
                             lines = [];
                             const paragraphs = val.toString().split(/\r?\n/);
                             paragraphs.forEach(p => {
@@ -2288,9 +2241,9 @@
                                 });
                                 if (currentLine) lines.push(currentLine);
                             });
-
+                            
                             lineH = fontSize * 1.35;
-                            if (lines.length * lineH <= h - 4) break;
+                            if (lines.length * lineH <= h - 4) break; 
                             fontSize -= 1;
                         }
 
@@ -2299,7 +2252,7 @@
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
                                 ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✔', x + w / 2, y + h / 2);
+                                ctx.fillText('✅', x + w / 2, y + h / 2);
                             }
                         } else {
                             lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
@@ -2438,9 +2391,6 @@
             }
             if (viewId === 'admin-editor' && !state.isEditing) resetEditor();
             if (viewId === 'admin-submissions') { } // handled by openSubmissions
-            
-            // Refresh icons after view change
-            setTimeout(() => lucide.createIcons(), 50);
         }
 
         function openSubmissions(aid) {
@@ -2479,15 +2429,14 @@
                     <h3 style="margin:0;">${s.team}${memberText}</h3>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${new Date(s.timestamp).toLocaleTimeString()}</div>
                     <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
-                        <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')"><i data-lucide="eye"></i> Review</button>
-                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')"><i data-lucide="folder-open"></i> Drive</button>` : ''}
-                        <button class="btn danger outline" style="flex:0.5; padding:0.6rem;" onclick="event.stopPropagation(); deleteSubmission('${s.id}')"><i data-lucide="trash-2"></i></button>
+                        <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')">Review</button>
+                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')">Drive</button>` : ''}
+                        <button class="btn danger outline" style="flex:0.5; padding:0.6rem;" onclick="event.stopPropagation(); deleteSubmission('${s.id}')">Del</button>
                     </div>
                 `;
                 el.onclick = () => launchSubmissionViewer(s, state.manageAssessmentId);
                 list.appendChild(el);
             });
-            lucide.createIcons();
         }
 
         function launchSubmissionViewer(sub, aid) {
@@ -2513,9 +2462,9 @@
             Modal.confirm("Delete Submission", "Are you sure you want to permanently delete this submission?", async (confirmed) => {
                 if (!confirmed) return;
                 const overlay = document.getElementById('save-overlay');
-                if (overlay) { document.getElementById('save-overlay-text').innerText = "Deleting..."; overlay.style.display = 'flex'; }
+                if(overlay) { document.getElementById('save-overlay-text').innerText = "Deleting..."; overlay.style.display = 'flex'; }
                 const { error } = await supabaseClient.from('submissions').delete().eq('id', sid).select();
-                if (overlay) overlay.style.display = 'none';
+                if(overlay) overlay.style.display = 'none';
                 if (error) return Modal.alert("Error", error.message);
                 openSubmissions(state.manageAssessmentId);
             });
@@ -2525,9 +2474,9 @@
             Modal.confirm("Delete All Submissions", "Warning! Are you sure you want to delete ALL submissions for this assessment. This cannot be undone.", async (confirmed) => {
                 if (!confirmed) return;
                 const overlay = document.getElementById('save-overlay');
-                if (overlay) { document.getElementById('save-overlay-text').innerText = "Deleting All..."; overlay.style.display = 'flex'; }
+                if(overlay) { document.getElementById('save-overlay-text').innerText = "Deleting All..."; overlay.style.display = 'flex'; }
                 const { error } = await supabaseClient.from('submissions').delete().eq('assessment_id', aid).select();
-                if (overlay) overlay.style.display = 'none';
+                if(overlay) overlay.style.display = 'none';
                 if (error) return Modal.alert("Error", error.message);
                 openSubmissions(aid);
             });
@@ -2537,7 +2486,7 @@
             document.getElementById('sub-viewer').style.display = 'none';
         }
 
-        async function renderSubmissionPage() {
+        function renderSubmissionPage() {
             const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
             const page = assm.pages[state.subPageIndex];
             const sub = state.subSub;
@@ -2552,31 +2501,77 @@
             img.parentElement.classList.add('skeleton');
             document.getElementById('sub-img-loader').style.display = 'block';
 
-            try {
-                // Use the same high-fidelity engine as the exporter (Canvas)
-                const base64Back = await loadBase64(page.fileId);
-                const pageWithData = await renderPageOnCanvas(base64Back, page, sub.answers);
+            const rawAnswers = sub.answers;
+            const nestedAnswers = rawAnswers[page.pageId];
+            page.fields.forEach(f => {
+                // Deep lookup: Try id, then name, in nested, then flat
+                let val = null;
+                const getFromObj = (obj) => {
+                    if (!obj || typeof obj !== 'object') return null;
+                    if (obj[f.id] !== undefined) return obj[f.id];
+                    if (obj[f.name] !== undefined) return obj[f.name];
 
-                if (pageWithData) {
-                    img.src = pageWithData;
-                    img.onload = () => {
-                        img.style.opacity = '1';
-                        img.parentElement.classList.remove('skeleton');
-                        document.getElementById('sub-img-loader').style.display = 'none';
-                    };
-                } else {
-                    throw new Error("Canvas render failed");
-                }
-            } catch (err) {
-                console.error("Sub Viewer Render Fail:", err);
-                // Simple fallback to background only if canvas fails
-                img.src = page.url;
-                img.onload = () => {
-                    img.style.opacity = '1';
-                    img.parentElement.classList.remove('skeleton');
-                    document.getElementById('sub-img-loader').style.display = 'none';
+                    // Fallback: If student used the ID system but ID changed, maybe they also saved the name?
+                    const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
+                    const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
+
+                    for (const key in obj) {
+                        const normKey = normalizeAnswerKey(key);
+                        if (normKey === normName || normKey === normId) return obj[key];
+                    }
+                    return null;
                 };
-            }
+
+                val = getFromObj(nestedAnswers);
+                if (val === null || val === undefined) val = getFromObj(rawAnswers);
+
+                if (val == null || val === '') return; // Skip empty
+                const div = document.createElement('div');
+                div.style.cssText = [
+                    'position:absolute',
+                    `top:${f.top}%`,
+                    `left:${f.left}%`,
+                    `width:${f.width}%`,
+                    `height:${f.height}%`,
+                    'padding:4px 6px',
+                    'font-size:13px',
+                    'font-weight:800',
+                    'color: #000000', // Hardcode black for review as it's on white paper
+                    'text-shadow: 0 0 1px #fff', // Subtle glow for readablity
+                    'background: rgba(250, 204, 21, 0.1)', // Light yellow highlight to show where the field is
+                    'border-bottom: 1px dotted rgba(0,0,0,0.2)',
+                    'text-align:center',
+                    'white-space:pre-wrap',
+                    'overflow:hidden',
+                    'position:absolute',
+                    'z-index:20',
+                    'pointer-events:none',
+                    'display:flex',
+                    'align-items:center',
+                    'justify-content:center',
+                    'line-height:1.1'
+                ].join(';');
+                if (f.type === 'checkbox') {
+                    if (val === 'true' || val === true) {
+                        div.innerHTML = '<span style="font-size:1.5rem;">✓</span>';
+                    } else {
+                        return; // don't show anything for unchecked
+                    }
+                } else {
+                    div.innerText = val.toString();
+                }
+                fieldsContainer.appendChild(div);
+            });
+
+            const revealOverlay = () => {
+                img.style.opacity = '1';
+                img.parentElement.classList.remove('skeleton');
+                document.getElementById('sub-img-loader').style.display = 'none';
+            };
+
+            img.src = page.url;
+            img.onload = revealOverlay;
+            img.onerror = revealOverlay;
 
             renderSubNavDots();
         }
@@ -2744,11 +2739,10 @@
                             <h3 style="color:var(--text-main); margin-bottom:0.2rem;">${a.title}</h3>
                             <span style="font-size:0.9rem; color:var(--text-muted);">${a.pages.length} Pages</span>
                         </div>
-                        <button class="btn" onclick="startAssessment('${a.id}')">Begin <i data-lucide="arrow-right"></i></button>
+                        <button class="btn" onclick="startAssessment('${a.id}')">Begin &#8594;</button>
                     `;
                     list.appendChild(el);
                 });
-                lucide.createIcons();
             });
         }
 
@@ -2818,14 +2812,14 @@
                     const sTeam = normalizeAnswerKey(s.team_name || s.team || '');
                     return sTeam === cleanTName;
                 });
-
+                
                 const sets = assm.settings || {};
                 const isBlocked = hasSubmitted && (sets.allowMulti !== true && sets.allowMulti !== 'true');
 
                 if (isBlocked) {
                     opt.disabled = true;
                     opt.innerText = t.name + " (Already Submitted)";
-                    opt.style.color = "var(--text-muted)";
+                    opt.style.color = "var(--text-muted)"; 
                 } else {
                     opt.innerText = t.name;
                 }
@@ -2863,7 +2857,7 @@
 
                 const assmId = state.activeAssessmentId;
                 const assm = state.assessments.find(a => a.id === assmId);
-
+                
                 // Final background sync check to prevent RLS race conditions
                 if (!state.submissions || state.submissions.length === 0) {
                     await google.script.run.withSuccessHandler(res => {
@@ -2883,7 +2877,7 @@
                 // Secure Double Submission check
                 const subs = state.submissions || [];
                 const allowMulti = assm && assm.settings && (assm.settings.allowMulti === true || assm.settings.allowMulti === 'true');
-
+                
                 if (assm && !allowMulti) {
                     const hasSubmitted = subs.some(s => {
                         const tid = String(s.assessment_id || s.assessmentId || '');
@@ -2893,7 +2887,7 @@
                         const tTeam = normalizeAnswerKey(teamName || '');
                         return sTeam === tTeam;
                     });
-
+                    
                     if (hasSubmitted) {
                         Modal.alert("Access Denied", "Your team has already finished this assessment. Multiple attempts are not allowed.");
                         return;
@@ -2966,7 +2960,7 @@
         }
 
         function autoSubmit() {
-            Modal.alert("Time's Up", "Your time of this assessment has ended. Your answers are being submitted automatically.");
+            alert("⏰ TIME IS UP! Your assessment is being submitted automatically.");
             // Jump to last page and trigger submission
             state.currentPageIndex = state.activePages.length - 1;
             nextPage();
@@ -3362,18 +3356,18 @@
 
             // Always ensure the latest submission counts are loaded when opening the dashboard
             if (forceFetch || !state.submissions || state.submissions.length === 0) {
-                google.script.run.fetchData(() => renderAdminDashboard(list, isTempTab, callback));
+                 google.script.run.fetchData(() => renderAdminDashboard(list, isTempTab, callback));
             } else {
-                renderAdminDashboard(list, isTempTab, callback);
+                 renderAdminDashboard(list, isTempTab, callback);
             }
         }
 
         function renderAdminDashboard(list, isTempTab, callback) {
             document.getElementById('admin-dash-title').innerText = isTempTab ? "Templates" : "Assessments";
             document.getElementById('btn-new-assessment').style.display = 'inline-flex';
-
+            
             // Auto-sync is now handled globally during showView transitions to prevent loops
-
+            
             // Highlight active tab
             document.getElementById('tab-btn-assm').style.background = isTempTab ? 'transparent' : 'var(--accent)';
             document.getElementById('tab-btn-assm').style.color = isTempTab ? 'var(--text-muted)' : '#000';
@@ -3384,26 +3378,26 @@
             list.innerHTML = '';
             list.className = isTempTab ? 'dash-list' : 'admin-grid';
 
-            // isTemplate is guaranteed boolean after normalizeData — use it directly
-            const filtered = state.assessments.filter(a => {
-                const isTemp = !!(a.settings && (a.settings.isTemplate === true || a.settings.isTemplate === 'true'));
-                return isTempTab ? isTemp : !isTemp;
-            });
+                // isTemplate is guaranteed boolean after normalizeData — use it directly
+                const filtered = state.assessments.filter(a => {
+                    const isTemp = !!(a.settings && (a.settings.isTemplate === true || a.settings.isTemplate === 'true'));
+                    return isTempTab ? isTemp : !isTemp;
+                });
 
-            if (filtered.length === 0) {
-                list.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted);">
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted);">
                         No ${isTempTab ? 'Templates' : 'Assessments'} found.<br>
                         <small style="opacity:0.7;">(Database currently has ${state.assessments.length} total records)</small>
                     </div>`;
-                if (callback) callback();
-                return;
-            }
+                    if (callback) callback();
+                    return;
+                }
 
-            filtered.forEach(a => {
-                const el = document.createElement('div');
-                if (isTempTab) {
-                    el.className = 'assessment-row';
-                    el.innerHTML = `
+                filtered.forEach(a => {
+                    const el = document.createElement('div');
+                    if (isTempTab) {
+                        el.className = 'assessment-row';
+                        el.innerHTML = `
                             <div style="flex-grow:1;">
                                 <h3 style="color:var(--text-main); margin-bottom:0.2rem;">${a.title}</h3>
                                 <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -3413,16 +3407,16 @@
                                 </div>
                             </div>
                             <div style="display:flex; align-items:center; gap: 0.8rem;">
-                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Settings"><i data-lucide="settings" style="width:14px;"></i></button>
-                                <button class="btn info" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.6rem; min-width:auto;" title="Rename"><i data-lucide="edit-2" style="width:14px;"></i></button>
-                                <button class="btn" onclick="duplicateAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Duplicate" ><i data-lucide="copy" style="width:14px;"></i></button>
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Settings">&#9881;</button>
+                                <button class="btn info" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.6rem; min-width:auto;" title="Rename">&#9998;</button>
+                                <button class="btn" onclick="duplicateAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Duplicate" >&#10064;</button>
                                 <button class="btn outline" onclick="managePages('${a.id}')">Manage</button>
-                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Delete"><i data-lucide="trash-2" style="width:14px;"></i></button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.6rem; min-width:auto;" title="Delete">&times;</button>
                             </div>
                         `;
-                } else {
-                    el.className = 'admin-card';
-                    el.innerHTML = `
+                    } else {
+                        el.className = 'admin-card';
+                        el.innerHTML = `
                             <div style="display:flex; justify-content:space-between; align-items:start;">
                                 <h3>${a.title}</h3>
                                 <label class="switch" title="Toggle Public Access">
@@ -3436,24 +3430,23 @@
                                 ${a.settings && a.settings.round && a.settings.round !== 'all' ? `<span style="background:var(--success); color:white; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.85rem;">Round ${a.settings.round}</span>` : ''}
                             </div>
                             <div class="card-actions">
-                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.65rem; flex:1;" title="Settings"><i data-lucide="settings" style="width:14px;"></i> Settings</button>
-                                <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice"><i data-lucide="megaphone" style="width:14px;"></i> Notify</button>
+                                <button class="btn success" onclick="openSettings('${a.id}')" style="padding: 0.65rem; flex:1;" title="Settings">&#9881; Settings</button>
+                                <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice">&#128227; Notify</button>
                             </div>
                             <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;"><i data-lucide="download" style="width:14px;"></i> Export</button>
-                                <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename"><i data-lucide="edit-2" style="width:14px;"></i></button>
-                                <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate"><i data-lucide="copy" style="width:14px;"></i></button>
+                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">📸 Export</button>
+                                <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename">Rename</button>
+                                <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate">Duplicate</button>
                             </div>
                             <div class="card-footer">
                                 <button class="btn outline" onclick="managePages('${a.id}')" style="width:100%; padding:0.8rem;">Manage Content</button>
-                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.65rem; min-width:auto; margin-left:0.5rem;" title="Delete"><i data-lucide="trash-2"></i></button>
+                                <button class="btn danger" onclick="deleteAssm('${a.id}')" style="padding: 0.65rem; min-width:auto; margin-left:0.5rem;" title="Delete">&times;</button>
                             </div>
                         `;
-                }
-                list.appendChild(el);
-            });
-            lucide.createIcons();
-            if (callback) callback();
+                    }
+                    list.appendChild(el);
+                });
+                if (callback) callback();
         }
 
         function openSettings(id) {
@@ -3510,10 +3503,10 @@
                     fontFamily: document.getElementById('setting-submit-font').value || "'Outfit', sans-serif"
                 }
             };
-
+            
             // Show saving overlay
             const overlay = document.getElementById('save-overlay');
-            if (overlay) {
+            if(overlay) {
                 document.getElementById('save-overlay-text').innerText = "Saving Settings...";
                 overlay.style.display = 'flex';
             }
@@ -3525,12 +3518,12 @@
                         .update({ settings_json: settings })
                         .eq('id', id)
                         .select();
-
+                        
                     if (error) throw error;
                     if (Array.isArray(data) && data.length === 0) {
                         throw new Error("Action blocked by Supabase Row Level Security (RLS). Ensure your policies allow UPDATE operations.");
                     }
-
+                    
                     if (current) current.settings = settings;
                     if (overlay) overlay.style.display = 'none';
                     loadAdminDashboard(true);
@@ -3633,9 +3626,9 @@
                 const dash = document.getElementById('view-admin-dashboard');
                 if (dash && dash.classList.contains('active')) {
                     google.script.run.fetchData((res) => {
-                        // Silent update logic
-                        const isTempTab = state.adminTab === 'templates';
-                        renderAdminDashboard(document.getElementById('dash-assessment-list'), isTempTab);
+                         // Silent update logic
+                         const isTempTab = state.adminTab === 'templates';
+                         renderAdminDashboard(document.getElementById('dash-assessment-list'), isTempTab);
                     });
                 }
             }, 30000); // Increased to 30s to prevent spam
@@ -3647,10 +3640,33 @@
             state.adminSyncIntervalId = null;
         }
 
-        async function exportToImages(aid) {
-            const btn = document.getElementById(`btn-export-${aid}`);
-            const oldHtml = btn.innerHTML;
+        async function exportToImages(idArg) {
+            const assmId = idArg || state.manageAssessmentId;
+            const assm = state.assessments.find(a => a.id === assmId);
+            const btn = document.getElementById(idArg ? `btn-export-${idArg}` : 'btn-export-images');
+            const orig = btn.innerHTML;
+
+            if (!assm || !assm.pages || assm.pages.length === 0) {
+                Modal.alert("Export Error", "No pages found for this assessment."); return;
+            }
+            if (typeof google === 'undefined') {
+                Modal.alert("Not Available", "Export requires the Google Apps Script environment."); return;
+            }
+
+            btn.innerHTML = "⏳ Preparing...";
             btn.disabled = true;
+
+            const subRes = await new Promise(r => google.script.run.withSuccessHandler(r).fetchSubmissionData(assmId));
+            if (!subRes.success || subRes.submissions.length === 0) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Modal.alert("Export", subRes.message || "No submissions to export."); return;
+            }
+
+            const submissions = subRes.submissions;
+            let lastFolderUrl = '';
+
+            btn.innerHTML = `⏳ Loading Backgrounds...`;
+            const pageImages = {};
             for (const page of assm.pages) {
                 pageImages[page.pageId] = page.fileId ? await loadBase64(page.fileId) : null;
             }
@@ -3751,7 +3767,7 @@
 
         function renameAssm(id, oldTitle) {
             Modal.prompt("Rename Assessment", "Enter a new title for this assessment:", (newTitle) => {
-                if (!newTitle || !newTitle === oldTitle) return;
+                if (!newTitle || newTitle === oldTitle) return;
                 document.getElementById('dash-loader').style.display = 'block';
                 google.script.run.withSuccessHandler(() => loadAdminDashboard(true)).renameAssessment(id, newTitle);
             });
@@ -4083,7 +4099,7 @@
                     google.script.run.withSuccessHandler(res => {
                         if (res.success) img.src = res.base64;
                     }).getBase64Image(p.fileId);
-                } else document.getElementById('thumb-' + p.pageId).src = p.url;
+                }
             });
         }
 
@@ -4453,9 +4469,7 @@
                 // Type Toggle Icon
                 const typeToggle = document.createElement('div');
                 typeToggle.style = "position:absolute; bottom:2px; left:2px; background:var(--accent); color:black; font-size:10px; font-weight:800; padding:1px 4px; border-radius:3px; cursor:pointer;";
-                typeToggle.innerHTML = f.type === 'checkbox' 
-                    ? '<i data-lucide="check-square" style="width:14px;"></i>' 
-                    : '<i data-lucide="type" style="width:14px;"></i>';
+                typeToggle.innerText = f.type === 'checkbox' ? '☑' : 'T';
                 typeToggle.title = "Click to Toggle Type (Text/Checkbox)";
                 typeToggle.onclick = (e) => {
                     e.stopPropagation();
@@ -4520,7 +4534,7 @@
             const tbody = document.getElementById('team-list-body');
             tbody.innerHTML = '';
             document.getElementById('team-count').innerText = state.teams.length;
-
+            
             const subsByTeam = {};
             (state.submissions || []).forEach(s => {
                 const tKey = normalizeAnswerKey(s.team_name || s.team || '');
@@ -4612,7 +4626,7 @@
         function renderAdminUserList() {
             const tbody = document.getElementById('admin-user-list-body');
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem;">Loading admins...</td></tr>';
-
+            
             google.script.run.withSuccessHandler(res => {
                 tbody.innerHTML = '';
                 if (!res.success) {
@@ -4638,7 +4652,7 @@
             const u = document.getElementById('new-admin-user').value.trim();
             const p = document.getElementById('new-admin-pass').value.trim();
             if (!u || !p) return Modal.alert("Error", "Please enter both username and password.");
-
+            
             google.script.run.withSuccessHandler(res => {
                 if (res.success) {
                     document.getElementById('new-admin-user').value = '';
@@ -4718,7 +4732,7 @@
             try {
                 const zip = new JSZip();
                 Modal.showLoader("Gathering ALL Team Data...");
-
+                
                 const teamsWithSubs = Array.from(new Set(state.submissions.map(s => normalizeAnswerKey(s.team_name || s.team || ''))));
                 if (teamsWithSubs.length === 0) {
                     Modal.hideLoader();
@@ -4733,21 +4747,21 @@
                 for (const tKey of teamsWithSubs) {
                     const tName = (state.teams.find(xt => normalizeAnswerKey(xt.name) === tKey)?.name || tKey).replace(/[\\/:*?"<>|]/g, '_');
                     const teamFolder = zip.folder(tName);
-
+                    
                     const activeSubs = fullSubs.filter(s => normalizeAnswerKey(s.team_name || '') === tKey);
-
+                    
                     for (let subIdx = 0; subIdx < activeSubs.length; subIdx++) {
                         const sub = activeSubs[subIdx];
                         const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                         if (!assm) continue;
-
+                        
                         const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
                         const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
                         const folderName = `${assm.title || "Assm"}${studentTag} (${safeDate})`.replace(/[\\/:*?"<>|]/g, '_');
-
+                        
                         const assmFolder = teamFolder.folder(folderName);
                         const answers = sub.answers_data || {};
-
+                        
                         for (let i = 0; i < assm.pages.length; i++) {
                             const blob = await renderPageToBlob(assm.pages[i], answers);
                             if (blob) {
@@ -4802,7 +4816,7 @@
                             }
                             return null;
                         };
-
+                        
                         let val = getFromObj(nestedAns);
                         if (val === null || val === undefined) val = getFromObj(ans);
                         if (val === undefined || val === null || val === "") return;
@@ -4871,7 +4885,7 @@
 
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     document.body.removeChild(canvas);
-
+                    
                     fetch(dataUrl).then(res => res.blob()).then(blob => resolve(blob));
                 };
                 img.onerror = () => {
@@ -4885,7 +4899,7 @@
         function viewTeamSubmissions(teamName) {
             const tKey = normalizeAnswerKey(teamName);
             const subs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === tKey);
-
+            
             let html = `<div style="text-align:left;">
                 <p style="margin-bottom:1rem; opacity:0.7;">History for <b>${teamName}</b></p>
                 <div style="max-height:300px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:8px; border:1px solid var(--card-border);">
