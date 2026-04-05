@@ -19,32 +19,34 @@
         }
 
         :root {
-            --bg-start: #0f172a;
-            --bg-end: #020617;
-            --card-bg: rgba(15, 23, 42, 0.8);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #ca8a04;
-            --accent-glow: rgba(202, 138, 4, 0.4);
-            --success: #22c55e;
-            --danger: #ef4444;
-            --student-color: #000000;
-            --h1-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
-            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Light Mode Variables */
-        [data-theme="light"] {
-            --bg-start: #f1f5f9;
-            --bg-end: #e2e8f0;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --card-border: rgba(148, 163, 184, 0.3);
+            --bg-main: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --accent: #eab308;
-            --accent-glow: rgba(234, 179, 8, 0.2);
-            --h1-gradient: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-soft: rgba(37, 99, 235, 0.1);
+            --success: #16a34a;
+            --danger: #dc2626;
+            --student-color: #000000;
+            --transition-base: 0.2s ease;
+        }
+
+        /* Dark Mode Preferences */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-main: #0f172a;
+                --bg-secondary: #1e293b;
+                --card-bg: #1e293b;
+                --card-border: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --accent: #3b82f6;
+                --accent-hover: #60a5fa;
+                --accent-soft: rgba(59, 130, 246, 0.1);
+            }
         }
 
 
@@ -61,12 +63,12 @@
         }
 
         body {
-            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            background-color: var(--bg-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: all var(--transition-base);
         }
 
         nav {
@@ -83,11 +85,10 @@
         }
 
         nav .logo {
-            font-weight: 800;
-            font-size: 1.6rem;
-            letter-spacing: -1px;
-            color: var(--accent);
-            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
         }
 
         .nav-actions {
@@ -146,18 +147,16 @@
             position: fixed;
             top: 0;
             inset-inline-end: -100%;
-            width: 300px;
+            width: 280px;
             height: 100vh;
-            background: var(--bg-end);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            background: var(--card-bg);
             display: flex;
             flex-direction: column;
-            padding: 100px 2rem;
-            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 80px 1.5rem;
+            transition: 0.4s ease;
             border-inline-start: 1px solid var(--card-border);
             z-index: 1000;
-            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
         }
 
         .nav-links.open {
@@ -214,23 +213,20 @@
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 2.5rem;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             text-align: center;
-            max-width: 500px;
+            max-width: 480px;
             width: 100%;
-            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: all var(--transition-base);
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: var(--h1-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
         p {
@@ -243,44 +239,44 @@
             background: var(--accent);
             color: #fff;
             border: none;
-            padding: 0.8rem 1.8rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.4s var(--transition-smooth);
-            box-shadow: 0 8px 20px -8px var(--accent-glow);
+            transition: all var(--transition-base);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
+            gap: 0.5rem;
+            text-transform: none;
+            letter-spacing: normal;
         }
 
         .btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 25px -5px var(--accent-glow);
-            filter: brightness(1.1);
+            background: var(--accent-hover);
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn:active {
-            transform: translateY(-1px);
+            transform: translateY(1px);
         }
 
         .btn.danger {
-            background: #ef4444;
+            background: var(--danger);
             color: white;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
         .btn.outline {
             background: transparent;
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            box-shadow: none;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+
+        .btn.outline:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
         }
 
         .btn.success {
@@ -1151,11 +1147,11 @@
         </div>
 
         <div class="nav-actions">
-            <button class="lang-btn" onclick="Language.toggle()">
+            <button class="lang-btn" onclick="Language.toggle()" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--card-border); background: transparent; cursor: pointer;">
                 <span id="lang-icon">AR</span>
             </button>
-            <button class="theme-btn" onclick="Theme.toggle()">
-                <span id="theme-icon">🌙</span>
+            <button class="theme-btn" onclick="Theme.toggle()" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                <span id="theme-icon">Theme</span>
             </button>
         </div>
 
@@ -1268,16 +1264,14 @@
             </div>
             <div style="display:flex; gap:0.8rem;">
                 <button class="btn outline" onclick="openTeamManager()" title="Bulk Manage Teams"
-                    style="border-color: var(--accent); color: var(--accent);">👥 Teams</button>
+                    style="border-color: var(--accent); color: var(--accent);">Teams</button>
                 <button class="btn outline" onclick="openUserManager()" title="Manage Admin Users"
-                    style="border-color: var(--accent); color: var(--accent);">👤 Admins</button>
-                <button class="btn outline" onclick="loadAdminDashboard(true)" title="Sync latest data from Supabase">🔄
-                    Refresh</button>
+                    style="border-color: var(--accent); color: var(--accent);">Admins</button>
+                <button class="btn outline" onclick="loadAdminDashboard(true)" title="Sync latest data from Supabase">Refresh</button>
                 <button class="btn outline" onclick="openSpreadsheet()"
-                    title="View raw responses and database records">📊
-                    Results</button>
+                    title="View raw responses and database records">Results</button>
                 <button id="btn-new-assessment" class="btn primary-btn" onclick="createNewAssessment()"
-                    title="Create a brand new assessment or template">+ New</button>
+                    title="Create a brand new assessment or template">New</button>
             </div>
         </div>
         <div class="loader" id="dash-loader"></div>
@@ -1458,7 +1452,7 @@
         <div style="max-width: 1000px; width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <div style="display:flex; align-items:center; gap:1rem;">
-                    <button class="btn outline" onclick="showView('admin-dashboard')">&#8592; Back</button>
+                    <button class="btn outline" onclick="showView('admin-dashboard')">Back</button>
                     <h2 id="sub-explorer-title" style="margin:0;">Submissions</h2>
                 </div>
                 <div style="display:flex; align-items:center; gap:1rem;">
@@ -1529,7 +1523,7 @@
                 <div style="display:flex; gap:1rem;">
                     <input type="text" id="new-admin-user" placeholder="Username" style="margin:0; flex:1;">
                     <input type="password" id="new-admin-pass" placeholder="Password" style="margin:0; flex:1;">
-                    <button class="btn primary-btn" onclick="addNewAdmin()">+ Add User</button>
+                    <button class="btn primary-btn" onclick="addNewAdmin()">Add User</button>
                 </div>
             </div>
 
@@ -1555,7 +1549,7 @@
                 <button class="btn outline" onclick="showView('admin-dashboard')">&#8592; Back</button>
                 <h2 id="manage-title">Pages</h2>
             </div>
-            <button class="btn" onclick="resetEditor(); showView('admin-editor')">+ Add Page</button>
+            <button class="btn" onclick="resetEditor(); showView('admin-editor')">Add Page</button>
         </div>
         <div class="page-list" id="manage-page-list"></div>
     </main>
@@ -1566,14 +1560,13 @@
             style="max-width: 900px; width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <div style="display:flex; align-items:center; gap:1rem;">
                 <button class="btn outline" onclick="showView('admin-assessment')"
-                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">&#8592; Back to List</button>
+                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">Back to List</button>
                 <h2 style="margin:0;">Page Editor</h2>
             </div>
             <div style="display: flex; gap: 1rem;">
-                <button class="btn outline" id="btn-crop-page" onclick="startCrop()"
-                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem;">✂ Crop</button>
+                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem;">Crop</button>
                 <button class="btn" id="btn-add-checkbox" onclick="createDirectCheckbox()"
-                    style="display:none; transition: all 0.3s; background: var(--success); color: white;">+ Add
+                    style="display:none; transition: all 0.3s; background: var(--success); color: white;">Add
                     Checkbox</button>
                 <button class="btn" id="btn-save-page" onclick="savePage()"
                     style="display:none; transition: all 0.3s;">Save Layout</button>
@@ -1945,7 +1938,7 @@
             },
             updateIcon() {
                 const icon = document.getElementById('theme-icon');
-                if (icon) icon.innerText = this.current === 'dark' ? '☀️' : '🌙';
+                if (icon) icon.innerText = this.current === 'dark' ? 'Light' : 'Dark';
             }
         };
 
