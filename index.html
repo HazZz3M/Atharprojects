@@ -1717,7 +1717,7 @@
 
                         const fm = {}; (f || []).forEach(r => { if (!fm[r.page_id]) fm[r.page_id] = []; fm[r.page_id].push({ id: r.id, top: r.top_percent, left: r.left_percent, width: r.width_percent, height: r.height_percent, name: r.field_name, type: r.type }); });
                         const pm = {}; (p || []).forEach(r => { if (!pm[r.assessment_id]) pm[r.assessment_id] = []; pm[r.assessment_id].push({ pageId: r.id, url: r.image_url, fields: fm[r.id] || [], timestamp: r.created_at }); });
-                        const ts = (t || []).map(r => ({ name: r.team_name || r.name, password: r.password, round: r.round || '1' }));
+                        const ts = (t || []).map(r => ({ name: r.team_name, password: r.password, round: r.round || '1' }));
 
                         const sm = {};
                         (s || []).forEach(r => {
@@ -1732,8 +1732,8 @@
                             let pg = pm[r.id] || [];
                             pg.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp));
                             const count = sm[String(r.id).toLowerCase().trim()] || 0;
-                            const sets = parseSettingsObject(r.settings_json || r.settings);
-                            return { id: r.id, title: r.title, isActive: r.is_active || r.isActive, settings: sets, pages: pg, submissionCount: count };
+                            const sets = parseSettingsObject(r.settings_json);
+                            return { id: r.id, title: r.title, isActive: r.is_active, settings: sets, pages: pg, submissionCount: count };
                         }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                         const res = { success: true, assessments: as, teams: ts, submissions: s || [], availableRounds: Array.from(new Set(ts.map(x => x.round))).sort() };
@@ -2765,20 +2765,18 @@
 
             // Filter Teams by Round if assigned
             let filteredTeams = state.teams;
-            const targetRound = assm.settings.round || assm.settings.assignedRound;
-            if (targetRound && targetRound !== 'all') {
-                filteredTeams = state.teams.filter(t => String(t.round) === String(targetRound));
+            if (assm.settings && assm.settings.round && assm.settings.round !== 'all') {
+                filteredTeams = state.teams.filter(t => t.round == assm.settings.round);
             }
 
             if (!filteredTeams || filteredTeams.length === 0) {
-                Modal.alert("Access Denied", "No Teams found for this assessment's assigned round (" + (targetRound || '1') + ").");
-                showView('home'); 
+                renderError("Access Denied: No Teams found for this assessment's assigned round (" + (assm.settings.round || '1') + ").");
                 return;
             }
 
             // Shuffle if enabled
             state.activePages = JSON.parse(JSON.stringify(assm.pages));
-            if (assm.settings && (assm.settings.shuffle === true || assm.settings.shuffle === 'true')) {
+            if (assm.settings && assm.settings.shuffle) {
                 state.activePages.sort(() => Math.random() - 0.5);
             }
             // Sort normally if not shuffled (by timestamp is best)
@@ -2800,17 +2798,11 @@
             // Always show Team Authentication view
             showView('team-auth');
             const sel = document.getElementById('team-select');
-            sel.innerHTML = `<option value="" disabled selected data-i18n="choose_team">${Language.get('choose_team')}</option>`;
+            sel.innerHTML = '<option value="" disabled selected>-- Select Your Team --</option>';
 
             filteredTeams.forEach(t => {
                 const opt = document.createElement('option');
                 opt.value = t.name;
-                opt.innerText = t.name;
-                sel.appendChild(opt);
-            });
-            
-            toggleTeamPassField(); // Force reset field visibility
-        }
 
                 const cleanTName = normalizeAnswerKey(t.name || '');
                 const hasSubmitted = (state.submissions || []).some(s => {
