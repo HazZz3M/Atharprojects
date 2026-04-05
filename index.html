@@ -2170,7 +2170,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const baseW = 1600;
+                    const baseW = 2000;
                     const scale = baseW / img.naturalWidth;
                     canvas.width = baseW;
                     canvas.height = img.naturalHeight * scale;
@@ -2179,6 +2179,8 @@
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
+
+                    document.body.appendChild(canvas); // Attach before measuring text
 
                     const nestedAnswers = rawAnswers[page.pageId] || rawAnswers; // Handle both nested and flat answers
                     page.fields.forEach(f => {
@@ -2220,20 +2222,22 @@
                             if (currentLine) lines.push(currentLine);
                         });
 
-                        const lineH = fontSize * 1.2;
+                        const lineH = fontSize * 1.4;
                         const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
 
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
                                 ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✓', x + w / 2, y + h / 2, w - 10);
+                                ctx.fillText('✅', x + w / 2, y + h / 2);
                             }
                         } else {
-                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH, w - 10));
+                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
                         }
                     });
 
-                    resolve(canvas.toDataURL('image/jpeg', 0.92));
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                    document.body.removeChild(canvas);
+                    resolve(dataUrl);
                 };
                 img.onerror = () => resolve(null);
                 img.src = bgBase64;
@@ -4761,7 +4765,7 @@
                 img.crossOrigin = "Anonymous";
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const baseW = 1600;
+                    const baseW = 2000;
                     const scale = baseW / img.naturalWidth;
                     canvas.width = baseW;
                     canvas.height = img.naturalHeight * scale;
@@ -4771,8 +4775,9 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
 
-                    const nestedAns = ans[page.pageId] || ans || {};
+                    document.body.appendChild(canvas); // Attach before measuring text
 
+                    const nestedAns = ans[page.pageId] || ans || {};
                     (page.fields || []).forEach(f => {
                         const getFromObj = (obj) => {
                             if (!obj || typeof obj !== 'object') return null;
@@ -4819,20 +4824,19 @@
                             if (currentLine) lines.push(currentLine);
                         });
 
-                        const lineH = fontSize * 1.2;
+                        const lineH = fontSize * 1.4;
                         const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
 
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
                                 ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✅', x + w / 2, y + h / 2, w - 10);
+                                ctx.fillText('✅', x + w / 2, y + h / 2);
                             }
                         } else {
-                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH, w - 10));
+                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
                         }
                     });
 
-                    document.body.appendChild(canvas); // Temporary attach for text metrics if needed
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     document.body.removeChild(canvas);
                     
