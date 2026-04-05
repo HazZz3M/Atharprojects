@@ -3390,7 +3390,7 @@
             showView('admin-settings');
         }
 
-        function saveAssessmentSettings() {
+        async function saveAssessmentSettings() {
             const id = state.manageAssessmentId;
             const current = state.assessments.find(a => a.id === id);
             const existingSettings = (current && current.settings && typeof current.settings === 'object') ? current.settings : {};
@@ -3409,10 +3409,46 @@
                     fontFamily: document.getElementById('setting-submit-font').value || "'Outfit', sans-serif"
                 }
             };
-            if (typeof google !== 'undefined') {
-                google.script.run.withSuccessHandler(() => {
-                    google.script.run.fetchData(() => showView('admin-dashboard'));
-                }).updateAssessmentSettings(id, settings);
+            
+            // Show saving overlay
+            const overlay = document.getElementById('save-overlay');
+            if(overlay) {
+                document.getElementById('save-overlay-text').innerText = "Saving Settings...";
+                overlay.style.display = 'flex';
+            }
+
+            try {
+                if (typeof supabaseClient !== 'undefined') {
+                    // New Supabase Logic
+                    const { error } = await supabaseClient.from('assessments')
+                        .update({ settings_json: settings })
+                        .eq('id', id);
+                    if (error) throw error;
+                    
+                    if (current) current.settings = settings;
+                    if (overlay) overlay.style.display = 'none';
+                    loadAdminDashboard(true);
+                    showView('admin-dashboard');
+
+                } else if (typeof google !== 'undefined') {
+                    // Legacy GAS Logic
+                    google.script.run
+                        .withSuccessHandler(() => {
+                            if (current) current.settings = settings;
+                            if (overlay) overlay.style.display = 'none';
+                            google.script.run.fetchData(() => showView('admin-dashboard'));
+                        })
+                        .withFailureHandler((err) => {
+                            if (overlay) overlay.style.display = 'none';
+                            Modal.alert('Error', 'Failed to save: ' + err.message);
+                        })
+                        .updateAssessmentSettings(id, settings);
+                } else {
+                    throw new Error("No backend available to save settings.");
+                }
+            } catch (err) {
+                if (overlay) overlay.style.display = 'none';
+                Modal.alert('Error', 'Failed to save settings: ' + err.message);
             }
         }
 
