@@ -2218,16 +2218,21 @@
                                 const words = p.split(/\s+/);
                                 let currentLine = '';
                                 words.forEach(word => {
-                                    const testLine = currentLine ? currentLine + ' ' + word : word;
-                                    const isTooWide = ctx.measureText(testLine).width > w - 10;
-                                    const isTooManyChars = testLine.length > 120; // Safety break for measurement failures
-                                    
-                                    if ((isTooWide || isTooManyChars) && currentLine) {
-                                        lines.push(currentLine);
-                                        currentLine = word;
-                                    } else {
-                                        currentLine = testLine;
-                                    }
+                                    // Helper to split a long word if it's wider than the field on its own
+                                    const splitWord = (wrd, startLine) => {
+                                        let test = startLine ? startLine + ' ' + wrd : wrd;
+                                        if (ctx.measureText(test).width <= w - 10) return test;
+                                        if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
+                                        // If empty line but word still too wide, we MUST break the word mid-char
+                                        let sub = '';
+                                        for (let char of wrd) {
+                                            if (ctx.measureText(sub + char).width > w - 10) {
+                                                lines.push(sub); sub = char;
+                                            } else { sub += char; }
+                                        }
+                                        return sub;
+                                    };
+                                    currentLine = splitWord(word, currentLine);
                                 });
                                 if (currentLine) lines.push(currentLine);
                             });
@@ -4832,16 +4837,19 @@
                                 const words = p.split(/\s+/);
                                 let currentLine = '';
                                 words.forEach(word => {
-                                    const testLine = currentLine ? currentLine + ' ' + word : word;
-                                    const isTooWide = ctx.measureText(testLine).width > w - 10;
-                                    const isTooManyChars = testLine.length > 120; // Safety break
-                                    
-                                    if ((isTooWide || isTooManyChars) && currentLine) {
-                                        lines.push(currentLine);
-                                        currentLine = word;
-                                    } else {
-                                        currentLine = testLine;
-                                    }
+                                    const splitWord = (wrd, startLine) => {
+                                        let test = startLine ? startLine + ' ' + wrd : wrd;
+                                        if (ctx.measureText(test).width <= w - 10) return test;
+                                        if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
+                                        let sub = '';
+                                        for (let char of wrd) {
+                                            if (ctx.measureText(sub + char).width > w - 10) {
+                                                lines.push(sub); sub = char;
+                                            } else { sub += char; }
+                                        }
+                                        return sub;
+                                    };
+                                    currentLine = splitWord(word, currentLine);
                                 });
                                 if (currentLine) lines.push(currentLine);
                             });
