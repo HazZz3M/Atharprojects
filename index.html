@@ -2486,7 +2486,7 @@
             document.getElementById('sub-viewer').style.display = 'none';
         }
 
-        function renderSubmissionPage() {
+        async function renderSubmissionPage() {
             const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
             const page = assm.pages[state.subPageIndex];
             const sub = state.subSub;
@@ -2501,81 +2501,31 @@
             img.parentElement.classList.add('skeleton');
             document.getElementById('sub-img-loader').style.display = 'block';
 
-            const rawAnswers = sub.answers;
-            const nestedAnswers = rawAnswers[page.pageId];
-            page.fields.forEach(f => {
-                // Deep lookup: Try id, then name, in nested, then flat
-                let val = null;
-                const getFromObj = (obj) => {
-                    if (!obj || typeof obj !== 'object') return null;
-                    if (obj[f.id] !== undefined) return obj[f.id];
-                    if (obj[f.name] !== undefined) return obj[f.name];
-
-                    // Fallback: If student used the ID system but ID changed, maybe they also saved the name?
-                    const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
-                    const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
-
-                    for (const key in obj) {
-                        const normKey = normalizeAnswerKey(key);
-                        if (normKey === normName || normKey === normId) return obj[key];
-                    }
-                    return null;
-                };
-
-                val = getFromObj(nestedAnswers);
-                if (val === null || val === undefined) val = getFromObj(rawAnswers);
-
-                if (val == null || val === '') return; // Skip empty
-                const div = document.createElement('div');
-                div.style.cssText = [
-                    'position:absolute',
-                    `top:${f.top}%`,
-                    `left:${f.left}%`,
-                    `width:${f.width}%`,
-                    `height:${f.height}%`,
-                    'padding:4px 6px',
-                    'font-size:13px',
-                    'font-weight:800',
-                    'color: #000000', // Hardcode black for review as it's on white paper
-                    'text-shadow: 0 0 1px #fff', // Subtle glow for readablity
-                    'background: rgba(250, 204, 21, 0.1)', // Light yellow highlight to show where the field is
-                    'border-bottom: 1px dotted rgba(0,0,0,0.2)',
-                    'text-align:center',
-                    'white-space:pre-wrap',
-                    'word-break:break-word',
-                    'overflow-wrap:anywhere',
-                    'overflow:hidden',
-                    'position:absolute',
-                    'z-index:20',
-                    'pointer-events:none',
-                    'display:flex',
-                    'flex-direction:column',
-                    'align-items:center',
-                    'justify-content:center',
-                    'line-height:1.25',
-                    'font-family: "Segoe UI", Tahoma, Arial, sans-serif'
-                ].join(';');
-                if (f.type === 'checkbox') {
-                    if (val === 'true' || val === true) {
-                        div.innerHTML = '<span style="font-size:1.5rem;">✅</span>';
-                    } else {
-                        return; // don't show anything for unchecked
-                    }
+            try {
+                // Use the same high-fidelity engine as the exporter (Canvas)
+                const base64Back = await loadBase64(page.fileId);
+                const pageWithData = await renderPageOnCanvas(base64Back, page, sub.answers);
+                
+                if (pageWithData) {
+                    img.src = pageWithData;
+                    img.onload = () => {
+                        img.style.opacity = '1';
+                        img.parentElement.classList.remove('skeleton');
+                        document.getElementById('sub-img-loader').style.display = 'none';
+                    };
                 } else {
-                    div.innerText = val.toString();
+                    throw new Error("Canvas render failed");
                 }
-                fieldsContainer.appendChild(div);
-            });
-
-            const revealOverlay = () => {
-                img.style.opacity = '1';
-                img.parentElement.classList.remove('skeleton');
-                document.getElementById('sub-img-loader').style.display = 'none';
-            };
-
-            img.src = page.url;
-            img.onload = revealOverlay;
-            img.onerror = revealOverlay;
+            } catch (err) {
+                console.error("Sub Viewer Render Fail:", err);
+                // Simple fallback to background only if canvas fails
+                img.src = page.url;
+                img.onload = () => {
+                    img.style.opacity = '1';
+                    img.parentElement.classList.remove('skeleton');
+                    document.getElementById('sub-img-loader').style.display = 'none';
+                };
+            }
 
             renderSubNavDots();
         }
