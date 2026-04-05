@@ -187,11 +187,13 @@
 
         .view-section {
             display: none;
-            padding: 3rem 2rem;
+            padding: 2.5rem 1.5rem;
             flex-grow: 1;
             flex-direction: column;
             align-items: center;
-            animation: fadeIn 0.4s ease-out;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         .view-section.active {
@@ -213,9 +215,9 @@
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 6px;
+            padding: 2.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             text-align: center;
             max-width: 480px;
             width: 100%;
@@ -288,13 +290,13 @@
         input[type="password"],
         input[type="number"] {
             width: 100%;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1.2rem;
-            background: rgba(0, 0, 0, 0.2);
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 1.25rem;
+            background: var(--bg-main);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s var(--transition-smooth);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all var(--transition-base);
             color: var(--text-main);
         }
 
@@ -487,9 +489,9 @@
             position: absolute;
             appearance: none;
             -webkit-appearance: none;
-            border: 3px solid var(--student-color);
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--student-color);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -502,10 +504,10 @@
         }
 
         .checkbox-overlay:checked::after {
-            content: '✓';
+            content: 'V';
             color: white;
-            font-size: 1.2rem;
-            font-weight: 900;
+            font-size: 1rem;
+            font-weight: 700;
         }
 
         .checkbox-overlay:focus {
@@ -566,12 +568,12 @@
         }
 
         .resize-handle::after {
-            content: "↘";
+            content: "â†˜";
             font-weight: bold;
         }
 
         [dir="rtl"] .resize-handle::after {
-            content: "↙";
+            content: "â†™";
         }
 
         .editor-box.moving {
@@ -666,13 +668,12 @@
             display: none;
             background: var(--danger);
             color: white;
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-            animation: pulse 2s infinite;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         @keyframes pulse {
@@ -1053,21 +1054,22 @@
         .admin-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 6px;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            transition: all 0.3s var(--transition-smooth);
+            gap: 1.25rem;
+            transition: all var(--transition-base);
             position: relative;
             overflow: hidden;
             text-align: left;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .admin-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
             border-color: var(--accent);
-            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .admin-card h3 {
@@ -1308,15 +1310,15 @@
                     style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
             </div>
             <div
-                style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2);">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                    <thead style="position: sticky; top: 0; background: var(--bg-start);">
-                        <tr style="border-bottom: 2px solid var(--card-border);">
-                            <th style="padding: 1rem;">Team Name</th>
-                            <th style="padding: 1rem;">Password</th>
-                            <th style="padding: 1rem;">Round</th>
-                            <th style="padding: 1rem;">Submissions</th>
-                            <th style="padding: 1rem; text-align: right;">Actions</th>
+                style="max-height: 400px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-secondary); z-index: 10;">
+                        <tr style="border-bottom: 1px solid var(--card-border);">
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Team Name</th>
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Password</th>
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Round</th>
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Submissions</th>
+                            <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: var(--text-muted);">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="team-list-body">
@@ -1515,7 +1517,7 @@
         <div class="card" style="max-width: 800px; text-align: left;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
                 <h2 style="margin:0;">Manage Administrators</h2>
-                <button class="btn outline" onclick="showView('admin-dashboard')">← Back</button>
+                <button class="btn outline" onclick="showView('admin-dashboard')">â† Back</button>
             </div>
 
             <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
@@ -1528,15 +1530,15 @@
             </div>
 
             <div style="overflow-x:auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                     <thead>
-                        <tr style="border-bottom: 2px solid var(--card-border);">
-                            <th style="padding: 1rem;">Username</th>
-                            <th style="padding: 1rem;">Password</th>
-                            <th style="padding: 1rem; width: 100px;">Actions</th>
+                        <tr style="border-bottom: 1px solid var(--card-border); background: var(--bg-secondary);">
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Username</th>
+                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted);">Password</th>
+                            <th style="padding: 0.75rem 1rem; width: 100px; font-weight: 600; color: var(--text-muted);">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-user-list-body"></tbody>
+                    <tbody id="admin-user-list-body" style="font-family: inherit;"></tbody>
                 </table>
             </div>
         </div>
@@ -1840,53 +1842,53 @@
                     are_you_sure: "Are you sure?",
                 },
                 ar: {
-                    logo: "مسرعة أعمال أثر",
-                    admin_portal: "خاص بفريق التنظيم",
-                    available_assessments: "التدريبات المتاحة",
-                    select_assessment: "اختر تدريباً للبدء.",
-                    no_assessments: "لا توجد تقييمات متاحة حالياً.",
-                    begin: "ابدأ",
-                    team_portal: "الفريق",
-                    select_team: "اختر فريقك وأدخل كلمة المرور.",
-                    choose_team: "-- اختر الفريق --",
-                    team_password: "كلمة مرور الفريق",
-                    your_name: "اسمك",
-                    confirm_team: "تأكيد الفريق",
-                    back_to_home: "العودة للصفحة الرئيسية",
-                    page_x_of_y: "صفحة {x} من {y}",
-                    point: "نقطة",
-                    points: "نقاط",
-                    text_color: "لون الخط",
-                    next_page: "الصفحة التالية",
-                    prev_page: "السابق",
-                    submit: "إرسال",
-                    loading: "جاري التحميل...",
-                    notice: "تنبيه",
-                    cancel: "إلغاء",
-                    confirm: "تأكيد",
-                    admin_login: "تسجيل دخول فريق التنظيم",
-                    username: "اسم المستخدم",
-                    password: "كلمة المرور",
-                    login: "دخول",
-                    logout: "خروج",
-                    confirm_submit_msg: "هل أنت متأكد من الإرسال ؟ لن تتمكن من تغيير إجاباتك بعد ذلك.",
-                    submitting: "جاري الإرسال...",
-                    error: "خطأ",
-                    success: "تم بنجاح",
-                    sent: "تم الإرسال",
-                    export_error: "خطأ في التصدير",
-                    no_pages: "لا توجد صفحات لهذا التقييم.",
-                    not_available: "غير متاح",
-                    export_success: "تم التصدير بنجاح",
-                    new_assessment: "تقييم جديد",
-                    delete_assessment: "حذف التقييم",
-                    rename_assessment: "إعادة تسمية التقييم",
-                    duplicate_assessment: "تكرار التقييم",
-                    delete_page: "حذف الصفحة",
-                    field_label: "تسمية الحقل",
-                    field_type: "نوع الحقل",
-                    rename_field: "إعادة تسمية الحقل",
-                    are_you_sure: "هل أنت متأكد؟",
+                    logo: "Ù…Ø³Ø±Ø¹Ø© Ø£Ø¹Ù…Ø§Ù„ Ø£Ø«Ø±",
+                    admin_portal: "Ø®Ø§Øµ Ø¨ÙØ±ÙŠÙ‚ Ø§Ù„ØªÙ†Ø¸ÙŠÙ…",
+                    available_assessments: "Ø§Ù„ØªØ¯Ø±ÙŠØ¨Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø©",
+                    select_assessment: "Ø§Ø®ØªØ± ØªØ¯Ø±ÙŠØ¨Ø§Ù‹ Ù„Ù„Ø¨Ø¯Ø¡.",
+                    no_assessments: "Ù„Ø§ ØªÙˆØ¬Ø¯ ØªÙ‚ÙŠÙŠÙ…Ø§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹.",
+                    begin: "Ø§Ø¨Ø¯Ø£",
+                    team_portal: "Ø§Ù„ÙØ±ÙŠÙ‚",
+                    select_team: "Ø§Ø®ØªØ± ÙØ±ÙŠÙ‚Ùƒ ÙˆØ£Ø¯Ø®Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±.",
+                    choose_team: "-- Ø§Ø®ØªØ± Ø§Ù„ÙØ±ÙŠÙ‚ --",
+                    team_password: "ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø§Ù„ÙØ±ÙŠÙ‚",
+                    your_name: "Ø§Ø³Ù…Ùƒ",
+                    confirm_team: "ØªØ£ÙƒÙŠØ¯ Ø§Ù„ÙØ±ÙŠÙ‚",
+                    back_to_home: "Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
+                    page_x_of_y: "ØµÙØ­Ø© {x} Ù…Ù† {y}",
+                    point: "Ù†Ù‚Ø·Ø©",
+                    points: "Ù†Ù‚Ø§Ø·",
+                    text_color: "Ù„ÙˆÙ† Ø§Ù„Ø®Ø·",
+                    next_page: "Ø§Ù„ØµÙØ­Ø© Ø§Ù„ØªØ§Ù„ÙŠØ©",
+                    prev_page: "Ø§Ù„Ø³Ø§Ø¨Ù‚",
+                    submit: "Ø¥Ø±Ø³Ø§Ù„",
+                    loading: "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...",
+                    notice: "ØªÙ†Ø¨ÙŠÙ‡",
+                    cancel: "Ø¥Ù„ØºØ§Ø¡",
+                    confirm: "ØªØ£ÙƒÙŠØ¯",
+                    admin_login: "ØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„ ÙØ±ÙŠÙ‚ Ø§Ù„ØªÙ†Ø¸ÙŠÙ…",
+                    username: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+                    password: "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±",
+                    login: "Ø¯Ø®ÙˆÙ„",
+                    logout: "Ø®Ø±ÙˆØ¬",
+                    confirm_submit_msg: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ ØŸ Ù„Ù† ØªØªÙ…ÙƒÙ† Ù…Ù† ØªØºÙŠÙŠØ± Ø¥Ø¬Ø§Ø¨Ø§ØªÙƒ Ø¨Ø¹Ø¯ Ø°Ù„Ùƒ.",
+                    submitting: "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„...",
+                    error: "Ø®Ø·Ø£",
+                    success: "ØªÙ… Ø¨Ù†Ø¬Ø§Ø­",
+                    sent: "ØªÙ… Ø§Ù„Ø¥Ø±Ø³Ø§Ù„",
+                    export_error: "Ø®Ø·Ø£ ÙÙŠ Ø§Ù„ØªØµØ¯ÙŠØ±",
+                    no_pages: "Ù„Ø§ ØªÙˆØ¬Ø¯ ØµÙØ­Ø§Øª Ù„Ù‡Ø°Ø§ Ø§Ù„ØªÙ‚ÙŠÙŠÙ….",
+                    not_available: "ØºÙŠØ± Ù…ØªØ§Ø­",
+                    export_success: "ØªÙ… Ø§Ù„ØªØµØ¯ÙŠØ± Ø¨Ù†Ø¬Ø§Ø­",
+                    new_assessment: "ØªÙ‚ÙŠÙŠÙ… Ø¬Ø¯ÙŠØ¯",
+                    delete_assessment: "Ø­Ø°Ù Ø§Ù„ØªÙ‚ÙŠÙŠÙ…",
+                    rename_assessment: "Ø¥Ø¹Ø§Ø¯Ø© ØªØ³Ù…ÙŠØ© Ø§Ù„ØªÙ‚ÙŠÙŠÙ…",
+                    duplicate_assessment: "ØªÙƒØ±Ø§Ø± Ø§Ù„ØªÙ‚ÙŠÙŠÙ…",
+                    delete_page: "Ø­Ø°Ù Ø§Ù„ØµÙØ­Ø©",
+                    field_label: "ØªØ³Ù…ÙŠØ© Ø§Ù„Ø­Ù‚Ù„",
+                    field_type: "Ù†ÙˆØ¹ Ø§Ù„Ø­Ù‚Ù„",
+                    rename_field: "Ø¥Ø¹Ø§Ø¯Ø© ØªØ³Ù…ÙŠØ© Ø§Ù„Ø­Ù‚Ù„",
+                    are_you_sure: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ",
                 }
             },
             init() {
@@ -2251,7 +2253,7 @@
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
                                 ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✅', x + w / 2, y + h / 2);
+                                ctx.fillText('âœ…', x + w / 2, y + h / 2);
                             }
                         } else {
                             lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
@@ -2552,7 +2554,7 @@
                 ].join(';');
                 if (f.type === 'checkbox') {
                     if (val === 'true' || val === true) {
-                        div.innerHTML = '<span style="font-size:1.5rem;">✓</span>';
+                        div.innerHTML = '<span style="font-size:1.5rem;">âœ“</span>';
                     } else {
                         return; // don't show anything for unchecked
                     }
@@ -2959,7 +2961,7 @@
         }
 
         function autoSubmit() {
-            alert("⏰ TIME IS UP! Your assessment is being submitted automatically.");
+            alert("â° TIME IS UP! Your assessment is being submitted automatically.");
             // Jump to last page and trigger submission
             state.currentPageIndex = state.activePages.length - 1;
             nextPage();
@@ -3377,7 +3379,7 @@
             list.innerHTML = '';
             list.className = isTempTab ? 'dash-list' : 'admin-grid';
 
-            // isTemplate is guaranteed boolean after normalizeData — use it directly
+            // isTemplate is guaranteed boolean after normalizeData â€” use it directly
             const filtered = state.assessments.filter(a => {
                 const isTemp = !!(a.settings && (a.settings.isTemplate === true || a.settings.isTemplate === 'true'));
                 return isTempTab ? isTemp : !isTemp;
@@ -3433,7 +3435,7 @@
                                 <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice">&#128227; Notify</button>
                             </div>
                             <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">📸 Export</button>
+                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">ðŸ“¸ Export</button>
                                 <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename">Rename</button>
                                 <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate">Duplicate</button>
                             </div>
@@ -3652,7 +3654,7 @@
                 Modal.alert("Not Available", "Export requires the Google Apps Script environment."); return;
             }
 
-            btn.innerHTML = "⏳ Preparing...";
+            btn.innerHTML = "â³ Preparing...";
             btn.disabled = true;
 
             const subRes = await new Promise(r => google.script.run.withSuccessHandler(r).fetchSubmissionData(assmId));
@@ -3664,7 +3666,7 @@
             const submissions = subRes.submissions;
             let lastFolderUrl = '';
 
-            btn.innerHTML = `⏳ Loading Backgrounds...`;
+            btn.innerHTML = `â³ Loading Backgrounds...`;
             const pageImages = {};
             for (const page of assm.pages) {
                 pageImages[page.pageId] = page.fileId ? await loadBase64(page.fileId) : null;
@@ -3672,7 +3674,7 @@
 
             for (let i = 0; i < submissions.length; i++) {
                 const sub = submissions[i];
-                btn.innerHTML = `⏳ Exporting ${sub.team} (${i + 1}/${submissions.length})`;
+                btn.innerHTML = `â³ Exporting ${sub.team} (${i + 1}/${submissions.length})`;
                 const folderUrl = await generateSubmissionExport(sub.id, assmId, sub.answers, sub.team, assm, pageImages);
                 if (folderUrl) lastFolderUrl = folderUrl;
             }
@@ -3680,7 +3682,7 @@
             btn.innerHTML = orig;
             btn.disabled = false;
 
-            const msg = `✅ Export Complete!\n\n- Created visual reports for ${submissions.length} teams.\n- Folders and Docs have been updated in Google Drive.`;
+            const msg = `âœ… Export Complete!\n\n- Created visual reports for ${submissions.length} teams.\n- Folders and Docs have been updated in Google Drive.`;
             Modal.confirm("Export Success", msg, (choice) => {
                 if (choice && lastFolderUrl) window.open(lastFolderUrl, '_blank');
             });
@@ -3708,15 +3710,15 @@
                 state._pendingAssessments.push(optimistic);
                 state.assessments.push(optimistic);
 
-                // Render immediately — no network call needed
+                // Render immediately â€” no network call needed
                 loadAdminDashboard(false);
 
 
 
-                // Background backend save — never triggers a force re-fetch
+                // Background backend save â€” never triggers a force re-fetch
                 google.script.run
                     .withFailureHandler(err => {
-                        // Backend failed — remove the optimistic entry and re-render
+                        // Backend failed â€” remove the optimistic entry and re-render
                         state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
                         state.assessments = state.assessments.filter(a => a.id !== tempId);
                         loadAdminDashboard(false);
@@ -3816,7 +3818,7 @@
                 item.innerHTML = `
                     <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                         <div style="font-size:0.85rem; font-weight:800; color:var(--accent);">Page ${idx + 1}</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted);">↕ Drag</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">â†• Drag</div>
                     </div>
                     <img id="thumb-${p.pageId}" src="" style="background: var(--card-border);" />
                     <div style="font-size:0.9rem; color:var(--text-muted);">${p.fields.length} Fields</div>
@@ -4468,7 +4470,7 @@
                 // Type Toggle Icon
                 const typeToggle = document.createElement('div');
                 typeToggle.style = "position:absolute; bottom:2px; left:2px; background:var(--accent); color:black; font-size:10px; font-weight:800; padding:1px 4px; border-radius:3px; cursor:pointer;";
-                typeToggle.innerText = f.type === 'checkbox' ? '☑' : 'T';
+                typeToggle.innerText = f.type === 'checkbox' ? 'â˜‘' : 'T';
                 typeToggle.title = "Click to Toggle Type (Text/Checkbox)";
                 typeToggle.onclick = (e) => {
                     e.stopPropagation();
@@ -4875,7 +4877,7 @@
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
                                 ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✅', x + w / 2, y + h / 2);
+                                ctx.fillText('âœ…', x + w / 2, y + h / 2);
                             }
                         } else {
                             lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
