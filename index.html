@@ -4640,14 +4640,15 @@
                     const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                     if (!assm) continue;
 
-                    const assmFolder = teamFolder.folder(assm.title || "Assessment_" + sub.assessment_id);
+                    const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
+                    const assmFolder = teamFolder.folder((assm.title || "Assessment_" + sub.assessment_id) + studentTag);
                     const answers = sub.answers_data || {};
 
                     for (let i = 0; i < assm.pages.length; i++) {
                         const page = assm.pages[i];
                         try {
                             const blob = await renderPageToBlob(page, answers);
-                            if (blob) assmFolder.file("Page_" + (i + 1) + ".png", blob);
+                            if (blob) assmFolder.file(`Page_${i + 1}${studentTag}.png`, blob);
                         } catch (e) { console.error("Page render fail:", e); }
                     }
                 }
@@ -4704,6 +4705,7 @@
 
         async function renderPageToBlob(page, ans) {
             try {
+                const nestedAns = ans[page.pageId] || ans || {};
                 const div = document.createElement('div');
                 div.style.position = 'fixed'; div.style.left = '-9999px'; div.style.width = '1000px'; 
                 div.style.background = '#fff'; div.className = 'canvas-container';
@@ -4712,7 +4714,7 @@
                 
                 const overlay = div.querySelector('div div');
                 (page.fields || []).forEach(f => {
-                    const val = ans[f.id] || ans[f.name] || '';
+                    const val = nestedAns[f.id] || nestedAns[f.name] || '';
                     const field = document.createElement('div');
                     field.style.position = 'absolute'; field.style.top = f.top + '%'; field.style.left = f.left + '%';
                     field.style.width = f.width + '%'; field.style.height = f.height + '%';
