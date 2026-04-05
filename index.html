@@ -1815,12 +1815,12 @@
                     groupImagesInDoc() { if (this._s) this._s({ success: true }); },
                     updateSubmissionFolderLink(aid, sid, url) { return this._x(supabaseClient.from('submissions').update({ folder_link: url }).eq('id', sid)); },
                     async fetchAdmins() {
-                        const { data, error } = await supabaseClient.from('admins').select('*').order('created_at', { ascending: false });
-                        if (this._s) this._s({ success: !error, admins: data || [] });
+                        const { data } = await supabaseClient.from('admins').select('*').order('username');
+                        if (this._s) this._s({ success: true, admins: data || [] });
                     },
-                    async createAdmin(u, p) {
-                        const { data, error } = await supabaseClient.from('admins').insert([{ username: u, password: p }]).select();
-                        if (this._s) this._s({ success: !error, message: error ? error.message : "Admin created" });
+                    async addAdmin(u, p) {
+                        const { error } = await supabaseClient.from('admins').insert([{ username: u, password: p }]);
+                        if (this._s) this._s({ success: !error, message: error ? error.message : null });
                     },
                     async deleteAdmin(id) {
                         const { error } = await supabaseClient.from('admins').delete().eq('id', id);
@@ -2858,9 +2858,8 @@
 
                 // Final background sync check to prevent RLS race conditions
                 if (!state.submissions || state.submissions.length === 0) {
-                    await google.script.run.withSuccessHandler(res => {
-                        if (res && res.submissions) state.submissions = res.submissions;
-                    }).fetchAppData();
+                    const { data: s } = await supabaseClient.from('submissions').select('id, assessment_id, team_name');
+                    if (s) state.submissions = s;
                 }
                 const memberName = document.getElementById('member-name').value.trim();
 
