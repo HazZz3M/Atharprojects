@@ -3376,11 +3376,11 @@
             });
 
             // Populate settings
-            document.getElementById('setting-allow-multi').checked = !!a.settings.allowMulti;
-            document.getElementById('setting-shuffle').checked = !!a.settings.shuffle;
-            document.getElementById('setting-timer-enabled').checked = !!a.settings.timerEnabled;
+            document.getElementById('setting-allow-multi').checked = toBool(a.settings.allowMulti);
+            document.getElementById('setting-shuffle').checked = toBool(a.settings.shuffle);
+            document.getElementById('setting-timer-enabled').checked = toBool(a.settings.timerEnabled);
             document.getElementById('setting-timer-duration').value = a.settings.timerDuration || 30;
-            document.getElementById('setting-is-template').checked = !!a.settings.isTemplate;
+            document.getElementById('setting-is-template').checked = toBool(a.settings.isTemplate);
             document.getElementById('setting-round').value = a.settings.round || 'all';
             document.getElementById('setting-submit-message').value = a.settings.submitMessage || "Assessment Successfully Submitted! Thank you.";
             document.getElementById('setting-submit-color').value = (a.settings.submitMessageStyle && a.settings.submitMessageStyle.color) ? a.settings.submitMessageStyle.color : '#22c55e';
