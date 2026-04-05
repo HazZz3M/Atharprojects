@@ -1457,9 +1457,10 @@
                     <button class="btn outline" onclick="showView('admin-dashboard')">&#8592; Back</button>
                     <h2 id="sub-explorer-title" style="margin:0;">Submissions</h2>
                 </div>
-                <div id="sub-count-badge"
-                    style="background:var(--card-border); padding:0.4rem 1rem; border-radius:999px; font-size:0.9rem; font-weight:700;">
-                    0 Teams</div>
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <div id="sub-count-badge" style="background:var(--card-border); padding:0.4rem 1rem; border-radius:999px; font-size:0.9rem; font-weight:700;">0 Teams</div>
+                    <button class="btn danger" style="padding:0.4rem 1rem;" onclick="deleteAllSubmissions(state.manageAssessmentId)">Delete All</button>
+                </div>
             </div>
 
             <div id="sub-team-list" class="admin-grid" style="margin-bottom:3rem;">
@@ -1712,7 +1713,7 @@
                     },
                     async fetchSubmissionData(aid) {
                         const { data } = await supabaseClient.from('submissions').select('*').eq('assessment_id', aid).order('created_at', { ascending: false });
-                        const r = { success: true, submissions: (data || []).map(d => ({ id: d.id, team: d.team_name, timestamp: d.created_at, answers: d.answers_data, folderLink: d.folder_link })) };
+                        const r = { success: true, submissions: (data || []).map(d => ({ id: d.id, team: d.team_name, member: d.member_name, timestamp: d.created_at, answers: d.answers_data, folderLink: d.folder_link })) };
                         if (this._s) this._s(r); return r;
                     },
                     async duplicateAssessment(id) {
@@ -2371,12 +2372,14 @@
                 el.className = 'admin-card';
                 el.style.textAlign = 'center';
                 el.style.cursor = 'pointer';
+                const memberText = s.member ? ` <span style="font-size:0.8rem; font-weight:normal; opacity:0.8;">(${s.member})</span>` : '';
                 el.innerHTML = `
-                    <h3 style="margin:0;">${s.team}</h3>
+                    <h3 style="margin:0;">${s.team}${memberText}</h3>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${new Date(s.timestamp).toLocaleTimeString()}</div>
                     <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
                         <button class="btn" style="flex:1; padding:0.6rem;" onclick="launchSubmissionViewer(state.activeSubmissions.find(sub => sub.id === '${s.id}'), '${state.manageAssessmentId}')">Review</button>
-                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')">📁 Drive</button>` : ''}
+                        ${s.folderLink ? `<button class="btn outline" style="flex:1; padding:0.6rem; border-color:var(--accent); color:var(--accent);" onclick="event.stopPropagation(); window.open('${s.folderLink}', '_blank')">Drive</button>` : ''}
+                        <button class="btn danger outline" style="flex:0.5; padding:0.6rem;" onclick="event.stopPropagation(); deleteSubmission('${s.id}')">Del</button>
                     </div>
                 `;
                 el.onclick = () => launchSubmissionViewer(s, state.manageAssessmentId);
@@ -2390,7 +2393,7 @@
             state.subSub = sub;
             state.subPageIndex = 0;
             document.getElementById('sub-viewer').style.display = 'flex';
-            document.getElementById('sub-viewer-team').innerText = sub.team;
+            document.getElementById('sub-viewer-team').innerText = sub.team + (sub.member ? ` (${sub.member})` : '');
             document.getElementById('sub-viewer-time').innerText = `Submitted: ${new Date(sub.timestamp).toLocaleString()}`;
 
             // Add a temporary Debug button to see raw data if missing
@@ -2401,6 +2404,34 @@
             document.getElementById('sub-viewer').scrollIntoView({ behavior: 'smooth' });
 
             renderSubmissionPage();
+        }
+
+        async function deleteSubmission(sid) {
+            Modal.confirm("Delete Submission", "Are you sure you want to permanently delete this submission?", async (confirmed) => {
+                if (!confirmed) return;
+                const overlay = document.getElementById('save-overlay');
+                if(overlay) { document.getElementById('save-overlay-text').innerText = "Deleting..."; overlay.style.display = 'flex'; }
+                const { error } = await supabaseClient.from('submissions').delete().eq('id', sid).select();
+                if(overlay) overlay.style.display = 'none';
+                if (error) return Modal.alert("Error", error.message);
+                openSubmissions(state.manageAssessmentId);
+            });
+        }
+
+        async function deleteAllSubmissions(aid) {
+            Modal.confirm("Delete All Submissions", "Warning! Are you sure you want to delete ALL submissions for this assessment. This cannot be undone.", async (confirmed) => {
+                if (!confirmed) return;
+                const overlay = document.getElementById('save-overlay');
+                if(overlay) { document.getElementById('save-overlay-text').innerText = "Deleting All..."; overlay.style.display = 'flex'; }
+                const { error } = await supabaseClient.from('submissions').delete().eq('assessment_id', aid).select();
+                if(overlay) overlay.style.display = 'none';
+                if (error) return Modal.alert("Error", error.message);
+                openSubmissions(aid);
+            });
+        }
+
+        function closeSubmissionViewer() {
+            document.getElementById('sub-viewer').style.display = 'none';
         }
 
         function renderSubmissionPage() {
@@ -4589,13 +4620,23 @@
                 const teamFolder = zip.folder(teamName);
                 Modal.showLoader("Preparing " + teamName + "...");
 
-                const teamSubs = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === normalizeAnswerKey(teamName));
-                if (teamSubs.length === 0) {
+                const teamSubsBase = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === normalizeAnswerKey(teamName));
+                if (teamSubsBase.length === 0) {
                     Modal.hideLoader();
                     return Modal.alert("Empty", "No submissions found for " + teamName);
                 }
 
-                for (const sub of teamSubs) {
+                const assessmentIds = teamSubsBase.map(s => s.assessment_id);
+                // Dynamically pull full payload using Supabase ILIKE wildcard
+                const { data: fullSubs, error } = await supabaseClient.from('submissions')
+                    .select('*')
+                    .ilike('team_name', teamName)
+                    .in('assessment_id', assessmentIds);
+
+                if (error) { Modal.hideLoader(); throw error; }
+                const activeSubs = fullSubs || [];
+
+                for (const sub of activeSubs) {
                     const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                     if (!assm) continue;
 
