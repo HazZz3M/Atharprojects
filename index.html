@@ -2036,6 +2036,32 @@
                 overlay.querySelector('#modal-ok').onclick = () => { overlay.remove(); onValue(true); };
                 document.body.appendChild(overlay);
                 lucide.createIcons();
+            },
+            prompt(title, msg, onValue) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="card" style="max-width:400px; padding:2rem; animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                         <div style="margin-bottom:1.5rem; display:flex; justify-content:center;">
+                            <div style="width:50px; height:50px; background:var(--accent-glow); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                                <i data-lucide="edit-3" style="width:24px; height:24px;"></i>
+                            </div>
+                        </div>
+                        <h2 style="margin-bottom:0.8rem; font-size:1.4rem;">${title}</h2>
+                        <p style="font-size:0.95rem; margin-bottom:1rem; white-space:pre-wrap;">${msg}</p>
+                        <input type="text" id="modal-input-field" class="form-control" style="width:100%; margin-bottom:1.5rem; background:var(--card-bg); border:1px solid var(--card-border); color:var(--text-main); padding:0.8rem; border-radius:8px;">
+                        <div style="display:flex; gap:0.8rem;">
+                            <button class="btn outline" style="flex:1;" id="modal-cancel">Cancel</button>
+                            <button class="btn" style="flex:1;" id="modal-ok">Submit</button>
+                        </div>
+                    </div>
+                `;
+                const input = overlay.querySelector('#modal-input-field');
+                overlay.querySelector('#modal-cancel').onclick = () => { overlay.remove(); onValue(null); };
+                overlay.querySelector('#modal-ok').onclick = () => { overlay.remove(); onValue(input.value); };
+                document.body.appendChild(overlay);
+                lucide.createIcons();
+                input.focus();
             }
         };
 
@@ -2590,6 +2616,7 @@
                 dot.onclick = () => { state.subPageIndex = i; renderSubmissionPage(); };
                 list.appendChild(dot);
             });
+            lucide.createIcons();
         }
 
         function prevSubPage() {
@@ -3439,7 +3466,7 @@
                                 <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice"><i data-lucide="megaphone" style="width:14px;"></i> Notify</button>
                             </div>
                             <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button id="btn-export-${a.id}" class="btn info outline" onclick="extractResultsForTeam('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;"><i data-lucide="download" style="width:14px;"></i> Export</button>
+                                <button id="btn-export-${a.id}" class="btn info outline" onclick="extractResultsForAssessment('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;"><i data-lucide="download" style="width:14px;"></i> Export ZIP</button>
                                 <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename"><i data-lucide="edit-2" style="width:14px;"></i></button>
                                 <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate"><i data-lucide="copy" style="width:14px;"></i></button>
                             </div>
@@ -3561,67 +3588,31 @@
             const assm = state.assessments.find(a => a.id === id);
             if (!assm) return;
 
-            // Custom modal for Live Notification with duration
-            const overlay = document.getElementById('global-modal');
-            const title = overlay.querySelector('.modal-title');
-            const text = overlay.querySelector('.modal-text');
-            const input = overlay.querySelector('.modal-input');
-            const btnCancel = overlay.querySelector('#modal-btn-cancel');
-            const btnOk = overlay.querySelector('#modal-btn-ok');
+            Modal.prompt("Live Notification", "Enter an urgent message for all participants in this assessment:", (message) => {
+                if (!message || !message.trim()) return;
+                const trimmed = message.trim();
+                const seconds = 10; // Default 10s for quick notify
 
-            title.innerText = "Live Notification";
-            text.innerHTML = "<b>Send a floating message</b> to users currently inside this assessment.<br>This will appear at the top of their screen with an alert sound.";
-            input.placeholder = "Type urgent message for participants...";
-            input.value = '';
-            input.style.display = 'block';
-            btnCancel.style.display = 'block';
-            overlay.style.display = 'flex';
-
-            // Add duration input temporarily
-            let durationWrap = document.getElementById('modal-duration-wrap');
-            if (!durationWrap) {
-                durationWrap = document.createElement('div');
-                durationWrap.id = 'modal-duration-wrap';
-                durationWrap.style = "margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem;";
-                durationWrap.innerHTML = `
-                    <span>Disappear after</span>
-                    <input type="number" id="modal-duration-input" min="1" max="120" value="${assm.settings.liveNoticeDefaultDuration || 8}" 
-                        style="width: 60px; padding: 0.4rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; color: var(--text-main); text-align: center;">
-                    <span>seconds</span>
-                `;
-                input.parentNode.insertBefore(durationWrap, input.nextSibling);
-            } else {
-                durationWrap.style.display = 'flex';
-                document.getElementById('modal-duration-input').value = assm.settings.liveNoticeDefaultDuration || 8;
-            }
-
-            Modal.activeCallback = (confirmed) => {
-                const message = input.value.trim();
-                const seconds = parseInt(document.getElementById('modal-duration-input').value) || 8;
-                durationWrap.style.display = 'none';
-
-                if (confirmed && message) {
-                    const settings = {
-                        ...(assm.settings || {}),
-                        liveNoticeDefaultDuration: seconds,
-                        liveNotice: {
-                            id: 'LN-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-                            assessmentId: String(id),
-                            message: message,
-                            durationSec: seconds,
-                            createdAt: new Date().toISOString()
-                        }
-                    };
-                    assm.settings = { ...settings };
-                    if (typeof google === 'undefined') {
-                        showLiveNotice(message, seconds);
-                        return;
+                const updatePayload = {
+                    ...(assm.settings || {}),
+                    liveNotice: {
+                        id: 'LN-' + Date.now(),
+                        assessmentId: String(id),
+                        message: trimmed,
+                        durationSec: seconds,
+                        createdAt: new Date().toISOString()
                     }
-                    google.script.run.withSuccessHandler(() => {
-                        Modal.alert("Sent", "Notification sent successfully.");
-                    }).updateAssessmentSettings(id, settings);
-                }
-            };
+                };
+
+                supabaseClient.from('assessments').update({ settings_json: updatePayload }).eq('id', id)
+                    .then(res => {
+                        if (res.error) Modal.alert("Error", "Failed to send notification: " + res.error.message);
+                        else {
+                           assm.settings = updatePayload;
+                           Modal.alert("Success", "Notification sent successfully!");
+                        }
+                    });
+            });
         }
 
         function startAdminAutoSync() {
@@ -3715,82 +3706,68 @@
                 state._pendingAssessments.push(optimistic);
                 state.assessments.push(optimistic);
 
-                // Render immediately — no network call needed
-                loadAdminDashboard(false);
-
-
-
-                // Background backend save — never triggers a force re-fetch
-                google.script.run
-                    .withFailureHandler(err => {
-                        // Backend failed — remove the optimistic entry and re-render
-                        state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
-                        state.assessments = state.assessments.filter(a => a.id !== tempId);
-                        loadAdminDashboard(false);
-                        Modal.alert('Create Failed', 'Could not save assessment: ' + (err.message || String(err)));
-                    })
-                    .withSuccessHandler(res => {
-                        if (res && res.assessmentId) {
-                            const realId = res.assessmentId;
+                supabaseClient.from('assessments')
+                    .insert([{ title: trimmedTitle, isActive: false, settings_json: { isTemplate: isTemplate } }])
+                    .select()
+                    .then(({ data, error }) => {
+                        if (error) {
+                            state._pendingAssessments = state._pendingAssessments.filter(a => a.id !== tempId);
+                            state.assessments = state.assessments.filter(a => a.id !== tempId);
+                            loadAdminDashboard(false);
+                            Modal.alert('Create Failed', 'Could not save assessment: ' + error.message);
+                        } else {
+                            const realId = data[0].id;
                             const idx = state.assessments.findIndex(a => a.id === tempId);
                             if (idx !== -1) {
                                 state.assessments[idx].id = realId;
                                 state.assessments[idx]._isOptimistic = false;
+                                state.assessments[idx].pages = [];
                             }
-                            state._pendingAssessments = state._pendingAssessments.map(a => {
-                                if (a.id === tempId) return { ...a, id: realId, _isOptimistic: false };
-                                return a;
-                            });
-
-                            // If we were currently managing this temporary ID, update it
-                            if (state.manageAssessmentId === tempId) {
-                                state.manageAssessmentId = realId;
-                            }
+                            if (state.manageAssessmentId === tempId) state.manageAssessmentId = realId;
+                            loadAdminDashboard(false);
                         }
-                        loadAdminDashboard(false);
-                    })
-                    .createAssessment(trimmedTitle);
+                    });
+            });
+        }
+        function toggleAssm(id, status) {
+            supabaseClient.from('assessments').update({ isActive: status }).eq('id', id).then(() => {
+                const a = state.assessments.find(x => x.id === id);
+                if (a) a.isActive = status;
             });
         }
 
-        function toggleAssm(id, state) {
-            google.script.run.withSuccessHandler(() => { }).toggleAssessment(id, state);
-        }
-
         function deleteAssm(id) {
-            Modal.confirm("Delete Assessment", "Are you sure? This will delete all pages, fields, and student records for this assessment.", (confirmed) => {
+            Modal.confirm("Delete Assessment", "Are you sure? This will delete all student records for this assessment.", (confirmed) => {
                 if (!confirmed) return;
-                const overlay = document.getElementById('save-overlay');
-                const overlayText = document.getElementById('save-overlay-text');
-                overlayText.innerText = "Deleting Assessment...";
-                overlay.style.display = 'flex';
-                google.script.run.withSuccessHandler(() => fetchData(() => {
-                    overlay.style.display = 'none';
-                    loadAdminDashboard(true);
-                })).deleteAssessment(id);
+                supabaseClient.from('assessments').delete().eq('id', id).then(() => {
+                    fetchData(() => loadAdminDashboard(true));
+                });
             });
         }
 
         function renameAssm(id, oldTitle) {
-            Modal.prompt("Rename Assessment", "Enter a new title for this assessment:", (newTitle) => {
-                if (!newTitle || !newTitle === oldTitle) return;
-                document.getElementById('dash-loader').style.display = 'block';
-                google.script.run.withSuccessHandler(() => loadAdminDashboard(true)).renameAssessment(id, newTitle);
+            Modal.prompt("Rename Assessment", "Enter a new title:", (newTitle) => {
+                if (!newTitle || newTitle === oldTitle) return;
+                supabaseClient.from('assessments').update({ title: newTitle }).eq('id', id).then(() => {
+                    fetchData(() => loadAdminDashboard(true));
+                });
             });
         }
 
         function duplicateAssm(id) {
-            Modal.confirm("Duplicate Assessment", "Duplicate this entire assessment including all pages and fields?", (confirmed) => {
+            Modal.confirm("Duplicate Assessment", "Duplicate this entire assessment (Pages + Layout)?", (confirmed) => {
                 if (!confirmed) return;
-                document.getElementById('dash-loader').style.display = 'block';
-                if (typeof google !== 'undefined') {
-                    google.script.run.withSuccessHandler((res) => {
-                        if (res.success) {
-                            // Fetch then open settings for the new clone
-                            loadAdminDashboard(true, () => openSettings(res.newId));
-                        }
-                    }).duplicateAssessment(id);
-                }
+                const assm = state.assessments.find(a => a.id === id);
+                if (!assm) return;
+                
+                supabaseClient.from('assessments').insert([{ 
+                    title: assm.title + " (Copy)", 
+                    isActive: false, 
+                    settings_json: assm.settings 
+                }]).select().then(({ data, error }) => {
+                    if (error) return Modal.alert("Error", error.message);
+                    fetchData(() => loadAdminDashboard(true));
+                });
             });
         }
 
@@ -3825,11 +3802,11 @@
                         <div style="font-size:0.85rem; font-weight:800; color:var(--accent);">Page ${idx + 1}</div>
                         <div style="font-size:0.8rem; color:var(--text-muted);">↕ Drag</div>
                     </div>
-                    <img id="thumb-${p.pageId}" src="" style="background: var(--card-border);" />
+                    <img id="thumb-${p.pageId}" src="${p.url}" style="background: var(--card-border); border-radius: 8px; width: 100%; height: 120px; object-fit: cover; margin: 0.5rem 0;" onerror="this.src='https://placehold.co/200x120?text=Page+${idx + 1}'" />
                     <div style="font-size:0.9rem; color:var(--text-muted);">${p.fields.length} Fields</div>
                     <div style="display:flex; gap:0.5rem; width:100%; margin-top:0.5rem;">
-                        <button class="btn info" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="editPageFields('${p.pageId}')">Edit Fields</button>
-                        <button class="btn danger" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="deletePage('${p.pageId}')">Delete</button>
+                        <button class="btn info" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="editPageFields('${p.pageId}')"><i data-lucide="edit"></i> Fields</button>
+                        <button class="btn danger" style="padding: 0.5rem; flex:1; font-size:0.8rem;" onclick="deletePage('${p.pageId}')"><i data-lucide="trash-2"></i></button>
                     </div>
                 `;
                 item.addEventListener('dragstart', handleManageDragStart);
@@ -3848,17 +3825,16 @@
         }
 
         function persistManagePageOrder() {
-            const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
+            const id = state.manageAssessmentId;
+            const assm = state.assessments.find(a => a.id === id);
             if (!assm) return;
             const pageOrder = assm.pages.map(p => p.pageId);
-            assm.settings = assm.settings || {};
-            assm.settings.pageOrder = pageOrder;
-
-            google.script.run
-                .withFailureHandler(() => {
-                    Modal.alert("Order Sync Failed", "Page order changed locally but could not be saved to server.");
-                })
-                .updateAssessmentSettings(assm.id, assm.settings);
+            const settings = { ...(assm.settings || {}), pageOrder: pageOrder };
+            
+            supabaseClient.from('assessments').update({ settings_json: settings }).eq('id', id).then(res => {
+                if (res.error) Modal.alert("Order Sync Failed", res.error.message);
+                else assm.settings = settings;
+            });
         }
 
         function handleManageDragStart(e) {
@@ -3966,16 +3942,11 @@
                 overlayText.innerText = "Deleting Page...";
                 overlay.style.display = 'flex';
 
-                if (typeof google !== 'undefined') {
-                    google.script.run.withSuccessHandler(() => {
-                        fetchData(() => {
-                            overlay.style.display = 'none';
-                            managePages(state.manageAssessmentId);
-                        });
-                    }).deletePage(pid);
-                } else {
+                supabaseClient.from('pages').delete().eq('id', pid).then(({ error }) => {
                     overlay.style.display = 'none';
-                }
+                    if (error) Modal.alert("Error", "Failed to delete page: " + error.message);
+                    else fetchData(() => managePages(state.manageAssessmentId));
+                });
             });
         }
 
@@ -4023,17 +3994,14 @@
 
             const processFile = (index) => {
                 if (index >= total) {
-                    // All finished
                     fetchData(() => {
                         progressText.style.display = 'none';
                         loader.style.display = 'none';
                         btn.style.display = 'inline-flex';
                         loadEditorSidebar();
-                        // Open the first one from the new batch
                         const assm = state.assessments.find(a => a.id === state.manageAssessmentId);
                         if (assm && assm.pages.length > 0) {
-                            const lastPage = assm.pages[assm.pages.length - 1]; // Usually recently added are at end depending on sorting
-                            editPageFields(lastPage.pageId);
+                            editPageFields(assm.pages[assm.pages.length - 1].pageId);
                         }
                     });
                     return;
@@ -4045,27 +4013,23 @@
 
                 reader.onload = function (evt) {
                     const base64Data = evt.target.result;
-                    if (typeof google !== 'undefined') {
-                        google.script.run.withSuccessHandler(res => {
-                            if (res && res.success) {
-                                // For single uploads, open editor canvas immediately (no crop popup)
-                                if (total === 1) {
-                                    setupEditorCanvas(res.pageId, base64Data);
-                                }
-                                processFile(index + 1);
-                            } else {
-                                Modal.alert("Batch Upload Error", `Failed to upload ${file.name}: ${res.message}`);
-                                resetEditor();
-                            }
-                        }).uploadImageAndCreatePage(base64Data, file.name, state.manageAssessmentId);
-                    } else {
-                        // Demo mode
-                        setTimeout(() => processFile(index + 1), 500);
+                    if (typeof google === 'undefined') {
+                        Modal.alert("Action Required", "Direct image upload is currently disabled in the standalone GitHub version. \n\nPlease upload templates directly to your Supabase Storage bucket and link them in the database manually.");
+                        resetEditor();
+                        return;
                     }
+                    google.script.run.withSuccessHandler(res => {
+                        if (res && res.success) {
+                            if (total === 1) setupEditorCanvas(res.pageId, base64Data);
+                            processFile(index + 1);
+                        } else {
+                            Modal.alert("Batch Upload Error", `Failed to upload ${file.name}: ${res.message}`);
+                            resetEditor();
+                        }
+                    }).uploadImageAndCreatePage(base64Data, file.name, state.manageAssessmentId);
                 };
                 reader.readAsDataURL(file);
             };
-
             processFile(0);
         }
 
