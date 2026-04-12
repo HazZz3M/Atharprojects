@@ -1340,6 +1340,30 @@
             body:has(.nav-links.open) {
                 overflow: hidden;
             }
+            .editor-label {
+                font-size: 15px !important;
+                padding: 6px 8px !important;
+            }
+            .editor-type-toggle {
+                font-size: 15px !important;
+                padding: 5px 8px !important;
+                bottom: 4px !important;
+                left: 4px !important;
+            }
+        }
+        .editor-label {
+            color: white; font-size: 11px; background: rgba(0,0,0,0.6);
+            padding: 2px 4px; border-radius: 3px; position: absolute;
+            top: 2px; left: 2px; overflow: hidden;
+            max-width: 90%; white-space: nowrap; cursor: pointer;
+        }
+        .editor-type-toggle {
+            position: absolute; bottom: 2px; left: 2px;
+            background: var(--accent); color: black; font-size: 10px;
+            font-weight: 800; padding: 1px 4px; border-radius: 3px; cursor: pointer;
+        }
+        .editor-box, #crop-box, #crop-overlay {
+            touch-action: none;
         }
     </style>
 </head>
@@ -4513,7 +4537,7 @@
             cropBox.style.height = height + 'px';
         }
 
-        cropOverlay.addEventListener('mousedown', e => {
+        cropOverlay.addEventListener('pointerdown', e => {
             if (cropOverlay.style.display === 'none') return;
             if (e.target !== cropOverlay) return;
             const rect = canvas.getBoundingClientRect();
@@ -4525,7 +4549,7 @@
             e.stopPropagation();
         });
 
-        cropBox.addEventListener('mousedown', e => {
+        cropBox.addEventListener('pointerdown', e => {
             if (cropOverlay.style.display === 'none') return;
             if (e.target === cropResizeHandle) return;
             isMovingCrop = true;
@@ -4538,7 +4562,7 @@
             e.stopPropagation();
         });
 
-        cropResizeHandle.addEventListener('mousedown', e => {
+        cropResizeHandle.addEventListener('pointerdown', e => {
             if (cropOverlay.style.display === 'none') return;
             isResizingCrop = true;
             cropStartX = e.clientX;
@@ -4551,7 +4575,7 @@
             e.stopPropagation();
         });
 
-        window.addEventListener('mousemove', e => {
+        window.addEventListener('pointermove', e => {
             if (isMovingCrop) {
                 const rect = canvas.getBoundingClientRect();
                 const nextLeft = (e.clientX - rect.left) - cropPointerOffsetX;
@@ -4621,7 +4645,7 @@
             }
         });
 
-        window.addEventListener('mouseup', () => {
+        window.addEventListener('pointerup', () => {
             isMovingCrop = false;
             isResizingCrop = false;
             isDrawingCrop = false;
@@ -4630,7 +4654,7 @@
             document.querySelectorAll('.moving').forEach(el => el.classList.remove('moving'));
         });
 
-        canvas.addEventListener('mousedown', e => {
+        canvas.addEventListener('pointerdown', e => {
             if (cropOverlay.style.display !== 'none') return;
             if (e.target.closest('.delete-btn') || e.target.closest('.editor-box')) return;
             state.selectedIndex = -1; // Deselect on background click
@@ -4644,7 +4668,7 @@
             layer.appendChild(tempBox);
         });
 
-        canvas.addEventListener('mouseup', e => {
+        canvas.addEventListener('pointerup', e => {
             if (!state.drawing) return;
             state.drawing = false;
             const tb = document.getElementById('temp-box');
@@ -4700,7 +4724,7 @@
 
                 // Label / Rename
                 const label = document.createElement('span');
-                label.style = "color:white; font-size: 11px; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius:3px; position:absolute; top:2px; left:2px; overflow:hidden; max-width:90%; white-space:nowrap; cursor:pointer;";
+                label.className = 'editor-label';
                 label.innerText = f.name || '';
                 label.onclick = (e) => {
                     e.stopPropagation();
@@ -4717,7 +4741,7 @@
                 // Resize Handle
                 const resizer = document.createElement('div');
                 resizer.className = 'resize-handle';
-                resizer.onmousedown = (e) => {
+                resizer.onpointerdown = (e) => {
                     e.stopPropagation(); e.preventDefault();
                     state.isResizing = true; state.dragIndex = i;
                     const rect = canvas.getBoundingClientRect();
@@ -4726,7 +4750,7 @@
                 };
 
                 // Move Logic
-                box.onmousedown = (e) => {
+                box.onpointerdown = (e) => {
                     if (e.target === delBtn || e.target === resizer || e.target === label) return;
                     e.preventDefault();
                     state.dragIndex = i; state.isResizing = false;
@@ -4741,7 +4765,7 @@
 
                 // Type Toggle Icon
                 const typeToggle = document.createElement('div');
-                typeToggle.style = "position:absolute; bottom:2px; left:2px; background:var(--accent); color:black; font-size:10px; font-weight:800; padding:1px 4px; border-radius:3px; cursor:pointer;";
+                typeToggle.className = 'editor-type-toggle';
                 typeToggle.innerText = f.type === 'checkbox' ? '☑' : 'T';
                 typeToggle.title = "Click to Toggle Type (Text/Checkbox)";
                 typeToggle.onclick = (e) => {
@@ -5289,4 +5313,4 @@
 
 </body>
 
-</html>s
+</html>
