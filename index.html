@@ -3312,20 +3312,17 @@
 
                     if (typeof supabaseClient !== 'undefined') {
                         const payload = buildAnswersPayload(state.userAnswers);
-                        let query;
                         if (state.existingSubmissionId) {
-                            query = supabaseClient.from('submissions').update({
-                                member_name: state.memberName,
-                                answers_data: payload
-                            }).eq('id', state.existingSubmissionId);
-                        } else {
-                            query = supabaseClient.from('submissions').insert([{
-                                assessment_id: state.activeAssessmentId,
-                                team_name: state.activeTeam,
-                                member_name: state.memberName,
-                                answers_data: payload
-                            }]);
+                            // Try to delete old to keep db clean, ignoring errors if RLS blocks delete
+                            supabaseClient.from('submissions').delete().eq('id', state.existingSubmissionId).then(() => {});
                         }
+                        
+                        let query = supabaseClient.from('submissions').insert([{
+                            assessment_id: state.activeAssessmentId,
+                            team_name: state.activeTeam,
+                            member_name: state.memberName,
+                            answers_data: payload
+                        }]);
                         
                         query.then(({ error }) => {
                             if (!error) {
