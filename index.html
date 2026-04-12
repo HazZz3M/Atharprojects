@@ -3343,6 +3343,11 @@
                                 if (state.isAdmin && document.getElementById('view-admin-dashboard').classList.contains('active')) {
                                     loadAdminDashboard(true);
                                 }
+                                
+                                // Redirect back to assessments after 5 seconds
+                                setTimeout(() => {
+                                    showView('home');
+                                }, 5000);
                             } else {
                                 alert(error.message || "Submission failed.");
                                 btn.disabled = false; btn.innerText = origText;
