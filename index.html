@@ -1275,11 +1275,17 @@
         }
 
         @media screen and (max-width: 768px) {
+            html, body {
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+                width: 100%;
+                position: relative;
+            }
             nav {
                 padding: 0 1rem;
             }
             .nav-links {
-                width: 100vw;
+                width: 100%;
                 padding-top: 5rem;
                 align-items: stretch;
             }
@@ -1294,15 +1300,24 @@
                 padding: 10px;
                 margin-inline-end: -10px;
             }
-            .card {
-                padding: 1.5rem 1rem;
-                max-width: 100%;
-                width: 100%;
-                border-radius: var(--radius-lg);
-            }
             .view-section {
-                padding: 1.5rem 1rem;
-                width: 100%;
+                padding: 1rem 0.5rem !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                box-sizing: border-box !important;
+            }
+            .view-section div, .view-section main, .view-section section {
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .card {
+                padding: 1.5rem 1rem !important;
+                margin: 0 auto !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border-radius: var(--radius-lg);
+                box-sizing: border-box !important;
             }
             h1 {
                 font-size: 1.6rem;
