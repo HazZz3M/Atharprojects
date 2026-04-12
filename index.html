@@ -1477,6 +1477,14 @@
                 <button class="btn accent-btn" onclick="extractAllResults()"
                     style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
             </div>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
+                <input type="text" id="team-search-input" placeholder="Search by team name..." style="flex: 1; margin-bottom: 0;" onkeyup="renderTeamManagerList()">
+                <select id="team-round-filter" style="width: 150px; margin-bottom: 0; padding-top: 0.75rem; padding-bottom: 0.75rem;" onchange="renderTeamManagerList()">
+                    <option value="all">All Rounds</option>
+                </select>
+            </div>
+
             <div
                 style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2);">
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -4704,7 +4712,24 @@
         function renderTeamManagerList() {
             const tbody = document.getElementById('team-list-body');
             tbody.innerHTML = '';
-            document.getElementById('team-count').innerText = state.teams.length;
+            
+            const filterDropdown = document.getElementById('team-round-filter');
+            const currentFilterValue = filterDropdown ? filterDropdown.value : 'all';
+            
+            if (filterDropdown) {
+                const uniqueRounds = [...new Set(state.teams.map(t => t.round || '1'))].sort((a,b) => a - b);
+                filterDropdown.innerHTML = '<option value="all">All Rounds</option>';
+                uniqueRounds.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r;
+                    opt.innerText = 'Round ' + r;
+                    if (r === currentFilterValue) opt.selected = true;
+                    filterDropdown.appendChild(opt);
+                });
+            }
+
+            const searchInput = document.getElementById('team-search-input');
+            const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
 
             const subsByTeam = {};
             (state.submissions || []).forEach(s => {
@@ -4713,7 +4738,15 @@
                 subsByTeam[tKey].push(s);
             });
 
-            state.teams.forEach(t => {
+            const filteredTeams = state.teams.filter(t => {
+                const matchesSearch = t.name.toLowerCase().includes(searchVal);
+                const matchesRound = currentFilterValue === 'all' || (t.round || '1') === currentFilterValue;
+                return matchesSearch && matchesRound;
+            });
+
+            document.getElementById('team-count').innerText = filteredTeams.length;
+
+            filteredTeams.forEach(t => {
                 const tKey = normalizeAnswerKey(t.name);
                 const tSubs = subsByTeam[tKey] || [];
                 const tr = document.createElement('tr');
