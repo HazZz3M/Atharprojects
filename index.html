@@ -2992,12 +2992,10 @@
                 });
 
                 const sets = assm.settings || {};
-                const isBlocked = hasSubmitted && (sets.allowMulti !== true && sets.allowMulti !== 'true');
 
-                if (isBlocked) {
-                    opt.disabled = true;
-                    opt.innerText = t.name + " (Already Submitted)";
-                    opt.style.color = "var(--text-muted)";
+                if (hasSubmitted) {
+                    opt.innerText = t.name + " (Submitted - Click to Edit)";
+                    opt.style.color = "var(--success)";
                 } else {
                     opt.innerText = t.name;
                 }
@@ -3053,28 +3051,33 @@
                 }
                 state.memberName = memberName;
 
-                // Secure Double Submission check
-                const subs = state.submissions || [];
-                const allowMulti = assm && assm.settings && (assm.settings.allowMulti === true || assm.settings.allowMulti === 'true');
-
-                if (assm && !allowMulti) {
-                    const hasSubmitted = subs.some(s => {
-                        const tid = String(s.assessment_id || s.assessmentId || '');
-                        const target = String(assm.id || '');
-                        if (tid !== target) return false;
-                        const sTeam = normalizeAnswerKey(s.team_name || s.team || '');
-                        const tTeam = normalizeAnswerKey(teamName || '');
-                        return sTeam === tTeam;
-                    });
-
-                    if (hasSubmitted) {
-                        Modal.alert("Access Denied", "Your team has already finished this assessment. Multiple attempts are not allowed.");
-                        return;
-                    }
-                }
-
                 // Interaction complete, safe to proceed
                 state.activeTeam = teamName;
+                
+                // Fetch previous answers if existing
+                state.prefilledAnswers = null;
+                state.existingSubmissionId = null;
+                
+                if (typeof supabaseClient !== 'undefined') {
+                    document.getElementById('login-loader').style.display = 'block';
+                    try {
+                        const { data: prevSubs } = await supabaseClient
+                            .from('submissions')
+                            .select('id, answers_data')
+                            .eq('assessment_id', assm.id)
+                            .eq('team_name', teamName)
+                            .order('created_at', { ascending: false });
+                        
+                        if (prevSubs && prevSubs.length > 0) {
+                            state.existingSubmissionId = prevSubs[0].id;
+                            state.prefilledAnswers = prevSubs[0].answers_data;
+                        }
+                    } catch(e) {
+                        console.error("Failed to fetch previous submission", e);
+                    }
+                    document.getElementById('login-loader').style.display = 'none';
+                }
+                
                 launchPlayer();
             } catch (err) {
                 console.error("Login crash:", err);
@@ -3088,12 +3091,24 @@
             document.getElementById('player-message').style.display = 'none';
             document.getElementById('player-wrapper').style.display = 'flex';
 
-            // Generate unique session ID for this attempt
-            state.submissionId = 'SUB-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+            const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
+            
+            state.submissionId = state.existingSubmissionId || ('SUB-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase());
             state.currentPageIndex = 0;
             state.userAnswers = {};
+            
+            if (state.prefilledAnswers && assm && assm.pages) {
+                assm.pages.forEach(p => {
+                    state.userAnswers[p.pageId] = {};
+                    (p.fields || []).forEach(f => {
+                        const k = normalizeAnswerKey(f.id);
+                        if (state.prefilledAnswers[k] !== undefined) {
+                            state.userAnswers[p.pageId][f.id] = state.prefilledAnswers[k];
+                        }
+                    });
+                });
+            }
 
-            const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
             document.getElementById('player-title').innerText = assm.title;
 
             // Timer Logic
@@ -3287,7 +3302,7 @@
 
             if (state.currentPageIndex >= state.activePages.length - 1) {
                 // Confirm before submission
-                Modal.confirm(Language.get('submit'), Language.get('confirm_submit_msg', { defaultValue: "Are you sure you want to submit your assessment? You won't be able to change your answers after this." }), (confirmed) => {
+                Modal.confirm(Language.get('submit'), Language.get('confirm_submit_msg', { defaultValue: "Are you sure you want to submit your assessment? You can reopen and edit your answers later if needed." }), (confirmed) => {
                     if (!confirmed) return;
 
                     clearInterval(state.timerInterval); // Stop timer on submit
@@ -3297,12 +3312,22 @@
 
                     if (typeof supabaseClient !== 'undefined') {
                         const payload = buildAnswersPayload(state.userAnswers);
-                        supabaseClient.from('submissions').insert([{
-                            assessment_id: state.activeAssessmentId,
-                            team_name: state.activeTeam,
-                            member_name: state.memberName,
-                            answers_data: payload
-                        }]).then(({ error }) => {
+                        let query;
+                        if (state.existingSubmissionId) {
+                            query = supabaseClient.from('submissions').update({
+                                member_name: state.memberName,
+                                answers_data: payload
+                            }).eq('id', state.existingSubmissionId);
+                        } else {
+                            query = supabaseClient.from('submissions').insert([{
+                                assessment_id: state.activeAssessmentId,
+                                team_name: state.activeTeam,
+                                member_name: state.memberName,
+                                answers_data: payload
+                            }]);
+                        }
+                        
+                        query.then(({ error }) => {
                             if (!error) {
                                 btn.disabled = false; btn.innerText = origText;
                                 document.getElementById('player-wrapper').style.display = 'none';
@@ -3613,7 +3638,6 @@
                                 <button class="btn info" onclick="quickSendNotification('${a.id}')" style="padding: 0.65rem; flex:1;" title="Live Notice">&#128227; Notify</button>
                             </div>
                             <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button id="btn-export-${a.id}" class="btn info outline" onclick="exportToImages('${a.id}')" style="padding:0.5rem; flex:1; font-size:0.8rem;">📸 Export</button>
                                 <button class="btn info outline" onclick="renameAssm('${a.id}', '${a.title ? a.title.replace(/'/g, "\\'") : ''}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Rename">Rename</button>
                                 <button class="btn outline" onclick="duplicateAssm('${a.id}')" style="padding: 0.5rem; flex:1; font-size:0.8rem;" title="Duplicate">Duplicate</button>
                             </div>
