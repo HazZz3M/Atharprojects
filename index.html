@@ -1340,6 +1340,23 @@
             body:has(.nav-links.open) {
                 overflow: hidden;
             }
+
+            /* Admin Portal Mobile Layout Fixes */
+            .view-section div[style*="display: flex"],
+            .view-section div[style*="display:flex"] {
+                flex-wrap: wrap;
+            }
+            .view-section table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .view-section table th, 
+            .view-section table td {
+                white-space: nowrap;
+            }
+
             .editor-label {
                 font-size: 15px !important;
                 padding: 6px 8px !important;
