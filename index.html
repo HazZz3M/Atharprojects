@@ -1598,7 +1598,7 @@
             </select>
             <input type="password" id="team-password" data-i18n="team_password" placeholder="Team Password"
                 style="display: none; margin-top: 0.5rem;">
-            <button id="btn-set-team-pass" class="btn success" onclick="setTeamPasswordPrompt()" 
+            <button id="btn-set-team-pass" class="btn success" onclick="setTeamPasswordPrompt()" data-i18n="set_team_password"
                 style="display: none; width: 100%; margin-top: 0.5rem; background: #8b5cf6;">🔒 Set Team Password</button>
             <input type="text" id="member-name" data-i18n="your_name" placeholder="Your Name"
                 style="display: none; margin-top: 0.5rem;">
@@ -2241,7 +2241,7 @@
         };
         // Language Utility
         const Language = {
-            current: 'en',
+            current: localStorage.getItem('app-lang') || 'ar',
             translations: {
                 en: {
                     logo: "Athar inc",
@@ -2289,6 +2289,7 @@
                     field_type: "Field Type",
                     rename_field: "Rename Field",
                     are_you_sure: "Are you sure?",
+                    set_team_password: "Set Team Password",
                 },
                 ar: {
                     logo: "مسرعة أعمال أثر",
@@ -2338,6 +2339,7 @@
                     field_type: "نوع الحقل",
                     rename_field: "إعادة تسمية الحقل",
                     are_you_sure: "هل أنت متأكد؟",
+                    set_team_password: "تعيين كلمة مرور الفريق",
                 }
             },
             init() {
@@ -2376,7 +2378,7 @@
 
         // Theme Utility
         const Theme = {
-            current: localStorage.getItem('app-theme') || 'dark',
+            current: localStorage.getItem('app-theme') || 'light',
             init() {
                 document.documentElement.setAttribute('data-theme', this.current);
                 this.updateIcon();
