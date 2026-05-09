@@ -1598,6 +1598,8 @@
             </select>
             <input type="password" id="team-password" data-i18n="team_password" placeholder="Team Password"
                 style="display: none; margin-top: 0.5rem;">
+            <button id="btn-set-team-pass" class="btn success" onclick="setTeamPasswordPrompt()" 
+                style="display: none; width: 100%; margin-top: 0.5rem; background: #8b5cf6;">🔒 Set Team Password</button>
             <input type="text" id="member-name" data-i18n="your_name" placeholder="Your Name"
                 style="display: none; margin-top: 0.5rem;">
             <button class="btn" onclick="verifyTeamAuth()" style="width: 100%; margin-top: 1rem;"
@@ -3285,6 +3287,33 @@
             const match = state.teams.find(t => t.name === teamName);
             const needsPass = match && match.password && match.password.toLowerCase() !== 'empty';
             document.getElementById('team-password').style.display = needsPass ? 'block' : 'none';
+            document.getElementById('btn-set-team-pass').style.display = (!needsPass && teamName) ? 'block' : 'none';
+        }
+
+        async function setTeamPasswordPrompt() {
+            const teamName = document.getElementById('team-select').value;
+            if (!teamName) return;
+            
+            Modal.prompt("Set Team Password", `Choose a private password for team "${teamName}". Other members will need this to join.`, async (newPass) => {
+                if (newPass && newPass.trim()) {
+                    Modal.showLoader("Saving password...");
+                    try {
+                        const { error } = await supabaseClient.from('teams').update({ password: newPass.trim() }).eq('team_name', teamName);
+                        if (error) throw error;
+                        
+                        // Update local state
+                        const t = state.teams.find(x => x.name === teamName);
+                        if (t) t.password = newPass.trim();
+                        
+                        Modal.hideLoader();
+                        showLiveNotice("Team Password Set Successfully!", 3);
+                        toggleTeamPassField(); // Refresh UI
+                    } catch (e) {
+                        Modal.hideLoader();
+                        Modal.alert("Error", "Failed to update password: " + e.message);
+                    }
+                }
+            });
         }
 
         async function verifyTeamAuth() {
@@ -5302,7 +5331,13 @@
                 tr.style.borderBottom = '1px solid var(--card-border)';
                 tr.innerHTML = `
                     <td style="padding: 0.8rem 1rem; font-weight:600; color:${tSubs.length > 0 ? 'var(--accent)' : 'var(--text-main)'};">${t.name}</td>
-                    <td style="padding: 0.8rem 1rem;">${t.password}</td>
+                    <td style="padding: 0.8rem 1rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="opacity:0.9;">${t.password || '---'}</span>
+                            <button class="btn outline" onclick="updateTeamPassword('${t.name.replace(/'/g, "\\'")}')" 
+                                style="padding:2px 6px; font-size:10px; border-color:rgba(255,255,255,0.1); opacity:0.6;">✎</button>
+                        </div>
+                    </td>
                     <td style="padding: 0.8rem 1rem;">${t.round || ''}</td>
                     <td style="padding: 0.8rem 1rem; text-align:center;">
                         <span class="badge" onclick="viewTeamSubmissions('${t.name.replace(/'/g, "\\'")}')" style="cursor:pointer; background:${tSubs.length > 0 ? 'rgba(255,215,0,0.1)' : 'transparent'}; border: 1px solid ${tSubs.length > 0 ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}; padding: 4px 10px; border-radius: 6px;">
@@ -5315,6 +5350,29 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+            });
+        }
+
+        async function updateTeamPassword(teamName) {
+            const team = state.teams.find(t => t.name === teamName);
+            if (!team) return;
+
+            Modal.prompt(`Update Password: ${teamName}`, "Enter new password for this team:", async (newPass) => {
+                if (newPass !== null) {
+                    Modal.showLoader("Updating password...");
+                    try {
+                        const { error } = await supabaseClient.from('teams').update({ password: newPass.trim() }).eq('team_name', teamName);
+                        if (error) throw error;
+                        
+                        team.password = newPass.trim();
+                        Modal.hideLoader();
+                        showLiveNotice("Team Password Updated", 2);
+                        renderTeamManagerList();
+                    } catch (e) {
+                        Modal.hideLoader();
+                        Modal.alert("Update Failed", e.message);
+                    }
+                }
             });
         }
 
