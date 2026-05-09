@@ -2477,6 +2477,7 @@
 
             // Interaction state
             drawing: false,
+            isDrawingTable: false,
             dragIndex: -1,
             isResizing: false,
             isEditing: false,
@@ -4460,6 +4461,7 @@
             state.editorPageId = null;
             state.editorFields = [];
             state.suggestedFields = [];
+            state.isDrawingTable = false;
             state.isEditing = false;
             document.getElementById('upload-card').style.display = 'block';
             document.getElementById('file-input').value = '';
@@ -4870,19 +4872,48 @@
                     const wPercent = (tW / rect.width) * 100;
                     const hPercent = (tH / rect.height) * 100;
 
-                    Modal.prompt("Field Label", "Enter a Name or Label for this Field:", (fieldName) => {
-                        if (fieldName) {
-                            state.editorFields.push({
-                                name: fieldName,
-                                type: 'text',
-                                left: lPercent,
-                                top: tPercent,
-                                width: wPercent,
-                                height: hPercent
+                    if (state.isDrawingTable) {
+                        state.isDrawingTable = false;
+                        Modal.prompt("Table Rows", "How many ROWS for this table?", (rows) => {
+                            if (!rows) return;
+                            Modal.prompt("Table Columns", "How many COLUMNS?", (cols) => {
+                                if (!cols) return;
+                                const r = parseInt(rows), c = parseInt(cols);
+                                if (isNaN(r) || isNaN(c) || r <= 0 || c <= 0) return;
+
+                                const cellW = wPercent / c;
+                                const cellH = hPercent / r;
+
+                                for (let i = 0; i < r; i++) {
+                                    for (let j = 0; j < c; j++) {
+                                        state.editorFields.push({
+                                            name: `Cell ${i+1}-${j+1}`,
+                                            type: 'text',
+                                            left: lPercent + (j * cellW),
+                                            top: tPercent + (i * cellH),
+                                            width: cellW * 0.95,
+                                            height: cellH * 0.95
+                                        });
+                                    }
+                                }
+                                renderEditorFields();
                             });
-                            renderEditorFields();
-                        }
-                    });
+                        });
+                    } else {
+                        Modal.prompt("Field Label", "Enter a Name or Label for this Field:", (fieldName) => {
+                            if (fieldName) {
+                                state.editorFields.push({
+                                    name: fieldName,
+                                    type: 'text',
+                                    left: lPercent,
+                                    top: tPercent,
+                                    width: wPercent,
+                                    height: hPercent
+                                });
+                                renderEditorFields();
+                            }
+                        });
+                    }
                 }
                 tb.remove();
             }
@@ -5055,35 +5086,8 @@
                 Modal.alert("No Page Selected", "Please open a page to edit first.");
                 return;
             }
-            Modal.prompt("Table Rows", "How many ROWS?", (rows) => {
-                if (!rows) return;
-                Modal.prompt("Table Columns", "How many COLUMNS?", (cols) => {
-                    if (!cols) return;
-                    
-                    const r = parseInt(rows);
-                    const c = parseInt(cols);
-                    if (isNaN(r) || isNaN(c) || r <= 0 || c <= 0) return;
-
-                    const cellW = 80 / c;
-                    const cellH = 60 / r;
-                    const startL = 10;
-                    const startT = 10;
-
-                    for (let i = 0; i < r; i++) {
-                        for (let j = 0; j < c; j++) {
-                            state.editorFields.push({
-                                name: `Cell ${i+1}-${j+1}`,
-                                type: 'text',
-                                left: startL + (j * cellW),
-                                top: startT + (i * cellH),
-                                width: cellW * 0.9,
-                                height: cellH * 0.9
-                            });
-                        }
-                    }
-                    renderEditorFields();
-                });
-            });
+            state.isDrawingTable = true;
+            showLiveNotice("Draw a box on the image to define the table area!", 5);
         }
 
         async function runAiDetection() {
