@@ -5697,6 +5697,13 @@
                             if (!obj || typeof obj !== 'object') return null;
                             if (obj[f.id] !== undefined) return obj[f.id];
                             if (obj[f.name] !== undefined) return obj[f.name];
+                            
+                            // Try normalized keys as fallback (matching how database stores them)
+                            const nid = normalizeAnswerKey(f.id);
+                            const nname = normalizeAnswerKey(f.name);
+                            if (obj[nid] !== undefined) return obj[nid];
+                            if (obj[nname] !== undefined) return obj[nname];
+                            
                             return null;
                         };
 
@@ -5710,7 +5717,7 @@
                         const h = (f.height / 100) * canvas.height;
 
                         if (f.type === 'checkbox') {
-                            if (val === 'true' || val === true) {
+                            if (toBool(val)) {
                                 ctx.strokeStyle = 'red';
                                 ctx.lineWidth = 4 * scale;
                                 ctx.beginPath();
