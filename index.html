@@ -644,15 +644,29 @@
         }
 
         .editor-box.suggested {
-            background: rgba(236, 72, 153, 0.1);
-            border: 2px dashed #ec4899;
+            background: rgba(236, 72, 153, 0.05);
+            border: 2px dashed rgba(236, 72, 153, 0.5);
             cursor: pointer;
-            animation: pulse-suggested 2s infinite;
+            box-shadow: inset 0 0 10px rgba(236, 72, 153, 0.1);
+            animation: pulse-suggested 2s infinite ease-in-out;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .editor-box.suggested:hover {
-            background: rgba(236, 72, 153, 0.3);
-            border-style: solid;
+            background: rgba(236, 72, 153, 0.2);
+            border: 2px solid #ec4899;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+            z-index: 50;
+        }
+
+        .editor-box.suggested .editor-label {
+            background: #ec4899;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 9px;
+            top: -18px;
         }
 
         @keyframes pulse-suggested {
@@ -663,47 +677,56 @@
 
         .editor-box .delete-btn, 
         .editor-box .copy-btn, 
+        .editor-box .rename-btn,
         .editor-box .editor-type-toggle {
             position: absolute;
-            width: 26px;
-            height: 26px;
+            width: clamp(14px, 1.5vw, 24px);
+            height: clamp(14px, 1.5vw, 24px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: clamp(8px, 1vw, 12px);
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             opacity: 0;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
-            border: 1.5px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(4px);
         }
 
         .editor-box .delete-btn {
-            top: -13px;
-            inset-inline-end: -13px;
+            top: -10px;
+            inset-inline-end: -10px;
             background: #ef4444;
             color: white;
         }
 
         .editor-box .copy-btn {
-            bottom: -13px;
-            inset-inline-start: -13px;
+            bottom: -10px;
+            inset-inline-start: -10px;
             background: #f59e0b;
             color: #000;
         }
 
+        .editor-box .rename-btn {
+            bottom: -10px;
+            inset-inline-start: 15px;
+            background: #10b981;
+            color: white;
+        }
+
         .editor-box .editor-type-toggle {
-            bottom: -13px;
-            inset-inline-start: 18px;
+            bottom: -10px;
+            inset-inline-start: 40px;
             background: #6366f1;
             color: white;
         }
 
         .editor-box:hover .delete-btn,
         .editor-box:hover .copy-btn,
+        .editor-box:hover .rename-btn,
         .editor-box:hover .editor-type-toggle {
             opacity: 1;
             transform: scale(1.1);
@@ -4941,18 +4964,24 @@
                     renderEditorFields();
                 };
 
-                box.appendChild(label);
-                box.appendChild(delBtn);
-                
                 // Copy Button
                 const copyBtn = document.createElement('div');
                 copyBtn.className = 'copy-btn'; copyBtn.innerHTML = '❐';
                 copyBtn.title = "Copy Field";
                 copyBtn.onclick = (e) => { e.stopPropagation(); copyField(i); };
-                box.appendChild(copyBtn);
+                
+                // Rename Button
+                const renameBtn = document.createElement('div');
+                renameBtn.className = 'rename-btn'; renameBtn.innerHTML = '✎';
+                renameBtn.title = "Rename Field";
+                renameBtn.onclick = (e) => { e.stopPropagation(); renameField(i); };
 
-                box.appendChild(resizer);
+                box.appendChild(label);
+                box.appendChild(delBtn);
+                box.appendChild(copyBtn);
+                box.appendChild(renameBtn);
                 box.appendChild(typeToggle);
+                box.appendChild(resizer);
                 layer.appendChild(box);
             });
 
@@ -4984,6 +5013,17 @@
             if (!f) return;
             state.clipboardField = JSON.parse(JSON.stringify(f));
             showLiveNotice("Field Copied to Clipboard", 2);
+        }
+
+        function renameField(index) {
+            const f = state.editorFields[index];
+            if (!f) return;
+            Modal.prompt("Rename Field", "Enter new name for this field:", (val) => {
+                if (val !== null && val.trim()) {
+                    f.name = val.trim();
+                    renderEditorFields();
+                }
+            });
         }
 
         function pasteField() {
