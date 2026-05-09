@@ -660,6 +660,38 @@
         .editor-box:hover .delete-btn {
             opacity: 1;
         }
+        .editor-box .copy-btn, .editor-box .editor-type-toggle {
+            position: absolute;
+            bottom: -10px;
+            background: var(--accent);
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .editor-box .copy-btn { inset-inline-start: -10px; }
+        .editor-box .editor-type-toggle { inset-inline-start: 15px; }
+        .editor-box:hover .copy-btn, .editor-box:hover .editor-type-toggle { opacity: 1; }
+        .editor-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            white-space: nowrap;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #fff;
+        }
 
         .resize-handle {
             position: absolute;
@@ -1275,20 +1307,25 @@
         }
 
         @media screen and (max-width: 768px) {
-            html, body {
+
+            html,
+            body {
                 max-width: 100vw !important;
                 overflow-x: hidden !important;
                 width: 100%;
                 position: relative;
             }
+
             nav {
                 padding: 0 1rem;
             }
+
             .nav-links {
                 width: 100%;
                 padding-top: 5rem;
                 align-items: stretch;
             }
+
             .nav-links a {
                 font-size: 1.15rem;
                 padding: 1rem;
@@ -1296,10 +1333,12 @@
                 border-radius: var(--radius-sm);
                 margin-bottom: 0.5rem;
             }
+
             .hamburger {
                 padding: 10px;
                 margin-inline-end: -10px;
             }
+
             .view-section {
                 padding: 1rem 0.5rem !important;
                 width: 100% !important;
@@ -1307,10 +1346,14 @@
                 overflow-x: hidden !important;
                 box-sizing: border-box !important;
             }
-            .view-section div, .view-section main, .view-section section {
+
+            .view-section div,
+            .view-section main,
+            .view-section section {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
             }
+
             .card {
                 padding: 1.5rem 1rem !important;
                 margin: 0 auto !important;
@@ -1319,19 +1362,24 @@
                 border-radius: var(--radius-lg);
                 box-sizing: border-box !important;
             }
+
             h1 {
                 font-size: 1.6rem;
             }
+
             p {
                 font-size: 0.95rem;
             }
+
             .page-list {
                 grid-template-columns: 1fr;
             }
+
             .btn {
                 padding: 0.75rem 1.2rem;
                 font-size: 0.95rem;
             }
+
             input[type="text"],
             input[type="password"],
             input[type="number"],
@@ -1339,6 +1387,7 @@
                 padding: 0.85rem 1rem;
                 font-size: 16px;
             }
+
             .editor-box .delete-btn {
                 width: 32px;
                 height: 32px;
@@ -1347,11 +1396,13 @@
                 inset-inline-end: -16px;
                 opacity: 1;
             }
+
             .resize-handle {
                 width: 24px;
                 height: 24px;
                 font-size: 12px;
             }
+
             body:has(.nav-links.open) {
                 overflow: hidden;
             }
@@ -1361,13 +1412,15 @@
             .view-section div[style*="display:flex"] {
                 flex-wrap: wrap;
             }
+
             .view-section table {
                 display: block;
                 width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .view-section table th, 
+
+            .view-section table th,
             .view-section table td {
                 white-space: nowrap;
             }
@@ -1376,6 +1429,7 @@
                 font-size: 15px !important;
                 padding: 6px 8px !important;
             }
+
             .editor-type-toggle {
                 font-size: 15px !important;
                 padding: 5px 8px !important;
@@ -1383,18 +1437,38 @@
                 left: 4px !important;
             }
         }
+
         .editor-label {
-            color: white; font-size: 11px; background: rgba(0,0,0,0.6);
-            padding: 2px 4px; border-radius: 3px; position: absolute;
-            top: 2px; left: 2px; overflow: hidden;
-            max-width: 90%; white-space: nowrap; cursor: pointer;
+            color: white;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 4px;
+            border-radius: 3px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            overflow: hidden;
+            max-width: 90%;
+            white-space: nowrap;
+            cursor: pointer;
         }
+
         .editor-type-toggle {
-            position: absolute; bottom: 2px; left: 2px;
-            background: var(--accent); color: black; font-size: 10px;
-            font-weight: 800; padding: 1px 4px; border-radius: 3px; cursor: pointer;
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            background: var(--accent);
+            color: black;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 4px;
+            border-radius: 3px;
+            cursor: pointer;
         }
-        .editor-box, #crop-box, #crop-overlay {
+
+        .editor-box,
+        #crop-box,
+        #crop-overlay {
             touch-action: none;
         }
     </style>
@@ -1572,14 +1646,19 @@
                 <h2 style="margin: 0;">Bulk Team Manager</h2>
                 <button class="btn outline" onclick="showView('admin-dashboard')">Close</button>
             </div>
-            
-            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 1.5rem;">
+
+            <div
+                style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 1.5rem;">
                 <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Add Individual Team</h3>
                 <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="single-team-name" placeholder="Team Name" style="flex: 1; min-width: 150px; margin-bottom: 0;">
-                    <input type="text" id="single-team-pass" placeholder="Password (Optional/Empty)" style="flex: 1; min-width: 150px; margin-bottom: 0;">
-                    <input type="number" id="single-team-round" placeholder="Round (e.g. 1)" style="width: 100px; margin-bottom: 0;">
-                    <button class="btn primary-btn" onclick="addSingleTeam()" style="margin-bottom: 0;">Add Team</button>
+                    <input type="text" id="single-team-name" placeholder="Team Name"
+                        style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                    <input type="text" id="single-team-pass" placeholder="Password (Optional/Empty)"
+                        style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                    <input type="number" id="single-team-round" placeholder="Round (e.g. 1)"
+                        style="width: 100px; margin-bottom: 0;">
+                    <button class="btn primary-btn" onclick="addSingleTeam()" style="margin-bottom: 0;">Add
+                        Team</button>
                 </div>
             </div>
 
@@ -1601,10 +1680,13 @@
                 <button class="btn accent-btn" onclick="extractAllResults()"
                     style="font-size:0.75rem; padding:0.4rem 0.8rem;">Extract All Teams (ZIP)</button>
             </div>
-            
+
             <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
-                <input type="text" id="team-search-input" placeholder="Search by team name..." style="flex: 1; margin-bottom: 0;" onkeyup="renderTeamManagerList()">
-                <select id="team-round-filter" style="width: 150px; margin-bottom: 0; padding-top: 0.75rem; padding-bottom: 0.75rem;" onchange="renderTeamManagerList()">
+                <input type="text" id="team-search-input" placeholder="Search by team name..."
+                    style="flex: 1; margin-bottom: 0;" onkeyup="renderTeamManagerList()">
+                <select id="team-round-filter"
+                    style="width: 150px; margin-bottom: 0; padding-top: 0.75rem; padding-bottom: 0.75rem;"
+                    onchange="renderTeamManagerList()">
                     <option value="all">All Rounds</option>
                 </select>
             </div>
@@ -1871,6 +1953,10 @@
                 <button class="btn" id="btn-add-checkbox" onclick="createDirectCheckbox()"
                     style="display:none; transition: all 0.3s; background: var(--success); color: white;">+ Add
                     Checkbox</button>
+                <button class="btn" id="btn-insert-table" onclick="insertTableFields()"
+                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem; background: #6366f1;">+ Table</button>
+                <button class="btn" id="btn-paste-field" onclick="pasteField()"
+                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem; background: #8b5cf6;">Paste</button>
                 <button class="btn" id="btn-save-page" onclick="savePage()"
                     style="display:none; transition: all 0.3s;">Save Layout</button>
             </div>
@@ -2336,7 +2422,8 @@
             origL: 0, origT: 0, origW: 0, origH: 0,
 
             // Audio
-            notificationSound: new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg')
+            notificationSound: new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'),
+            clipboardField: null
         };
 
         function updateColor() {
@@ -3177,11 +3264,11 @@
 
                 // Interaction complete, safe to proceed
                 state.activeTeam = teamName;
-                
+
                 // Fetch previous answers if existing
                 state.prefilledAnswers = null;
                 state.existingSubmissionId = null;
-                
+
                 if (typeof supabaseClient !== 'undefined') {
                     document.getElementById('login-loader').style.display = 'block';
                     try {
@@ -3191,17 +3278,17 @@
                             .eq('assessment_id', assm.id)
                             .eq('team_name', teamName)
                             .order('created_at', { ascending: false });
-                        
+
                         if (prevSubs && prevSubs.length > 0) {
                             state.existingSubmissionId = prevSubs[0].id;
                             state.prefilledAnswers = prevSubs[0].answers_data;
                         }
-                    } catch(e) {
+                    } catch (e) {
                         console.error("Failed to fetch previous submission", e);
                     }
                     document.getElementById('login-loader').style.display = 'none';
                 }
-                
+
                 launchPlayer();
             } catch (err) {
                 console.error("Login crash:", err);
@@ -3216,11 +3303,11 @@
             document.getElementById('player-wrapper').style.display = 'flex';
 
             const assm = state.assessments.find(a => a.id === state.activeAssessmentId);
-            
+
             state.submissionId = state.existingSubmissionId || ('SUB-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase());
             state.currentPageIndex = 0;
             state.userAnswers = {};
-            
+
             if (state.prefilledAnswers && assm && assm.pages) {
                 assm.pages.forEach(p => {
                     state.userAnswers[p.pageId] = {};
@@ -3438,16 +3525,16 @@
                         const payload = buildAnswersPayload(state.userAnswers);
                         if (state.existingSubmissionId) {
                             // Try to delete old to keep db clean, ignoring errors if RLS blocks delete
-                            supabaseClient.from('submissions').delete().eq('id', state.existingSubmissionId).then(() => {});
+                            supabaseClient.from('submissions').delete().eq('id', state.existingSubmissionId).then(() => { });
                         }
-                        
+
                         let query = supabaseClient.from('submissions').insert([{
                             assessment_id: state.activeAssessmentId,
                             team_name: state.activeTeam,
                             member_name: state.memberName,
                             answers_data: payload
                         }]);
-                        
+
                         query.then(({ error }) => {
                             if (!error) {
                                 btn.disabled = false; btn.innerText = origText;
@@ -3467,7 +3554,7 @@
                                 if (state.isAdmin && document.getElementById('view-admin-dashboard').classList.contains('active')) {
                                     loadAdminDashboard(true);
                                 }
-                                
+
                                 // Redirect back to assessments after 5 seconds
                                 setTimeout(() => {
                                     showView('home');
@@ -4248,6 +4335,8 @@
 
             loadEditorSidebar();
             document.getElementById('btn-add-checkbox').style.display = 'inline-flex';
+            document.getElementById('btn-insert-table').style.display = 'inline-flex';
+            document.getElementById('btn-paste-field').style.display = 'inline-flex';
             renderEditorFields(); // Ensure boxes are drawn for the new selected page
 
             const img = document.getElementById('editor-image');
@@ -4311,6 +4400,8 @@
             document.getElementById('file-input').value = '';
             document.getElementById('editor-canvas').style.display = 'none';
             document.getElementById('btn-add-checkbox').style.display = 'none';
+            document.getElementById('btn-insert-table').style.display = 'none';
+            document.getElementById('btn-paste-field').style.display = 'none';
             document.getElementById('editor-layer').innerHTML = '';
             document.getElementById('editor-sidebar').style.display = 'none';
         }
@@ -4808,9 +4899,70 @@
 
                 box.appendChild(label);
                 box.appendChild(delBtn);
+                
+                // Copy Button
+                const copyBtn = document.createElement('div');
+                copyBtn.className = 'copy-btn'; copyBtn.innerHTML = '❐';
+                copyBtn.title = "Copy Field";
+                copyBtn.onclick = (e) => { e.stopPropagation(); copyField(i); };
+                box.appendChild(copyBtn);
+
                 box.appendChild(resizer);
                 box.appendChild(typeToggle);
                 layer.appendChild(box);
+            });
+        }
+
+        function copyField(index) {
+            const f = state.editorFields[index];
+            if (!f) return;
+            state.clipboardField = JSON.parse(JSON.stringify(f));
+            showLiveNotice("Field Copied to Clipboard", 2);
+        }
+
+        function pasteField() {
+            if (!state.clipboardField) {
+                Modal.alert("Clipboard Empty", "Please copy a field first.");
+                return;
+            }
+            const clone = JSON.parse(JSON.stringify(state.clipboardField));
+            // Offset slightly
+            clone.left = Math.min(95, clone.left + 2);
+            clone.top = Math.min(95, clone.top + 2);
+            state.editorFields.push(clone);
+            state.selectedIndex = state.editorFields.length - 1;
+            renderEditorFields();
+        }
+
+        function insertTableFields() {
+            Modal.prompt("Table Rows", "How many ROWS?", (rows) => {
+                if (!rows) return;
+                Modal.prompt("Table Columns", "How many COLUMNS?", (cols) => {
+                    if (!cols) return;
+                    
+                    const r = parseInt(rows);
+                    const c = parseInt(cols);
+                    if (isNaN(r) || isNaN(c) || r <= 0 || c <= 0) return;
+
+                    const cellW = 80 / c;
+                    const cellH = 60 / r;
+                    const startL = 10;
+                    const startT = 10;
+
+                    for (let i = 0; i < r; i++) {
+                        for (let j = 0; j < c; j++) {
+                            state.editorFields.push({
+                                name: `Cell ${i+1}-${j+1}`,
+                                type: 'text',
+                                left: startL + (j * cellW),
+                                top: startT + (i * cellH),
+                                width: cellW * 0.9,
+                                height: cellH * 0.9
+                            });
+                        }
+                    }
+                    renderEditorFields();
+                });
             });
         }
 
@@ -4833,6 +4985,12 @@
                     clone.name += " (Copy)";
                     state.editorFields.push(clone);
                     state.selectedIndex = state.editorFields.length - 1;
+                } else if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+                    e.preventDefault();
+                    copyField(state.selectedIndex);
+                } else if (e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+                    e.preventDefault();
+                    pasteField();
                 } else if (e.key === 'Delete' || e.key === 'Backspace') {
                     // Prevent backspace from interacting with input unless in an input
                     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -4862,12 +5020,12 @@
         function renderTeamManagerList() {
             const tbody = document.getElementById('team-list-body');
             tbody.innerHTML = '';
-            
+
             const filterDropdown = document.getElementById('team-round-filter');
             const currentFilterValue = filterDropdown ? filterDropdown.value : 'all';
-            
+
             if (filterDropdown) {
-                const uniqueRounds = [...new Set(state.teams.map(t => t.round || '1'))].sort((a,b) => a - b);
+                const uniqueRounds = [...new Set(state.teams.map(t => t.round || '1'))].sort((a, b) => a - b);
                 filterDropdown.innerHTML = '<option value="all">All Rounds</option>';
                 uniqueRounds.forEach(r => {
                     const opt = document.createElement('option');
@@ -4976,21 +5134,21 @@
             const nameEl = document.getElementById('single-team-name');
             const passEl = document.getElementById('single-team-pass');
             const roundEl = document.getElementById('single-team-round');
-            
+
             const name = nameEl.value.trim();
             const pass = passEl.value.trim() || 'Empty';
             const round = roundEl.value.trim() || '1';
-            
+
             if (!name) {
                 Modal.alert("Error", "Team Name is required.");
                 return;
             }
-            
+
             document.getElementById('team-loader').style.display = 'block';
-            
+
             if (typeof supabaseClient !== 'undefined') {
                 const { error } = await supabaseClient.from('teams').insert([{ team_name: name, password: pass, round: round }]);
-                
+
                 fetchData(() => {
                     document.getElementById('team-loader').style.display = 'none';
                     if (!error) {
@@ -5013,10 +5171,10 @@
         async function deleteTeam(teamName) {
             if (!confirm("Are you sure you want to delete team: " + teamName + "?")) return;
             document.getElementById('team-loader').style.display = 'block';
-            
+
             if (typeof supabaseClient !== 'undefined') {
                 const { error } = await supabaseClient.from('teams').delete().eq('team_name', teamName);
-                
+
                 fetchData(() => {
                     document.getElementById('team-loader').style.display = 'none';
                     if (!error) {
