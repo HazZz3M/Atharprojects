@@ -627,9 +627,15 @@
 
         .editor-box {
             position: absolute;
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.15);
             border: 2px dashed var(--accent);
-            cursor: pointer;
+            cursor: move;
+            transition: background 0.2s, border-style 0.2s, box-shadow 0.2s;
+        }
+        .editor-box:hover {
+            background: rgba(99, 102, 241, 0.25);
+            box-shadow: 0 0 15px var(--accent-glow);
+            border-style: solid;
         }
 
         .editor-box.temp {
@@ -637,85 +643,96 @@
             border: 2px solid var(--success);
         }
 
-        .editor-box .delete-btn {
+        .editor-box .delete-btn, 
+        .editor-box .copy-btn, 
+        .editor-box .editor-type-toggle {
             position: absolute;
-            top: -10px;
-            inset-inline-end: -10px;
-            background: var(--danger);
-            color: white;
-            width: 20px;
-            height: 20px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            border: 1.5px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
         }
 
-        .editor-box:hover .delete-btn {
-            opacity: 1;
+        .editor-box .delete-btn {
+            top: -13px;
+            inset-inline-end: -13px;
+            background: #ef4444;
+            color: white;
         }
-        .editor-box .copy-btn, .editor-box .editor-type-toggle {
-            position: absolute;
-            bottom: -10px;
-            background: var(--accent);
+
+        .editor-box .copy-btn {
+            bottom: -13px;
+            inset-inline-start: -13px;
+            background: #f59e0b;
             color: #000;
-            width: 20px;
-            height: 20px;
+        }
+
+        .editor-box .editor-type-toggle {
+            bottom: -13px;
+            inset-inline-start: 18px;
+            background: #6366f1;
+            color: white;
+        }
+
+        .editor-box:hover .delete-btn,
+        .editor-box:hover .copy-btn,
+        .editor-box:hover .editor-type-toggle {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .editor-box:hover .delete-btn:hover { background: #dc2626; transform: scale(1.25); }
+        .editor-box:hover .copy-btn:hover { background: #d97706; transform: scale(1.25); }
+        .editor-box:hover .editor-type-toggle:hover { background: #4f46e5; transform: scale(1.25); }
+
+        .editor-label {
+            position: absolute;
+            top: -24px;
+            left: 0;
+            white-space: nowrap;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: -8px;
+            inset-inline-end: -8px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            cursor: nwse-resize;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .editor-box .copy-btn { inset-inline-start: -10px; }
-        .editor-box .editor-type-toggle { inset-inline-start: 15px; }
-        .editor-box:hover .copy-btn, .editor-box:hover .editor-type-toggle { opacity: 1; }
-        .editor-label {
-            position: absolute;
-            top: -20px;
-            left: 0;
-            white-space: nowrap;
-            background: rgba(0,0,0,0.7);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            color: #fff;
-        }
-
-        .resize-handle {
-            position: absolute;
-            bottom: 0;
-            inset-inline-end: 0;
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            cursor: nwse-resize;
-            border-start-start-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
             color: #000;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            border: 2px solid #fff;
+            transition: transform 0.2s;
+            z-index: 11;
         }
 
-        .resize-handle::after {
-            content: "↘";
-            font-weight: bold;
-        }
-
-        [dir="rtl"] .resize-handle::after {
-            content: "↙";
+        .resize-handle:hover {
+            transform: scale(1.3);
+            background: var(--accent-light);
         }
 
         .editor-box.moving {
@@ -2372,14 +2389,15 @@
                 const input = overlay.querySelector('.modal-input');
                 const val = input.value;
                 overlay.style.display = 'none';
-                if (this.activeCallback) {
+                const cb = this.activeCallback;
+                this.activeCallback = null; // Clear BEFORE calling to allow nested modals
+                if (cb) {
                     if (input.style.display !== 'none') {
-                        this.activeCallback(confirmed ? val : null);
+                        cb(confirmed ? val : null);
                     } else {
-                        this.activeCallback(confirmed);
+                        cb(confirmed);
                     }
                 }
-                this.activeCallback = null;
             }
         };
 
@@ -4737,8 +4755,8 @@
                 let dx = ((e.clientX - state.startX) / rect.width) * 100;
                 let dy = ((e.clientY - state.startY) / rect.height) * 100;
 
-                // Smart Field Editor: Grid Snapping
-                if (window.snapToGridEnabled !== false) { // Default true
+                // Smart Field Editor: Grid Snapping (Disabled for free movement)
+                if (window.snapToGridEnabled === true) { 
                     const snapX = (20 / rect.width) * 100; // 20px grid
                     const snapY = (20 / rect.height) * 100;
                     dx = Math.round(dx / snapX) * snapX;
@@ -4864,6 +4882,7 @@
                 // Resize Handle
                 const resizer = document.createElement('div');
                 resizer.className = 'resize-handle';
+                resizer.innerHTML = '⤨';
                 resizer.onpointerdown = (e) => {
                     e.stopPropagation(); e.preventDefault();
                     state.isResizing = true; state.dragIndex = i;
@@ -4935,6 +4954,10 @@
         }
 
         function insertTableFields() {
+            if (!state.editorPageId) {
+                Modal.alert("No Page Selected", "Please open a page to edit first.");
+                return;
+            }
             Modal.prompt("Table Rows", "How many ROWS?", (rows) => {
                 if (!rows) return;
                 Modal.prompt("Table Columns", "How many COLUMNS?", (cols) => {
