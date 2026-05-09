@@ -680,13 +680,13 @@
         .editor-box .rename-btn,
         .editor-box .editor-type-toggle {
             position: absolute;
-            width: clamp(14px, 1.5vw, 24px);
-            height: clamp(14px, 1.5vw, 24px);
+            width: var(--btn-size, 20px);
+            height: var(--btn-size, 20px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(8px, 1vw, 12px);
+            font-size: calc(var(--btn-size, 20px) * 0.6);
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             opacity: 0;
@@ -697,29 +697,29 @@
         }
 
         .editor-box .delete-btn {
-            top: -10px;
-            inset-inline-end: -10px;
+            top: calc(var(--btn-size, 20px) * -0.4);
+            inset-inline-end: calc(var(--btn-size, 20px) * -0.4);
             background: #ef4444;
             color: white;
         }
 
         .editor-box .copy-btn {
-            bottom: -10px;
-            inset-inline-start: -10px;
+            bottom: calc(var(--btn-size, 20px) * -0.4);
+            inset-inline-start: calc(var(--btn-size, 20px) * -0.4);
             background: #f59e0b;
             color: #000;
         }
 
         .editor-box .rename-btn {
-            bottom: -10px;
-            inset-inline-start: 15px;
+            bottom: calc(var(--btn-size, 20px) * -0.4);
+            inset-inline-start: calc(var(--btn-size, 20px) * 0.8);
             background: #10b981;
             color: white;
         }
 
         .editor-box .editor-type-toggle {
-            bottom: -10px;
-            inset-inline-start: 40px;
+            bottom: calc(var(--btn-size, 20px) * -0.4);
+            inset-inline-start: calc(var(--btn-size, 20px) * 2.0);
             background: #6366f1;
             color: white;
         }
@@ -4905,6 +4905,11 @@
                 box.style.width = f.width + '%'; box.style.height = f.height + '%';
                 box.style.cursor = 'move';
 
+                // Relative Button Size calculation
+                const avgDim = (f.width + f.height) / 2;
+                const dynamicBtnSize = Math.min(24, Math.max(12, avgDim * 3)); 
+                box.style.setProperty('--btn-size', dynamicBtnSize + 'px');
+
                 // Active State Styling
                 if (state.selectedIndex === i) {
                     box.style.borderColor = '#ff4444';
@@ -4993,6 +4998,11 @@
                 box.style.top = s.top + '%';
                 box.style.width = s.width + '%';
                 box.style.height = s.height + '%';
+                
+                const avgDim = (s.width + s.height) / 2;
+                const dynamicBtnSize = Math.min(24, Math.max(12, avgDim * 3)); 
+                box.style.setProperty('--btn-size', dynamicBtnSize + 'px');
+
                 box.title = "Click to Draw Recommended Box";
                 box.onclick = (e) => {
                     e.stopPropagation();
