@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
     <style>
@@ -2339,7 +2340,7 @@
                     field_type: "نوع الحقل",
                     rename_field: "إعادة تسمية الحقل",
                     are_you_sure: "هل أنت متأكد؟",
-                    set_team_password: "انشاء كلمة مرور (لمرة واحدة) ",
+                    set_team_password: "تعيين كلمة مرور الفريق",
                 }
             },
             init() {
@@ -5547,53 +5548,61 @@
         // ----- PREMIUM EXTRACTION SYSTEM -----
         async function extractResultsForTeam(teamName) {
             try {
-                const zip = new JSZip();
-                const teamFolder = zip.folder(teamName);
-                Modal.showLoader("Preparing " + teamName + "...");
-
                 const teamSubsBase = state.submissions.filter(s => normalizeAnswerKey(s.team_name || s.team || '') === normalizeAnswerKey(teamName));
                 if (teamSubsBase.length === 0) {
-                    Modal.hideLoader();
                     return Modal.alert("Empty", "No submissions found for " + teamName);
                 }
 
+                Modal.showLoader(`Generating High-Quality PDFs for ${teamName}...`);
                 const submissionIds = teamSubsBase.map(s => s.id);
-                // Dynamically pull full payload using exact submission IDs
-                const { data: fullSubs, error } = await supabaseClient.from('submissions')
-                    .select('*')
-                    .in('id', submissionIds);
+                const { data: fullSubs, error } = await supabaseClient.from('submissions').select('*').in('id', submissionIds);
+                if (error) throw error;
 
-                if (error) { Modal.hideLoader(); throw error; }
-                const activeSubs = fullSubs || [];
+                const { jsPDF } = window.jspdf;
+                const zip = new JSZip(); // Keep zip for multi-PDF output
+                let pdfCount = 0;
 
-                for (let subIdx = 0; subIdx < activeSubs.length; subIdx++) {
-                    const sub = activeSubs[subIdx];
+                for (const sub of fullSubs) {
                     const assm = state.assessments.find(a => String(a.id) === String(sub.assessment_id));
                     if (!assm) continue;
 
+                    const doc = new jsPDF({
+                        orientation: 'p', unit: 'px', format: 'a4', hotfixes: ["px_scaling"]
+                    });
+
                     const studentTag = sub.member_name ? ` - ${sub.member_name.trim()}` : '';
-                    // Prevent Overwrites on multi-submissions by adding index/date
-                    const safeDate = new Date(sub.created_at).toLocaleString().replace(/[\/\\:*?"<>|]/g, '-');
-                    const folderName = `${assm.title || "Assessment_" + sub.assessment_id}${studentTag} (${safeDate})`;
-                    const assmFolder = teamFolder.folder(folderName);
                     const answers = sub.answers_data || {};
 
                     for (let i = 0; i < assm.pages.length; i++) {
-                        const page = assm.pages[i];
-                        try {
-                            const blob = await renderPageToBlob(page, answers);
-                            if (blob) {
-                                const fileName = `Page_${i + 1}${studentTag}.jpg`.replace(/[\/\\:*?"<>|]/g, '-');
-                                assmFolder.file(fileName, blob);
-                            }
-                        } catch (e) { console.error("Page render fail:", e); }
+                        if (i > 0) doc.addPage();
+                        const dataUrl = await renderPageToDataUrl(assm.pages[i], answers);
+                        if (dataUrl) {
+                            const pdfWidth = doc.internal.pageSize.getWidth();
+                            const pdfHeight = doc.internal.pageSize.getHeight();
+                            doc.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+                        }
                     }
+
+                    const safeDate = new Date(sub.created_at).toLocaleDateString().replace(/\//g, '-');
+                    const fileName = `${teamName}_${assm.title}${studentTag}_${safeDate}.pdf`.replace(/[\/\\:*?"<>|]/g, '-');
+                    
+                    if (fullSubs.length === 1) {
+                        doc.save(fileName);
+                    } else {
+                        const pdfBlob = doc.output('blob');
+                        zip.file(fileName, pdfBlob);
+                    }
+                    pdfCount++;
                 }
 
-                const content = await zip.generateAsync({ type: "blob" });
-                const url = window.URL.createObjectURL(content);
-                const a = document.createElement('a'); a.href = url; a.download = teamName + "_Results.zip"; a.click();
+                if (fullSubs.length > 1) {
+                    const content = await zip.generateAsync({ type: "blob" });
+                    const url = window.URL.createObjectURL(content);
+                    const a = document.createElement('a'); a.href = url; a.download = teamName + "_PDF_Archive.zip"; a.click();
+                }
+
                 Modal.hideLoader();
+                showLiveNotice(`${pdfCount} PDFs Generated!`, 3);
             } catch (err) {
                 console.error(err);
                 Modal.hideLoader();
@@ -5635,19 +5644,29 @@
                         const assmFolder = teamFolder.folder(folderName);
                         const answers = sub.answers_data || {};
 
+                        const doc = new jsPDF({
+                            orientation: 'p', unit: 'px', format: 'a4', hotfixes: ["px_scaling"]
+                        });
+
                         for (let i = 0; i < assm.pages.length; i++) {
-                            const blob = await renderPageToBlob(assm.pages[i], answers);
-                            if (blob) {
-                                const fileName = `Page_${i + 1}${studentTag}.jpg`.replace(/[\/\\:*?"<>|]/g, '-');
-                                assmFolder.file(fileName, blob);
+                            if (i > 0) doc.addPage();
+                            const dataUrl = await renderPageToDataUrl(assm.pages[i], answers);
+                            if (dataUrl) {
+                                const pdfWidth = doc.internal.pageSize.getWidth();
+                                const pdfHeight = doc.internal.pageSize.getHeight();
+                                doc.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
                             }
                         }
+
+                        const pdfFileName = `${assm.title || "Assm"}${studentTag} (${safeDate}).pdf`.replace(/[\\/:*?"<>|]/g, '_');
+                        const pdfBlob = doc.output('blob');
+                        teamFolder.file(pdfFileName, pdfBlob);
                     }
                 }
 
                 const content = await zip.generateAsync({ type: "blob" });
                 const url = window.URL.createObjectURL(content);
-                const a = document.createElement('a'); a.href = url; a.download = "Full_Assessment_Archive.zip"; a.click();
+                const a = document.createElement('a'); a.href = url; a.download = "Full_HighQuality_PDF_Archive.zip"; a.click();
                 Modal.hideLoader();
             } catch (err) {
                 console.error(err);
@@ -5656,13 +5675,13 @@
             }
         }
 
-        async function renderPageToBlob(page, ans) {
+        async function renderPageToDataUrl(page, ans) {
             return new Promise(resolve => {
                 const img = new Image();
                 img.crossOrigin = "Anonymous";
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const baseW = 2000;
+                    const baseW = 2400; // Increased resolution for High Quality
                     const scale = baseW / img.naturalWidth;
                     canvas.width = baseW;
                     canvas.height = img.naturalHeight * scale;
@@ -5672,21 +5691,12 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, canvas.width, canvas.height);
 
-                    canvas.style.position = 'fixed'; canvas.style.left = '-10000px'; canvas.style.top = '0';
-                    document.body.appendChild(canvas); // Attach before measuring text
-
                     const nestedAns = ans[page.pageId] || ans || {};
                     (page.fields || []).forEach(f => {
                         const getFromObj = (obj) => {
                             if (!obj || typeof obj !== 'object') return null;
                             if (obj[f.id] !== undefined) return obj[f.id];
                             if (obj[f.name] !== undefined) return obj[f.name];
-                            const normName = normalizeAnswerKey ? normalizeAnswerKey(f.name) : f.name;
-                            const normId = normalizeAnswerKey ? normalizeAnswerKey(f.id) : f.id;
-                            for (const key in obj) {
-                                const normKey = normalizeAnswerKey(key);
-                                if (normKey === normName || normKey === normId) return obj[key];
-                            }
                             return null;
                         };
 
@@ -5699,72 +5709,64 @@
                         const w = (f.width / 100) * canvas.width;
                         const h = (f.height / 100) * canvas.height;
 
-                        let fontSize = Math.max(12, Math.min(45, Math.round(h * 0.28)));
-                        let lines = [];
-                        let lineH = fontSize * 1.4;
-
-                        ctx.fillStyle = '#0a2540'; // Fallback student-color hex
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-
-                        // Recursive Shrink-to-Fit loop
-                        while (fontSize > 8) {
-                            ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
-                            const safeMeasure = (txt) => {
-                                let wpx = ctx.measureText(txt).width;
-                                if (wpx === 0) return txt.length * (fontSize * 0.55); // Fallback
-                                return wpx;
-                            };
-
-                            lines = [];
-                            const paragraphs = val.toString().split(/\r?\n/);
-                            paragraphs.forEach(p => {
-                                const words = p.split(/\s+/);
-                                let currentLine = '';
-                                words.forEach(word => {
-                                    const splitWord = (wrd, startLine) => {
-                                        let test = startLine ? startLine + ' ' + wrd : wrd;
-                                        if (safeMeasure(test) <= w - 10) return test;
-                                        if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
-                                        let sub = '';
-                                        for (let char of wrd) {
-                                            if (safeMeasure(sub + char) > w - 10) {
-                                                lines.push(sub); sub = char;
-                                            } else { sub += char; }
-                                        }
-                                        return sub;
-                                    };
-                                    currentLine = splitWord(word, currentLine);
-                                });
-                                if (currentLine) lines.push(currentLine);
-                            });
-
-                            lineH = fontSize * 1.35;
-                            if (lines.length * lineH <= h - 4) break;
-                            fontSize -= 1;
-                        }
-
-                        const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
-
                         if (f.type === 'checkbox') {
                             if (val === 'true' || val === true) {
-                                ctx.font = `bold ${fontSize * 1.5}px Arial`;
-                                ctx.fillText('✅', x + w / 2, y + h / 2);
+                                ctx.strokeStyle = 'red';
+                                ctx.lineWidth = 4 * scale;
+                                ctx.beginPath();
+                                ctx.moveTo(x + (5 * scale), y + (5 * scale)); 
+                                ctx.lineTo(x + w - (5 * scale), y + h - (5 * scale));
+                                ctx.moveTo(x + w - (5 * scale), y + (5 * scale)); 
+                                ctx.lineTo(x + (5 * scale), y + h - (5 * scale));
+                                ctx.stroke();
                             }
                         } else {
-                            lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lineH));
+                            let fontSize = Math.max(12, Math.min(60, Math.round(h * 0.35)));
+                            ctx.fillStyle = '#1e3a8a'; // Professional Dark Blue
+                            ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Advanced text wrapping logic preserved
+                            let lines = [];
+                            let lineH = fontSize * 1.35;
+                            while (fontSize > 8) {
+                                ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, Arial, sans-serif`;
+                                const safeMeasure = (txt) => ctx.measureText(txt).width || txt.length * (fontSize * 0.55);
+                                lines = [];
+                                const paragraphs = val.toString().split(/\r?\n/);
+                                paragraphs.forEach(p => {
+                                    const words = p.split(/\s+/);
+                                    let currentLine = '';
+                                    words.forEach(word => {
+                                        const splitWord = (wrd, startLine) => {
+                                            let test = startLine ? startLine + ' ' + wrd : wrd;
+                                            if (safeMeasure(test) <= w - (10 * scale)) return test;
+                                            if (startLine) { lines.push(startLine); return splitWord(wrd, ''); }
+                                            let sub = '';
+                                            for (let char of wrd) {
+                                                if (safeMeasure(sub + char) > w - (10 * scale)) { lines.push(sub); sub = char; } 
+                                                else { sub += char; }
+                                            }
+                                            return sub;
+                                        };
+                                        currentLine = splitWord(word, currentLine);
+                                    });
+                                    if (currentLine) lines.push(currentLine);
+                                });
+                                lineH = fontSize * 1.35;
+                                if (lines.length * lineH <= h - (4 * scale)) break;
+                                fontSize -= 1;
+                            }
+                            const startY = y + h / 2 - (lines.length - 1) * lineH / 2;
+                            lines.forEach((line, lineIdx) => {
+                                ctx.fillText(line, x + w / 2, startY + lineIdx * lineH);
+                            });
                         }
                     });
-
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                    document.body.removeChild(canvas);
-
-                    fetch(dataUrl).then(res => res.blob()).then(blob => resolve(blob));
+                    resolve(canvas.toDataURL('image/jpeg', 0.95));
                 };
-                img.onerror = () => {
-                    console.error("Failed to load backgound image for export.");
-                    resolve(null);
-                };
+                img.onerror = () => resolve(null);
                 img.src = page.url;
             });
         }
