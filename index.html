@@ -643,6 +643,24 @@
             border: 2px solid var(--success);
         }
 
+        .editor-box.suggested {
+            background: rgba(236, 72, 153, 0.1);
+            border: 2px dashed #ec4899;
+            cursor: pointer;
+            animation: pulse-suggested 2s infinite;
+        }
+
+        .editor-box.suggested:hover {
+            background: rgba(236, 72, 153, 0.3);
+            border-style: solid;
+        }
+
+        @keyframes pulse-suggested {
+            0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+        }
+
         .editor-box .delete-btn, 
         .editor-box .copy-btn, 
         .editor-box .editor-type-toggle {
@@ -1974,6 +1992,8 @@
                     style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem; background: #6366f1;">+ Table</button>
                 <button class="btn" id="btn-paste-field" onclick="pasteField()"
                     style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem; background: #8b5cf6;">Paste</button>
+                <button class="btn" id="btn-ai-detect" onclick="runAiDetection()"
+                    style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem; background: #ec4899; color:white;">✨ AI Detect</button>
                 <button class="btn" id="btn-save-page" onclick="savePage()"
                     style="display:none; transition: all 0.3s;">Save Layout</button>
             </div>
@@ -2430,6 +2450,7 @@
             manageAssessmentId: null,
             editorPageId: null,
             editorFields: [],
+            suggestedFields: [],
 
             // Interaction state
             drawing: false,
@@ -4343,6 +4364,7 @@
             state.isEditing = true;
             state.editorPageId = pid;
             state.editorFields = JSON.parse(JSON.stringify(page.fields)); // Clone
+            state.suggestedFields = []; // Clear old suggestions
 
             showView('admin-editor');
             document.getElementById('upload-card').style.display = 'none';
@@ -4355,6 +4377,7 @@
             document.getElementById('btn-add-checkbox').style.display = 'inline-flex';
             document.getElementById('btn-insert-table').style.display = 'inline-flex';
             document.getElementById('btn-paste-field').style.display = 'inline-flex';
+            document.getElementById('btn-ai-detect').style.display = 'inline-flex';
             renderEditorFields(); // Ensure boxes are drawn for the new selected page
 
             const img = document.getElementById('editor-image');
@@ -4413,6 +4436,7 @@
         function resetEditor() {
             state.editorPageId = null;
             state.editorFields = [];
+            state.suggestedFields = [];
             state.isEditing = false;
             document.getElementById('upload-card').style.display = 'block';
             document.getElementById('file-input').value = '';
@@ -4420,6 +4444,7 @@
             document.getElementById('btn-add-checkbox').style.display = 'none';
             document.getElementById('btn-insert-table').style.display = 'none';
             document.getElementById('btn-paste-field').style.display = 'none';
+            document.getElementById('btn-ai-detect').style.display = 'none';
             document.getElementById('editor-layer').innerHTML = '';
             document.getElementById('editor-sidebar').style.display = 'none';
         }
@@ -4930,6 +4955,28 @@
                 box.appendChild(typeToggle);
                 layer.appendChild(box);
             });
+
+            // Render Suggested Fields
+            state.suggestedFields.forEach((s, i) => {
+                const box = document.createElement('div');
+                box.className = 'editor-box suggested';
+                box.style.left = s.left + '%';
+                box.style.top = s.top + '%';
+                box.style.width = s.width + '%';
+                box.style.height = s.height + '%';
+                box.title = "Click to Draw Recommended Box";
+                box.onclick = (e) => {
+                    e.stopPropagation();
+                    acceptSuggestion(i);
+                };
+                
+                const badge = document.createElement('div');
+                badge.className = 'editor-label';
+                badge.innerText = 'Recommend';
+                box.appendChild(badge);
+                
+                layer.appendChild(box);
+            });
         }
 
         function copyField(index) {
@@ -4987,6 +5034,123 @@
                     renderEditorFields();
                 });
             });
+        }
+
+        async function runAiDetection() {
+            const img = document.getElementById('editor-image');
+            if (!img || !img.src || img.style.opacity === '0') {
+                Modal.alert("Error", "Please wait for the image to load first.");
+                return;
+            }
+
+            Modal.showLoader("AI is scanning for input boxes...");
+
+            try {
+                // Create offscreen canvas for analysis
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                ctx.drawImage(img, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                const width = canvas.width;
+                const height = canvas.height;
+
+                // Simple Box Detection Algorithm
+                // 1. Convert to binary (high contrast)
+                // 2. Scan for rectangular white regions
+                const suggestions = [];
+                const visited = new Uint8Array(width * height);
+                
+                // Jump in steps for speed
+                const step = Math.floor(Math.min(width, height) / 100) || 5;
+
+                for (let y = 10; y < height - 10; y += step) {
+                    for (let x = 10; x < width - 10; x += step) {
+                        const idx = (y * width + x);
+                        if (visited[idx]) continue;
+
+                        const r = data[idx * 4], g = data[idx * 4 + 1], b = data[idx * 4 + 2];
+                        const brightness = (r + g + b) / 3;
+
+                        // Look for "white-ish" areas (threshold 220)
+                        if (brightness > 220) {
+                            // Try to find the bounds of this white area
+                            let left = x, right = x, top = y, bottom = y;
+
+                            // Expand right
+                            while (right < width - 5) {
+                                const nextIdx = (y * width + (right + 1)) * 4;
+                                if ((data[nextIdx] + data[nextIdx+1] + data[nextIdx+2]) / 3 < 200) break;
+                                right++;
+                            }
+                            // Expand down
+                            while (bottom < height - 5) {
+                                const nextIdx = ((bottom + 1) * width + x) * 4;
+                                if ((data[nextIdx] + data[nextIdx+1] + data[nextIdx+2]) / 3 < 200) break;
+                                bottom++;
+                            }
+
+                            const boxW = right - left;
+                            const boxH = bottom - top;
+
+                            // Filter by reasonable input box sizes
+                            if (boxW > 30 && boxH > 15 && boxW < width * 0.5 && boxH < height * 0.2) {
+                                // Mark area as visited
+                                for (let vy = top; vy <= bottom; vy += step) {
+                                    for (let vx = left; vx <= right; vx += step) {
+                                        visited[vy * width + vx] = 1;
+                                    }
+                                }
+
+                                suggestions.push({
+                                    name: `Auto ${suggestions.length + 1}`,
+                                    type: 'text',
+                                    left: (left / width) * 100,
+                                    top: (top / height) * 100,
+                                    width: (boxW / width) * 100,
+                                    height: (boxH / height) * 100
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Filter out overlapping suggestions
+                const filtered = suggestions.filter((s1, i) => {
+                    return !suggestions.some((s2, j) => {
+                        if (i === j) return false;
+                        // If s1 is largely inside s2, discard s1
+                        return s1.left > s2.left && s1.top > s2.top && 
+                               (s1.left + s1.width) < (s2.left + s2.width) && 
+                               (s1.top + s1.height) < (s2.top + s2.height);
+                    });
+                });
+
+                state.suggestedFields = filtered.slice(0, 50); // Cap at 50
+                Modal.hideLoader();
+                
+                if (state.suggestedFields.length === 0) {
+                    Modal.alert("AI Detection", "No obvious boxes found. Try drawing them manually.");
+                } else {
+                    showLiveNotice(`AI found ${state.suggestedFields.length} possible fields. Click Pink boxes to add them!`, 5);
+                    renderEditorFields();
+                }
+            } catch (err) {
+                console.error("AI Detect Crash:", err);
+                Modal.hideLoader();
+                Modal.alert("AI Error", "Failed to analyze image: " + err.message);
+            }
+        }
+
+        function acceptSuggestion(index) {
+            const s = state.suggestedFields[index];
+            if (!s) return;
+            state.editorFields.push({ ...s });
+            state.suggestedFields.splice(index, 1);
+            renderEditorFields();
         }
 
         // Keyboard logic: Nudging & Duplication
